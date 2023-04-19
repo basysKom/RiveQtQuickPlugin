@@ -55,8 +55,6 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
   //          all animations are done during the node update, from within the renderthread
   //          Note: this is kind of scarry as all objects are created in the main thread
   //                which means that we have to be really carefull here to not crash
-  m_animator.setInterval(16);
-  connect(&m_animator, &QTimer::timeout, this, [this]() { this->update(); });
 
   // those will be triggered by renderthread once an update was applied to the pipeline
   // this will inform QML about changes
@@ -77,9 +75,13 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     Qt::QueuedConnection);
 
   // do update the index only once we are setuped and happy
-  connect(this, &RiveQtQuickItem::stateMachineInterfaceChanged, this, &RiveQtQuickItem::currentStateMachineIndexChanged, Qt::QueuedConnection);
+  connect(this, &RiveQtQuickItem::stateMachineInterfaceChanged, this, &RiveQtQuickItem::currentStateMachineIndexChanged,
+          Qt::QueuedConnection);
 
-  m_animator.start();
+  m_elapsedTimer.start();
+  m_lastUpdateTime = m_elapsedTimer.elapsed();
+
+  update();
 }
 
 // void RiveQtQuickItem::paint(QPainter* painter)
@@ -113,7 +115,9 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     if (m_currentArtboardInstance) {
       m_animationInstance = m_currentArtboardInstance->animationNamed(m_currentArtboardInstance->firstAnimation()->name());
       m_currentArtboardInstance->updateComponents();
-      setCurrentStateMachineIndex(m_currentArtboardInstance->defaultStateMachineIndex()); // this will set m_scheduleStateMachineChange
+      if (m_currentStateMachineIndex == -1) {
+        setCurrentStateMachineIndex(m_currentArtboardInstance->defaultStateMachineIndex()); // this will set m_scheduleStateMachineChange
+      }
     }
     emit internalArtboardChanged();
 
@@ -126,7 +130,6 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
   if (m_scheduleStateMachineChange && m_currentArtboardInstance) {
     m_currentStateMachineInstance = m_currentArtboardInstance->stateMachineAt(m_currentStateMachineIndex);
-
     emit internalStateMachineChanged();
     m_scheduleStateMachineChange = false;
   }
@@ -135,23 +138,21 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     node = new RiveQSGRenderNode(m_currentArtboardInstance.get(), this);
   }
 
-  float deltaTime = m_animator.interval() / 1000.0f;
+  qint64 currentTime = m_elapsedTimer.elapsed();
+  float deltaTime = (currentTime - m_lastUpdateTime) / 1000.0f;
+  m_lastUpdateTime = currentTime;
 
   if (m_currentArtboardInstance) {
-    if (m_currentStateMachineInstance) {
-      m_currentStateMachineInstance->advanceAndApply(deltaTime);
-
-      if (m_stateMachineInputMap) {
-        m_stateMachineInputMap->updateValues();
-      }
-    }
     if (m_animationInstance) {
       bool shouldContinue = m_animationInstance->advance(deltaTime);
       if (shouldContinue) {
         m_animationInstance->apply();
-        m_currentArtboardInstance->updateComponents();
       }
     }
+    if (m_currentStateMachineInstance) {
+      m_currentStateMachineInstance->advance(deltaTime);
+    }
+    m_currentArtboardInstance->updateComponents();
     m_currentArtboardInstance->advance(deltaTime);
     m_currentArtboardInstance->update(rive::ComponentDirt::Filthy);
   }
@@ -159,6 +160,7 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
   if (node) {
     node->markDirty(QSGNode::DirtyForceUpdate);
   }
+  this->update();
 
   return node;
 }
@@ -202,6 +204,7 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
   emit loadingStatusChanged();
 
   QFile file(source);
+
   if (!file.open(QIODevice::ReadOnly)) {
     qWarning("Failed to open the file.");
     m_loadingStatus = Error;
@@ -215,6 +218,7 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
 
   rive::ImportResult importResult;
   m_riveFile = rive::File::import(dataSpan, &customFactory, &importResult);
+
   if (importResult == rive::ImportResult::success) {
     qDebug("Successfully imported Rive file.");
     m_loadingStatus = Loaded;
@@ -235,7 +239,9 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
 
     // todo allow to preselect the artboard and statemachine and animation at load
     setCurrentArtboardIndex(0);
-
+    if (m_initialStateMachineIndex != -1) {
+      setCurrentStateMachineIndex(m_initialStateMachineIndex);
+    }
   } else {
     qDebug("Failed to import Rive file.");
     m_loadingStatus = Error;
@@ -303,11 +309,22 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
   float scaleX = width() / m_currentArtboardInstance->width();
   float scaleY = height() / m_currentArtboardInstance->height();
 
-  rive::HitInfo hitInfo;
-  rive::Mat2D transform; // Use the identity matrix or the appropriate transformation for your use case
+  // Calculate the uniform scale factor to preserve the aspect ratio
+  auto scaleFactor = qMin(scaleX, scaleY);
 
-  int x = pos.x() / scaleX;
-  int y = pos.y() / scaleY;
+  // Calculate the new width and height of the item while preserving the aspect ratio
+  auto newWidth = m_currentArtboardInstance->width() * scaleFactor;
+  auto newHeight = m_currentArtboardInstance->height() * scaleFactor;
+
+  // Calculate the offsets needed to center the item within its bounding rectangle
+  auto offsetX = (width() - newWidth) / 2.0;
+  auto offsetY = (height() - newHeight) / 2.0;
+
+  rive::HitInfo hitInfo;
+  rive::Mat2D transform;
+
+  float x = (pos.x() - offsetX) / scaleFactor;
+  float y = (pos.y() - offsetY) / scaleFactor;
 
   for (int i = 0; i < m_currentStateMachineInstance->stateMachine()->listenerCount(); ++i) {
     auto *listener = m_currentStateMachineInstance->stateMachine()->listener(i);
@@ -328,11 +345,7 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
 
             if (hit) {
               listener->performChanges(m_currentStateMachineInstance.get(), rive::Vec2D(x, y));
-
               return true;
-              // for (int j = 0; j < listener->actionCount(); ++j) {
-              //   // do we need this...
-              // }
             }
           }
         }
@@ -351,19 +364,44 @@ RiveQSGRenderNode::RiveQSGRenderNode(rive::ArtboardInstance *artboardInstance, R
   m_renderer.initGL();
 }
 
+QPointF RiveQSGRenderNode::globalPosition(QQuickItem *item)
+{
+  if (!item)
+    return QPointF(0, 0);
+  QQuickItem *parentItem = item->parentItem();
+  if (parentItem) {
+    return item->position() + globalPosition(parentItem);
+  } else {
+    return item->position();
+  }
+}
+
 void RiveQSGRenderNode::render(const RenderState *state)
 {
   // Render the artboard instance using the renderer and OpenGL
   if (m_artboardInstance) {
-    auto x = m_item->x();
-    auto y = m_item->y();
+
+    QPointF globalPos = globalPosition(m_item);
+    auto x = globalPos.x();
+    auto y = globalPos.y();
 
     auto aspectX = m_item->width() / (m_artboardInstance->width());
     auto aspectY = m_item->height() / (m_artboardInstance->height());
 
+    // Calculate the uniform scale factor to preserve the aspect ratio
+    auto scaleFactor = qMin(aspectX, aspectY);
+
+    // Calculate the new width and height of the item while preserving the aspect ratio
+    auto newWidth = m_artboardInstance->width() * scaleFactor;
+    auto newHeight = m_artboardInstance->height() * scaleFactor;
+
+    // Calculate the offsets needed to center the item within its bounding rectangle
+    auto offsetX = (m_item->width() - newWidth) / 2.0;
+    auto offsetY = (m_item->height() - newHeight) / 2.0;
+
     QMatrix4x4 modelMatrix;
-    modelMatrix.translate(x, y);
-    modelMatrix.scale(aspectX, aspectY);
+    modelMatrix.translate(x + offsetX, y + offsetY);
+    modelMatrix.scale(scaleFactor, scaleFactor);
 
     m_renderer.updateViewportSize();
     m_renderer.updateModelMatrix(modelMatrix);
@@ -447,6 +485,7 @@ void RiveQtQuickItem::setCurrentStateMachineIndex(int newCurrentStateMachineInde
   }
 
   if (!m_riveFile) {
+    m_initialStateMachineIndex = newCurrentStateMachineIndex; // file not yet loaded, save the info from qml
     return;
   }
 
@@ -478,7 +517,7 @@ bool RiveQtQuickItem::interactive() const
 
 void RiveQtQuickItem::setInteractive(bool newInteractive)
 {
-  if (acceptedMouseButtons() == Qt::AllButtons && newInteractive || acceptedMouseButtons() != Qt::AllButtons && !newInteractive) {
+  if (acceptedMouseButtons() == Qt::AllButtons && newInteractive || (acceptedMouseButtons() != Qt::AllButtons && !newInteractive)) {
     return;
   }
 

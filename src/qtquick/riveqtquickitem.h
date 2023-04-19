@@ -36,7 +36,6 @@
 #include "riveqtopenglrenderer.h"
 #include "riveqtstatemachineinputmap.h"
 
-
 // TODO: Move Structs in extra file
 struct AnimationInfo
 {
@@ -113,6 +112,7 @@ private:
   RiveQtOpenGLRenderer m_renderer;
   RiveQtQuickItem *m_item;
   void printOpenGLStates(const char *context);
+  QPointF globalPosition(QQuickItem *item);
 };
 
 class RiveQtQuickItem : public QQuickItem
@@ -184,10 +184,6 @@ signals:
 
   void interactiveChanged();
 
-#ifndef Q_MOC_RUN
-
-private: // don't tell moc
-#endif
   void internalArtboardChanged();
   void internalStateMachineChanged();
   void stateMachineInterfaceChanged();
@@ -212,8 +208,6 @@ private:
 
   std::unique_ptr<rive::File> m_riveFile;
 
-  QTimer m_animator;
-
   mutable QScopedPointer<QSGTextureProvider> m_textureProvider;
 
   QString m_fileSource;
@@ -228,8 +222,12 @@ private:
 
   int m_currentArtboardIndex { -1 };
   int m_currentStateMachineIndex { -1 };
+  int m_initialStateMachineIndex { -1 };
 
   RiveQtStateMachineInputMap *m_stateMachineInputMap { nullptr };
 
   RiveQtFactory customFactory { RiveQtFactory::RiveQtRenderType::QOpenGLRenderer };
+
+  QElapsedTimer m_elapsedTimer;
+  qint64 m_lastUpdateTime;
 };

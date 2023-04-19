@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>bullet_man.riv</file>
+        <file>water-bar-demo.riv</file>
     </qresource>
 </RCC>

@@ -2,24 +2,50 @@
 
 RiveQtQuickPlugin is a Qt/QtQuick renderer that enables the integration of Rive animations in QML. For more information on Rive, visit [https://www.rive.app](https://www.rive.app).
 
-The plugin allows you to display Rive animations, interact with them, and bind data to and from the animations.
+This plugin allows you to display Rive animations, interact with them, and bind data to and from the animations in your Qt Quick applications.
 
 https://user-images.githubusercontent.com/1797537/232922391-5a1f398a-9908-446a-bd2c-b2d7788c4f48.mp4
+
+## Features
+
+- Display Rive animations in QML
+- Interactive animations with support for user input and triggers
+- Data bindings for reading and writing data to and from Rive animations
+- Support for managing multiple artboards, animations, and state machines
+
+## Dependencies
+
+- Qt 5 or later
+- Rive C++ Runtime (available at [https://github.com/rive-app/rive-cpp](https://github.com/rive-app/rive-cpp))
+
+## Building
+
+1. Clone this repository:
+
+```
+git clone https://github.com/jebos/RiveQtQuickPlugin.git
+```
+
+You can download and build the Rive C++ Runtime, following the instructions in the Rive C++ Runtime repository.
+You can also just use the CMake I put into 3rdParty, it will download, build and link rive-cpp and its dependencies
+
+2. Just build using cmake and make.
 
 ## Usage
 
 Here's a short example of how to use the RiveQtQuickItem in your QML code:
 
-```qml
+```
 import RiveQtQuickPlugin 1.0
 
 ...
+
 RiveQtQuickItem {
     id: riveItem
-    
+
     width: 800
     height: 800
-    
+
     fileSource: "YOUR_RIVE_FILE"
 
     onStateMachineInterfaceChanged: {
@@ -28,43 +54,21 @@ RiveQtQuickItem {
         console.log(Object.keys(riveItem.stateMachineInterface))
     }
 }
-...
-```
-
-By default, the interactive property is set to true, which means that mouse events are propagated to Rive. You can activate triggers with the following code:
 
 ```
-riveItem.stateMachineInterface.activateTrigger("TRIGGER_NAME")
-```
 
-You can also create bindings to read and write data to and from Rive animations:
-The name of the property is whatever is configured in the animation
-Looking at the Object.keys function allows you to check for the names, in case you dont know them.
+## Example Project
 
-Note that stateMachineInterface will be null as long as no StateMachine was selected.
-Note that rive animations come with and without stateMachines, also note that rive animations may not have a default state machine so you may have to select it initialy.
+Check out the "example" folder in this repository for a complete example project demonstrating how to use the `RiveQtQuickPlugin`.
 
-```
-Text {
-    text: riveItem.stateMachineInterface.InputName
-}
-```
+## Compatibility
 
-For more details, check out the example project. 
+The plugin has been tested on Windows using the MSVC 2019 compiler and Qt 5. To ensure broader compatibility, test the plugin on different platforms, compilers, and Qt versions, and address any compatibility issues that may arise.
 
-Keep in mind that this is an initial release, so there will be some rough edges and the interface of the RiveQtQuickItem is subject to change. 
-Currently, the plugin has only been tested on Windows using the MSVC 2019 compiler and Qt 5.
+## Contributing
 
-# RiveQtQuickItem Overview
+Contributions are welcome! If you encounter any issues or would like to request a feature, feel free to open an issue or submit a pull request.
 
-The RiveQtQuickItem is item designed to display Rive animations and art in Qt Quick applications using the Rive C++ library. 
+## License
 
-It inherits from the QQuickItem class.It exposes several key properties that allow you to customize the appearance and behavior of the Rive animation:
-
-- `fileSource`: The path to the Rive file containing the animation or art to display.
-- `currentArtboardIndex`: The index of the current artboard.
-- `currentStateMachineIndex`: The index of the current state machine.
-- `interactive`: A boolean value indicating whether the Rive animation should be interactive.
-
-The RiveQtQuickItem also provides read-only properties, such as artboards, animations, and stateMachines, which return lists of available artboards, animations, and state machines, respectively. 
-Additionally, it emits signals like `fileSourceChanged`, `currentArtboardIndexChanged`, and `currentStateMachineIndexChanged` that allow you to monitor changes in the animation's state.
+This project is released under the MIT License.

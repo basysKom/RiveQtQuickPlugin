@@ -37,16 +37,12 @@ ApplicationWindow {
     Item {
         anchors.fill: parent
 
-        Row {
-            anchors.left: parent.left
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            width: 600
+        RowLayout {
+            anchors.fill: parent
 
             ScrollView {
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: 200
+                Layout.fillHeight: true
+                Layout.preferredWidth: 200
                 clip: true
                 background: Rectangle { color: "white" }
 
@@ -57,21 +53,20 @@ ApplicationWindow {
                     padding: 16
 
                     Repeater {
-                        model: riveItem.artboards
+                        model: bulletMan.artboards
 
                         delegate: Button {
                             text: "id: " + modelData.id + "Name: " + modelData.name
 
-                            onClicked: riveItem.currentArtboardIndex = modelData.id
+                            onClicked: bulletMan.currentArtboardIndex = modelData.id
                         }
                     }
                 }
             }
 
             ScrollView {
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: 200
+                Layout.fillHeight: true
+                Layout.preferredWidth: 200
                 clip: true
                 background: Rectangle { color: "white" }
 
@@ -82,21 +77,20 @@ ApplicationWindow {
                     padding: 16
 
                     Repeater {
-                        model: riveItem.animations
+                        model: bulletMan.animations
 
                         delegate: Button {
                             text: "id: " + modelData.id + "Name: " + modelData.name + ", Duration: " + modelData.duration + ", FPS: " + modelData.fps
 
-                            onClicked: riveItem.triggerAnimation(modelData.id)
+                            onClicked: bulletMan.triggerAnimation(modelData.id)
                         }
                     }
                 }
             }
 
             ScrollView {
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: 200
+                Layout.fillHeight: true
+                Layout.preferredWidth: 200
 
                 clip: true
                 background: Rectangle { color: "white" }
@@ -108,20 +102,19 @@ ApplicationWindow {
                     padding: 16
 
                     Repeater {
-                        model: riveItem.stateMachines
+                        model: bulletMan.stateMachines
 
                         delegate: Button {
                             text: "id: " + modelData.id + "Name: " + modelData.name
-                            onClicked: riveItem.currentStateMachineIndex = modelData.id
+                            onClicked: bulletMan.currentStateMachineIndex = modelData.id
                         }
                     }
                 }
             }
 
             ScrollView {
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: 200
+                Layout.fillHeight: true
+                Layout.preferredWidth: 200
 
                 clip: true
                 background: Rectangle { color: "white" }
@@ -133,28 +126,74 @@ ApplicationWindow {
                     padding: 16
 
                     Repeater {
-                        model: riveItem.stateMachineInterface.triggers
+                        model: bulletMan.stateMachineInterface ? bulletMan.stateMachineInterface.triggers : 0
 
                         delegate: Button {
                             text: "Trigger: " + modelData
-                            onClicked: riveItem.stateMachineInterface.activateTrigger(modelData)
+                            onClicked: bulletMan.stateMachineInterface.activateTrigger(modelData)
                         }
                     }
                 }
             }
 
-            RiveQtQuickItem {
-                id: riveItem
-                width: 800
-                height: 800
-                fileSource: ":/bullet_man.riv"
+            ColumnLayout {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                Layout.preferredWidth: 400
 
-                onStateMachineInterfaceChanged: {
-                    // this give a list of all possible properties of the file
-                    // those properties can be used in bindings and updated through bindings!
-                    console.log("currentStateMachineIndex",
-                                JSON.stringify(riveItem.stateMachineInterface))
-                    console.log(Object.keys(riveItem.stateMachineInterface))
+                RiveQtQuickItem {
+                    id: bulletMan
+
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
+
+                    width: 400
+                    height: 400
+
+                    fileSource: ":/bullet_man.riv"
+
+                    currentArtboardIndex: 0
+                    currentStateMachineIndex: 0
+
+                    onStateMachineInterfaceChanged: {
+                        if (stateMachineInterface) {
+                            console.log(Object.keys(stateMachineInterface))
+                        }
+                    }
+                }
+
+                Slider {
+                    id: slider
+
+                    Layout.fillWidth: true
+                    from: 1
+                    value: 25
+                    to: 100
+                    stepSize: 0.1
+                }
+
+                RiveQtQuickItem {
+                    id: riveItem
+
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
+
+                    width: 400
+                    height: 400
+
+                    fileSource: ":/water-bar-demo.riv"
+
+                    currentArtboardIndex: 0
+                    currentStateMachineIndex: 0
+
+                    interactive: false
+
+                    Binding {
+                        target: riveItem.stateMachineInterface
+                        property: "Level"
+                        value: slider.value
+                        when: riveItem.currentStateMachineIndex !== null
+                    }
                 }
             }
         }

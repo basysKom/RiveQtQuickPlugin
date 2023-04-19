@@ -44,15 +44,29 @@ RiveQtStateMachineInputMap::RiveQtStateMachineInputMap(rive::StateMachineInstanc
     return;
 
   QStringList triggerList;
-  for (int i = 0; i < stateMachineInstance->stateMachine()->inputCount(); i++) {
-    auto input = stateMachineInstance->stateMachine()->input(i);
-    QString propertyName = QString::fromStdString(input->name());
 
-    if (input->isTypeOf(rive::StateMachineBool::typeKey)) {
-      insert(propertyName, QVariant(dynamic_cast<const rive::SMIBool *>(input)->value()));
-    } else if (input->isTypeOf(rive::StateMachineNumber::typeKey)) {
-      insert(propertyName, QVariant(static_cast<double>(dynamic_cast<const rive::SMINumber *>(input)->value())));
-    } else if (input->isTypeOf(rive::StateMachineTrigger::typeKey)) {
+  for (int i = 0; i < stateMachineInstance->inputCount(); i++) {
+    auto input = stateMachineInstance->input(i);
+
+    const QString &propertyName = QString::fromStdString(input->name());
+
+    if (input->inputCoreType() == rive::StateMachineNumber::typeKey) {
+      auto numberInput = static_cast<const rive::SMINumber *>(input);
+      if (numberInput) {
+        auto v = numberInput->value();
+        insert(propertyName, QVariant(static_cast<float>(v)));
+      }
+    }
+
+    if (input->inputCoreType() == rive::StateMachineBool::typeKey) {
+      auto numberInput = static_cast<const rive::SMIBool *>(input);
+      if (numberInput) {
+        auto v = numberInput->value();
+        insert(propertyName, QVariant(static_cast<bool>(v)));
+      }
+    }
+
+    if (input->inputCoreType() == rive::StateMachineTrigger::typeKey) {
       triggerList << propertyName;
     }
   }
@@ -67,17 +81,24 @@ void RiveQtStateMachineInputMap::updateValues()
   if (!m_stateMachineInstance)
     return;
 
-  for (int i = 0; i < m_stateMachineInstance->stateMachine()->inputCount(); i++) {
-    auto input = m_stateMachineInstance->stateMachine()->input(i);
+  for (int i = 0; i < m_stateMachineInstance->inputCount(); i++) {
+    auto input = m_stateMachineInstance->input(i);
     QString propertyName = QString::fromStdString(input->name());
-    propertyName[0] = propertyName[0].toLower();
 
-    if (input->isTypeOf(rive::StateMachineBool::typeKey)) {
-      auto *smiBool = dynamic_cast<const rive::SMIBool *>(input);
-      insert(propertyName, smiBool->value());
-    } else if (input->isTypeOf(rive::StateMachineNumber::typeKey)) {
-      auto *smiNumber = dynamic_cast<const rive::SMINumber *>(input);
-      insert(propertyName, static_cast<double>(smiNumber->value()));
+    if (input->inputCoreType() == rive::StateMachineNumber::typeKey) {
+      auto numberInput = static_cast<const rive::SMINumber *>(input);
+      if (numberInput) {
+        auto v = numberInput->value();
+        insert(propertyName, QVariant(static_cast<float>(v)));
+      }
+    }
+
+    if (input->inputCoreType() == rive::StateMachineBool::typeKey) {
+      auto numberInput = static_cast<const rive::SMIBool *>(input);
+      if (numberInput) {
+        auto v = numberInput->value();
+        insert(propertyName, QVariant(static_cast<bool>(v)));
+      }
     }
   }
 }
@@ -86,7 +107,9 @@ void RiveQtStateMachineInputMap::activateTrigger(const QString &trigger)
 {
   if (!m_stateMachineInstance)
     return;
+
   auto *targetInput = m_stateMachineInstance->getTrigger(trigger.toStdString());
+
   if (!targetInput)
     return;
 
@@ -106,17 +129,24 @@ void RiveQtStateMachineInputMap::onInputValueChanged(const QString &key, const Q
 
     if (value.toBool() != targetInput->value()) {
       targetInput->value(value.toBool());
+      m_stateMachineInstance->needsAdvance();
+      insert(key, value);
     }
+    break;
   }
 
+  case QVariant::Type::Int:
   case QVariant::Type::Double: {
     auto *targetInput = m_stateMachineInstance->getNumber(key.toStdString());
-    if (!targetInput)
+    if (!targetInput) {
       return;
+    }
 
     if (value.toFloat() != targetInput->value()) {
       targetInput->value(value.toFloat());
+      insert(key, value);
     }
+    break;
   }
   default:
     return;
