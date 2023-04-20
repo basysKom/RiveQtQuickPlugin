@@ -114,6 +114,7 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     m_currentArtboardInstance = m_riveFile->artboardAt(m_currentArtboardIndex);
     if (m_currentArtboardInstance) {
       m_animationInstance = m_currentArtboardInstance->animationNamed(m_currentArtboardInstance->firstAnimation()->name());
+      m_currentStateMachineInstance = nullptr;
       m_currentArtboardInstance->updateComponents();
       if (m_currentStateMachineIndex == -1) {
         setCurrentStateMachineIndex(m_currentArtboardInstance->defaultStateMachineIndex()); // this will set m_scheduleStateMachineChange
