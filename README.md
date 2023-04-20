@@ -61,10 +61,14 @@ RiveQtQuickItem {
 ## Example Project
 
 Check out the "example" folder in this repository for a complete example project demonstrating how to use the `RiveQtQuickPlugin`.
+When you build with examples, dont forget to set the correct import path in Linux.
+In Windows everything is deployed in your build directory into a directory called "binary"
 
 ## Compatibility
 
-The plugin has been tested on Windows using the MSVC 2019 compiler and Qt 5. To ensure broader compatibility, test the plugin on different platforms, compilers, and Qt versions, and address any compatibility issues that may arise.
+The plugin has been tested on:
+ * Windows using the MSVC 2019 compiler and Qt 5.15.2
+ * Linux/Ubuntu using CLANG12 and Qt and Qt 5.15.2
 
 ## Contributing
 
