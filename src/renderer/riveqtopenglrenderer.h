@@ -39,6 +39,7 @@
 #include <QOpenGLTexture>
 #include <QOpenGLVertexArrayObject>
 
+#include "qopenglframebufferobject.h"
 #include "riveqtutils.h"
 
 class SubPath;

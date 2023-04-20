@@ -22,7 +22,7 @@
   SOFTWARE.
 ]]
 
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.14)
 project(rive_cpp VERSION 1.0.0 LANGUAGES CXX)
 
 set(BUILD_SHARED_LIBS OFF)
@@ -41,14 +41,29 @@ function(extract_zip zip_file output_dir target_name)
     execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory "${output_dir}")
 
     # Extract the zip file
+    message(STATUS "EXTRACT directory content: ${zip_file} to ${output_dir}")
+    execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory "${output_dir}")
     execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf "${zip_file}" WORKING_DIRECTORY "${output_dir}")
   endif()
 
   if(target_name)
-    file(GLOB SUBDIR LIST_DIRECTORIES true "${output_dir}/*")
-    list(GET SUBDIR 0 SUBDIR)
-    file(RENAME "${SUBDIR}" "${output_dir}/${target_name}")
-  endif()
+      file(GLOB SUBDIR LIST_DIRECTORIES true "${output_dir}/*")
+
+      # Add diagnostic messages
+      message(STATUS "Output directory content: ${output_dir}")
+      message(STATUS "SUBDIR variable content: ${SUBDIR}")
+
+      # List all files and directories in the output_dir
+      file(GLOB ALL_CONTENT "${output_dir}/*")
+      message(STATUS "All content inside output_dir: ${ALL_CONTENT}")
+
+      if (SUBDIR)
+        list(GET SUBDIR 0 FIRST_SUBDIR)
+        file(RENAME "${FIRST_SUBDIR}" "${output_dir}/${target_name}")
+      else()
+        message(FATAL_ERROR "No subdirectories found in ${output_dir}")
+      endif()
+    endif()
 endfunction()
 
 # TODO: Investigate why...
@@ -125,8 +140,12 @@ endif()
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/sheenbidi")
 
-# Set the warning level
-add_compile_options(/W3)
+if (WIN32)
+    # Set the warning level
+    add_compile_options(/W3)
+else()
+    add_compile_options(-Wall -fPIC)
+endif()
 
 # Define _UNICODE and UNICODE
 add_definitions(-D_UNICODE -DUNICODE)

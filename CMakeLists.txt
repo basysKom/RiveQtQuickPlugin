@@ -31,10 +31,6 @@ project(RiveQtQuickPlugin
     LANGUAGES CXX
 )
 
-if (NOT WIN32)
-    message(WARNING "Building on a non-Windows platform is untested and may not work as expected.")
-endif()
-
 option(RQQRP_BUILD_EXAMPLES "Build demo applications." ON)
 option(RQQRP_DOWNLOAD_BUILD_DEPENDENCIES "Downloads and Builds dependencies." ON)
 

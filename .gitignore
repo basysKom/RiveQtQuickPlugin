@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+
+3rdParty/rive/cmake/rive-cpp-src/
+*.user

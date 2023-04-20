@@ -341,7 +341,7 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
           if (coreElement->is<rive::Shape>()) {
             rive::Shape *shape = dynamic_cast<rive::Shape *>(coreElement);
 
-            const rive::IAABB area = { x, y, x + 1, y + 1 };
+            const rive::IAABB area = { static_cast<int32_t>(x), static_cast<int32_t>(y), static_cast<int32_t>(x + 1), static_cast<int32_t>(y + 1) };
             bool hit = shape->hitTest(area);
 
             if (hit) {
