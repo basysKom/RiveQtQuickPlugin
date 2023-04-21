@@ -1,6 +1,7 @@
 # RiveQtQuickPlugin
 
-RiveQtQuickPlugin is a Qt/QtQuick renderer that enables the integration of Rive animations in QML. For more information on Rive, visit [https://www.rive.app](https://www.rive.app).
+RiveQtQuickPlugin is a Qt/QtQuick renderer that enables the integration of Rive animations in QtQuick / QML. 
+For more information on Rive, visit [https://www.rive.app](https://www.rive.app).
 
 This plugin allows you to display Rive animations, interact with them, and bind data to and from the animations in your Qt Quick applications.
 
@@ -10,15 +11,18 @@ https://user-images.githubusercontent.com/1797537/233192955-7360403b-b51b-422a-8
 ## Features
 
 - Display Rive animations in QML
+- OpenGL Rendering
+- Software Rendering
 - Interactive animations with support for user input and triggers
 - Data bindings for reading and writing data to and from Rive animations
 - Support for managing multiple artboards, animations, and state machines
 
 ## Dependencies
 
-- Qt 5 or later
+- Qt 5.15.2 or later (not Qt6 yet :( )
 - Rive C++ Runtime (available at [https://github.com/rive-app/rive-cpp](https://github.com/rive-app/rive-cpp))
-
+  * To ease things up, the plugin source codes cmake will download rive-cpp and its dependencies and build them using cmake. The result is a static lib the plugin links against. 
+    
 ## Building
 
 1. Clone this repository:
@@ -27,8 +31,9 @@ https://user-images.githubusercontent.com/1797537/233192955-7360403b-b51b-422a-8
 git clone https://github.com/jebos/RiveQtQuickPlugin.git
 ```
 
-You can download and build the Rive C++ Runtime, following the instructions in the Rive C++ Runtime repository.
-You can also just use the CMake I put into 3rdParty, it will download, build and link rive-cpp and its dependencies
+#### Note:
+  You can download and build the Rive C++ Runtime, following the instructions in the Rive C++ Runtime repository.
+  You can also just use the CMake I put into 3rdParty, it will download, build and link rive-cpp and its dependencies
 
 2. Just build using cmake and make.
 
