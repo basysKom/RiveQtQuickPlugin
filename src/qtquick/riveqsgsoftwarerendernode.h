@@ -22,29 +22,37 @@
  * SOFTWARE.
  */
 
-#include <QDir>
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
+#pragma once
 
-int main(int argc, char *argv[])
+#include <QElapsedTimer>
+#include <QQuickItem>
+#include <QQuickPaintedItem>
+#include <QSGRenderNode>
+#include <QSGTextureProvider>
+
+#include "rive/artboard.hpp"
+#include "riveqtfactory.h"
+#include "riveqsgrendernode.h"
+#include "riveqtpainterrenderer.h"
+
+class RiveQtQuickItem;
+class QQuickWindow;
+
+class RiveQSGSoftwareRenderNode : public RiveQSGRenderNode
 {
-  QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-  QGuiApplication app(argc, argv);
+public:
+  RiveQSGSoftwareRenderNode(QQuickWindow *window, rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
 
-  QQmlApplicationEngine engine;
+  QRectF rect() const override;
 
-  for (const QString &path : engine.importPathList()) {
-    qDebug() << "  " << path;
-  }
-  const QUrl url(QStringLiteral("qrc:/main.qml"));
-  QObject::connect(
-    &engine, &QQmlApplicationEngine::objectCreated, &app,
-    [url](QObject *obj, const QUrl &objUrl) {
-      if (!obj && url == objUrl)
-        QCoreApplication::exit(-1);
-    },
-    Qt::QueuedConnection);
-  engine.load(url);
+  StateFlags changedStates() const override { return QSGRenderNode::BlendState; }
+  RenderingFlags flags() const override { return QSGRenderNode::BoundedRectRendering; }
 
-  return app.exec();
-}
+  void render(const RenderState *state) override;
+
+private:
+  void renderSoftware(const RenderState *state);
+
+  RiveQtPainterRenderer m_renderer;
+  QQuickWindow *m_window { nullptr };
+};

@@ -144,12 +144,10 @@ ApplicationWindow {
                 RiveQtQuickItem {
                     id: bulletMan
 
-                    Layout.fillHeight: true
-                    Layout.fillWidth: true
-
                     width: 400
                     height: 400
 
+                    Layout.fillWidth: true
                     fileSource: ":/bullet_man.riv"
 
                     currentArtboardIndex: 0
@@ -175,9 +173,7 @@ ApplicationWindow {
                 RiveQtQuickItem {
                     id: riveItem
 
-                    Layout.fillHeight: true
                     Layout.fillWidth: true
-
                     width: 400
                     height: 400
 

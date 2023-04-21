@@ -22,6 +22,8 @@
  * SOFTWARE.
  */
 
+#pragma once
+
 #include <QPainter>
 #include <QPainterPath>
 #include <QBrush>
@@ -34,28 +36,20 @@
 #include "riveqtutils.h"
 
 class QPainterSubPath;
+class RiveQtPainterSubPath;
 
 class RiveQtPainterPath : public rive::RenderPath
 {
-private:
-  QPainterPath m_path;
-
 public:
   RiveQtPainterPath() = default;
   RiveQtPainterPath(const RiveQtPainterPath &rqp) { m_path = rqp.m_path; }
-
   RiveQtPainterPath(rive::RawPath &rawPath, rive::FillRule fillRule);
 
   void rewind() override { m_path.clear(); }
-
   void moveTo(float x, float y) override { m_path.moveTo(x, y); }
-
   void lineTo(float x, float y) override { m_path.lineTo(x, y); }
-
   void cubicTo(float ox, float oy, float ix, float iy, float x, float y) override { m_path.cubicTo(ox, oy, ix, iy, x, y); }
-
   void close() override { m_path.closeSubpath(); }
-
   void fillRule(rive::FillRule value) override
   {
     switch (value) {
@@ -68,10 +62,27 @@ public:
     }
   }
   void addRenderPath(RenderPath *path, const rive::Mat2D &transform) override;
-
   void setQPainterPath(QPainterPath path) { m_path = path; }
 
   QPainterPath toQPainterPath() const { return m_path; }
+  std::vector<QPainterPath> pathes() const;
+
+private:
+  QPainterPath m_path;
+  std::vector<RiveQtPainterSubPath> m_subPaths;
+};
+
+class RiveQtPainterSubPath
+{
+private:
+  RiveQtPainterPath *m_path;
+  QTransform m_transform;
+
+public:
+  RiveQtPainterSubPath(RiveQtPainterPath *path, const QTransform &transform);
+
+  RiveQtPainterPath *path() const;
+  QTransform transform() const;
 };
 
 class RiveQtPainterRenderer : public rive::Renderer
@@ -140,6 +151,6 @@ private:
       return QPainter::CompositionMode_SourceOver;
     }
   }
-
+  QTransform m_transform;
   QPainter *m_painter;
 };

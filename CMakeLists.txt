@@ -63,6 +63,12 @@ set(PROJECT_SOURCES
     src/qtquick/riveqtquickitem.cpp
     src/qtquick/riveqtstatemachineinputmap.h
     src/qtquick/riveqtstatemachineinputmap.cpp
+    src/qtquick/riveqsgopenglrendernode.h
+    src/qtquick/riveqsgopenglrendernode.cpp
+    src/qtquick/riveqsgsoftwarerendernode.h
+    src/qtquick/riveqsgsoftwarerendernode.cpp
+    src/qtquick/riveqsgrendernode.h
+    src/qtquick/riveqsgrendernode.cpp
     src/qmldir
     shader.qrc
 )

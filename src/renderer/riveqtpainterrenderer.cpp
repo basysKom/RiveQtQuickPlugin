@@ -50,9 +50,8 @@ void RiveQtPainterRenderer::restore()
 
 void RiveQtPainterRenderer::transform(const rive::Mat2D &m)
 {
-  QTransform qTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
-
-  m_painter->setTransform(qTransform, true);
+  QTransform transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+  m_painter->setTransform(transform, true);
 }
 
 void RiveQtPainterRenderer::drawPath(rive::RenderPath *path, rive::RenderPaint *paint)
@@ -64,27 +63,30 @@ void RiveQtPainterRenderer::drawPath(rive::RenderPath *path, rive::RenderPaint *
   RiveQtPainterPath *qtPath = static_cast<RiveQtPainterPath *>(path);
   RiveQtPaint *qtPaint = static_cast<RiveQtPaint *>(paint);
 
+  QPainter::CompositionMode compositionMode = convertRiveBlendModeToQCompositionMode(qtPaint->blendMode());
+
   QPainter::RenderHints oldRenderHint = m_painter->renderHints();
+  m_painter->setCompositionMode(compositionMode);
   m_painter->setRenderHint(QPainter::Antialiasing, true);
   m_painter->setBrush(qtPaint->brush());
   m_painter->setPen(qtPaint->pen());
 
-  QPainterPath painterPath = qtPath->toQPainterPath();
-  if (painterPath.isEmpty()) {
-    return;
+  const auto qpath = qtPath->toQPainterPath();
+
+  if (!qpath.isEmpty()) {
+    switch (qtPaint->paintStyle()) {
+    case rive::RenderPaintStyle::fill:
+      m_painter->fillPath(qpath, qtPaint->brush());
+      break;
+    case rive::RenderPaintStyle::stroke:
+      m_painter->strokePath(qpath, qtPaint->pen());
+      break;
+    default:
+      break;
+    }
   }
 
-  switch (qtPaint->paintStyle()) {
-  case rive::RenderPaintStyle::fill:
-    m_painter->fillPath(painterPath, qtPaint->brush());
-    break;
-  case rive::RenderPaintStyle::stroke:
-    m_painter->strokePath(painterPath, qtPaint->pen());
-    break;
-  default:
-    break;
-  }
-
+  m_painter->setCompositionMode(QPainter::CompositionMode_SourceOver);
   m_painter->setRenderHints(oldRenderHint);
 }
 
@@ -95,11 +97,7 @@ void RiveQtPainterRenderer::clipPath(rive::RenderPath *path)
   }
 
   RiveQtPainterPath *qtPath = static_cast<RiveQtPainterPath *>(path);
-  QPainterPath painterPath = qtPath->toQPainterPath();
-
-  if (!painterPath.isEmpty()) {
-    m_painter->setClipPath(painterPath, Qt::ClipOperation::ReplaceClip);
-  }
+  m_painter->setClipPath(qtPath->toQPainterPath(), Qt::ClipOperation::IntersectClip);
 }
 
 void RiveQtPainterRenderer::drawImage(const rive::RenderImage *image, rive::BlendMode blendMode, float opacity)
@@ -114,8 +112,12 @@ void RiveQtPainterRenderer::drawImage(const rive::RenderImage *image, rive::Blen
     return;
   }
 
-  // Set the blend mode
   QPainter::CompositionMode compositionMode = convertRiveBlendModeToQCompositionMode(blendMode);
+  QPainter::RenderHints oldRenderHint = m_painter->renderHints();
+  m_painter->setCompositionMode(compositionMode);
+  m_painter->setRenderHint(QPainter::Antialiasing, true);
+
+  // Set the blend mode
   m_painter->setCompositionMode(compositionMode);
 
   // Set the opacity
@@ -127,6 +129,7 @@ void RiveQtPainterRenderer::drawImage(const rive::RenderImage *image, rive::Blen
   // Reset the composition mode and opacity to their default values
   m_painter->setCompositionMode(QPainter::CompositionMode_SourceOver);
   m_painter->setOpacity(1.0);
+  m_painter->setRenderHints(oldRenderHint);
 }
 
 void RiveQtPainterRenderer::drawImageMesh(const rive::RenderImage *image, rive::rcp<rive::RenderBuffer> vertices_f32,
@@ -170,6 +173,7 @@ void RiveQtPainterPath::addRenderPath(RenderPath *path, const rive::Mat2D &trans
 
   RiveQtPainterPath *qtPath = static_cast<RiveQtPainterPath *>(path);
   QTransform qTransform(transform[0], transform[1], transform[2], transform[3], transform[4], transform[5]);
-  QPainterPath transformedPath = qtPath->m_path * qTransform;
-  m_path.addPath(transformedPath);
+
+  QPainterPath qPath = qtPath->toQPainterPath() * qTransform;
+  m_path.addPath(qPath);
 }

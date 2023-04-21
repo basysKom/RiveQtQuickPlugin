@@ -22,29 +22,35 @@
  * SOFTWARE.
  */
 
-#include <QDir>
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
+#include "riveqsgrendernode.h"
+#include "src/qtquick/riveqtquickitem.h"
 
-int main(int argc, char *argv[])
+QRectF RiveQSGRenderNode::rect() const
 {
-  QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-  QGuiApplication app(argc, argv);
+  // Return the bounding rectangle of your item
+  // You should update m_rect with the actual bounding rectangle
+  return m_item->boundingRect();
+}
 
-  QQmlApplicationEngine engine;
+void RiveQSGRenderNode::updateArtboardInstance(rive::ArtboardInstance *artboardInstance)
+{
+  m_artboardInstance = artboardInstance;
+}
 
-  for (const QString &path : engine.importPathList()) {
-    qDebug() << "  " << path;
+RiveQSGRenderNode::RiveQSGRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
+  : m_artboardInstance(artboardInstance)
+  , m_item(item)
+{
+}
+
+QPointF RiveQSGRenderNode::globalPosition(QQuickItem *item)
+{
+  if (!item)
+    return QPointF(0, 0);
+  QQuickItem *parentItem = item->parentItem();
+  if (parentItem) {
+    return item->position() + globalPosition(parentItem);
+  } else {
+    return item->position();
   }
-  const QUrl url(QStringLiteral("qrc:/main.qml"));
-  QObject::connect(
-    &engine, &QQmlApplicationEngine::objectCreated, &app,
-    [url](QObject *obj, const QUrl &objUrl) {
-      if (!obj && url == objUrl)
-        QCoreApplication::exit(-1);
-    },
-    Qt::QueuedConnection);
-  engine.load(url);
-
-  return app.exec();
 }

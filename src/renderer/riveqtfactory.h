@@ -42,6 +42,7 @@ class RiveQtFactory : public rive::Factory
 public:
   enum class RiveQtRenderType : quint8
   {
+    None,
     QPainterRenderer,
     QOpenGLRenderer
   };
@@ -50,6 +51,14 @@ public:
     : rive::Factory()
     , m_renderType(renderType)
   {
+  }
+
+  void setRenderType(RiveQtRenderType renderType)
+  {
+    if (m_renderType != RiveQtRenderType::None) {
+      return;
+    }
+    m_renderType = renderType;
   }
 
   rive::rcp<rive::RenderBuffer> makeBufferU16(rive::Span<const uint16_t> data) override;
@@ -64,5 +73,5 @@ public:
   rive::rcp<rive::Font> decodeFont(rive::Span<const uint8_t> span) override;
 
 private:
-  const RiveQtRenderType m_renderType;
+  RiveQtRenderType m_renderType;
 };

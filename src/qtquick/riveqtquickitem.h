@@ -30,11 +30,15 @@
 #include <QSGRenderNode>
 #include <QSGTextureProvider>
 
+#include <QImage>
+#include <QPainter>
+
 #include <QTimer>
 #include "rive/artboard.hpp"
 #include "riveqtfactory.h"
-#include "riveqtopenglrenderer.h"
 #include "riveqtstatemachineinputmap.h"
+
+class RiveQSGOpenGLRenderNode;
 
 // TODO: Move Structs in extra file
 struct AnimationInfo
@@ -77,44 +81,6 @@ public:
   QString name;
 };
 
-class RiveQtQuickItem;
-
-class RiveQSGRenderNode : public QSGRenderNode, public QOpenGLFunctions
-{
-
-public:
-  RiveQSGRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
-
-  void render(const RenderState *state) override;
-
-  StateFlags changedStates() const override
-  {
-    // Return the necessary state flags
-    return QSGRenderNode::BlendState;
-  }
-
-  QRectF rect() const override;
-
-  RenderingFlags flags() const override
-  {
-    // Return the necessary rendering flags
-    return QSGRenderNode::BoundedRectRendering | QSGRenderNode::DepthAwareRendering;
-  }
-
-  void updateArtboardInstance(rive::ArtboardInstance *artboardInstance)
-  {
-    m_renderer.reset();
-    m_artboardInstance = artboardInstance;
-  }
-
-private:
-  rive::ArtboardInstance *m_artboardInstance;
-  RiveQtOpenGLRenderer m_renderer;
-  RiveQtQuickItem *m_item;
-  void printOpenGLStates(const char *context);
-  QPointF globalPosition(QQuickItem *item);
-};
-
 class RiveQtQuickItem : public QQuickItem
 {
   Q_OBJECT
@@ -143,6 +109,7 @@ public:
   Q_ENUM(LoadingStatus)
 
   RiveQtQuickItem(QQuickItem *parent = nullptr);
+  ~RiveQtQuickItem();
 
   Q_INVOKABLE void triggerAnimation(int id);
 
@@ -226,7 +193,7 @@ private:
 
   RiveQtStateMachineInputMap *m_stateMachineInputMap { nullptr };
 
-  RiveQtFactory customFactory { RiveQtFactory::RiveQtRenderType::QOpenGLRenderer };
+  RiveQtFactory m_riveQtFactory { RiveQtFactory::RiveQtRenderType::None };
 
   QElapsedTimer m_elapsedTimer;
   qint64 m_lastUpdateTime;
