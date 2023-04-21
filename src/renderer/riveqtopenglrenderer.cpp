@@ -534,7 +534,6 @@ void RiveQtOpenGLRenderer::save()
 void RiveQtOpenGLRenderer::restore()
 {
   assert(m_Stack.size() > 1);
-  RenderState &state = m_Stack.back();
   m_Stack.pop_back();
 }
 

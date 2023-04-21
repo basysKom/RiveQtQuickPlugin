@@ -74,10 +74,13 @@ std::unique_ptr<rive::RenderPath> RiveQtFactory::makeRenderPath(rive::RawPath &r
 
 std::unique_ptr<rive::RenderPath> RiveQtFactory::makeEmptyRenderPath()
 {
-  if (m_renderType == RiveQtRenderType::QOpenGLRenderer) {
+  switch (m_renderType) {
+  case RiveQtRenderType::QOpenGLRenderer:
     return std::make_unique<RiveQtOpenGLPath>();
-  } else {
+  case RiveQtRenderType::QPainterRenderer:
     return std::make_unique<RiveQtPainterPath>();
+  case RiveQtRenderType::None:
+    return std::make_unique<RiveQtPainterPath>(); // TODO Add Empty Path
   }
 }
 

@@ -22,29 +22,31 @@
  * SOFTWARE.
  */
 
-#include <QDir>
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
+#pragma once
 
-int main(int argc, char *argv[])
+#include <QElapsedTimer>
+#include <QQuickItem>
+#include <QQuickPaintedItem>
+#include <QSGRenderNode>
+#include <QSGTextureProvider>
+
+#include "rive/artboard.hpp"
+#include "riveqtfactory.h"
+#include "riveqsgrendernode.h"
+#include "riveqtopenglrenderer.h"
+
+class RiveQtQuickItem;
+
+class RiveQSGOpenGLRenderNode : public RiveQSGRenderNode, public QOpenGLFunctions
 {
-  QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-  QGuiApplication app(argc, argv);
+public:
+  RiveQSGOpenGLRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
 
-  QQmlApplicationEngine engine;
+  void render(const RenderState *state) override;
 
-  for (const QString &path : engine.importPathList()) {
-    qDebug() << "  " << path;
-  }
-  const QUrl url(QStringLiteral("qrc:/main.qml"));
-  QObject::connect(
-    &engine, &QQmlApplicationEngine::objectCreated, &app,
-    [url](QObject *obj, const QUrl &objUrl) {
-      if (!obj && url == objUrl)
-        QCoreApplication::exit(-1);
-    },
-    Qt::QueuedConnection);
-  engine.load(url);
+  virtual void updateArtboardInstance(rive::ArtboardInstance *artboardInstance) override;
 
-  return app.exec();
-}
+protected:
+  void renderOpenGL(const RenderState *state);
+  RiveQtOpenGLRenderer m_renderer;
+};

@@ -27,10 +27,14 @@
 #include "rive/animation/state_machine_listener.hpp"
 #include "rive/file.hpp"
 #include "riveqtfactory.h"
-#include "riveqtopenglrenderer.h"
 
+#include "src/qtquick/riveqsgopenglrendernode.h"
+#include "src/qtquick/riveqsgsoftwarerendernode.h"
+
+#include <QSGRendererInterface>
 #include <QSGRenderNode>
 #include <QQmlEngine>
+#include <QQuickWindow>
 
 #include <rive/node.hpp>
 #include <rive/shapes/clipping_shape.hpp>
@@ -84,18 +88,7 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
   update();
 }
 
-// void RiveQtQuickItem::paint(QPainter* painter)
-//{
-//     if (!m_artboardInstance || !painter)
-//     {
-//         return;
-//     }
-
-//    m_renderer.setPainter(painter);
-//    m_artboardInstance->draw(&m_renderer);
-
-//    qDebug("paint");
-//}
+RiveQtQuickItem::~RiveQtQuickItem() { }
 
 void RiveQtQuickItem::triggerAnimation(int id)
 {
@@ -108,6 +101,8 @@ void RiveQtQuickItem::triggerAnimation(int id)
 
 QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
+  QQuickWindow *currentWindow = window();
+
   RiveQSGRenderNode *node = static_cast<RiveQSGRenderNode *>(oldNode);
 
   if (m_scheduleArtboardChange) {
@@ -136,7 +131,16 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
   }
 
   if (!node && m_currentArtboardInstance) {
-    node = new RiveQSGRenderNode(m_currentArtboardInstance.get(), this);
+    switch (currentWindow->rendererInterface()->graphicsApi()) {
+    case QSGRendererInterface::GraphicsApi::OpenGL:
+      m_riveQtFactory.setRenderType(RiveQtFactory::RiveQtRenderType::QOpenGLRenderer);
+      node = new RiveQSGOpenGLRenderNode(m_currentArtboardInstance.get(), this);
+      break;
+    case QSGRendererInterface::GraphicsApi::Software:
+    default:
+      m_riveQtFactory.setRenderType(RiveQtFactory::RiveQtRenderType::QPainterRenderer);
+      node = new RiveQSGSoftwareRenderNode(currentWindow, m_currentArtboardInstance.get(), this);
+    }
   }
 
   qint64 currentTime = m_elapsedTimer.elapsed();
@@ -218,7 +222,7 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
   rive::Span<const uint8_t> dataSpan(reinterpret_cast<const uint8_t *>(fileData.constData()), fileData.size());
 
   rive::ImportResult importResult;
-  m_riveFile = rive::File::import(dataSpan, &customFactory, &importResult);
+  m_riveFile = rive::File::import(dataSpan, &m_riveQtFactory, &importResult);
 
   if (importResult == rive::ImportResult::success) {
     qDebug("Successfully imported Rive file.");
@@ -341,7 +345,8 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
           if (coreElement->is<rive::Shape>()) {
             rive::Shape *shape = dynamic_cast<rive::Shape *>(coreElement);
 
-            const rive::IAABB area = { static_cast<int32_t>(x), static_cast<int32_t>(y), static_cast<int32_t>(x + 1), static_cast<int32_t>(y + 1) };
+            const rive::IAABB area = { static_cast<int32_t>(x), static_cast<int32_t>(y), static_cast<int32_t>(x + 1),
+                                       static_cast<int32_t>(y + 1) };
             bool hit = shape->hitTest(area);
 
             if (hit) {
@@ -355,87 +360,6 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
   }
 
   return false;
-}
-
-RiveQSGRenderNode::RiveQSGRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
-  : m_artboardInstance(artboardInstance)
-  , m_item(item)
-{
-  initializeOpenGLFunctions();
-  m_renderer.initGL();
-}
-
-QPointF RiveQSGRenderNode::globalPosition(QQuickItem *item)
-{
-  if (!item)
-    return QPointF(0, 0);
-  QQuickItem *parentItem = item->parentItem();
-  if (parentItem) {
-    return item->position() + globalPosition(parentItem);
-  } else {
-    return item->position();
-  }
-}
-
-void RiveQSGRenderNode::render(const RenderState *state)
-{
-  // Render the artboard instance using the renderer and OpenGL
-  if (m_artboardInstance) {
-
-    QPointF globalPos = globalPosition(m_item);
-    auto x = globalPos.x();
-    auto y = globalPos.y();
-
-    auto aspectX = m_item->width() / (m_artboardInstance->width());
-    auto aspectY = m_item->height() / (m_artboardInstance->height());
-
-    // Calculate the uniform scale factor to preserve the aspect ratio
-    auto scaleFactor = qMin(aspectX, aspectY);
-
-    // Calculate the new width and height of the item while preserving the aspect ratio
-    auto newWidth = m_artboardInstance->width() * scaleFactor;
-    auto newHeight = m_artboardInstance->height() * scaleFactor;
-
-    // Calculate the offsets needed to center the item within its bounding rectangle
-    auto offsetX = (m_item->width() - newWidth) / 2.0;
-    auto offsetY = (m_item->height() - newHeight) / 2.0;
-
-    QMatrix4x4 modelMatrix;
-    modelMatrix.translate(x + offsetX, y + offsetY);
-    modelMatrix.scale(scaleFactor, scaleFactor);
-
-    m_renderer.updateViewportSize();
-    m_renderer.updateModelMatrix(modelMatrix);
-    m_renderer.updateProjectionMatrix(*state->projectionMatrix());
-
-    // TODO: sicssorRect of RenderState is 0x0 width,
-    // just create it for now.
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-    int viewportHeight = viewport[3];
-
-    glEnable(GL_SCISSOR_TEST);
-    int scissorX = static_cast<int>(x);
-    int scissorY = static_cast<int>(viewportHeight - y - m_item->height());
-    int scissorWidth = static_cast<int>(m_item->width());
-    int scissorHeight = static_cast<int>(m_item->height());
-    glScissor(scissorX, scissorY, scissorWidth, scissorHeight);
-
-    // this renders the artboard!
-    m_artboardInstance->draw(&m_renderer);
-
-    glDisable(GL_SCISSOR_TEST);
-  }
-
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-}
-
-QRectF RiveQSGRenderNode::rect() const
-{
-  // Return the bounding rectangle of your item
-  // You should update m_rect with the actual bounding rectangle
-  return m_item->boundingRect();
 }
 
 const QList<AnimationInfo> &RiveQtQuickItem::animations() const
@@ -518,7 +442,7 @@ bool RiveQtQuickItem::interactive() const
 
 void RiveQtQuickItem::setInteractive(bool newInteractive)
 {
-  if (acceptedMouseButtons() == Qt::AllButtons && newInteractive || (acceptedMouseButtons() != Qt::AllButtons && !newInteractive)) {
+  if ((acceptedMouseButtons() == Qt::AllButtons && newInteractive) || (acceptedMouseButtons() != Qt::AllButtons && !newInteractive)) {
     return;
   }
 
