@@ -1,25 +1,8 @@
 #[[
-  MIT License
+  SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
+  SPDX-FileCopyrightText: 2023 basysKom GmbH
 
-  Copyright (C) 2023 by Jeremias Bosch
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-  SOFTWARE.
+  SPDX-License-Identifier: LGPL-3.0-or-later
 ]]
 
 cmake_minimum_required(VERSION 3.14)
@@ -70,7 +53,9 @@ endfunction()
 # newer versions dont show pathes correctly (i.e. in the rocket example the arrow is not shown)
 # there are some upstream fixes in regard of clip fill rule that mostlikely cause this
 # since this code works around the potential issue
-set(RIVE_CPP_DOWNLOAD_URL "https://codeload.github.com/rive-app/rive-cpp/zip/ec9d94ab7915c6633d3bd0fd9b2fe74a4f69dda0")
+#set(RIVE_CPP_DOWNLOAD_URL "https://codeload.github.com/rive-app/rive-cpp/zip/ec9d94ab7915c6633d3bd0fd9b2fe74a4f69dda0")
+set(RIVE_CPP_DOWNLOAD_URL "https://codeload.github.com/rive-app/rive-cpp/zip/79e32293139f7360004fe56ce75314ec23f2f8be")
+
 set(RIVE_CPP_DOWNLOAD_DIR "${CMAKE_BINARY_DIR}/rive-cpp-src-download")
 set(RIVE_CPP_SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdParty/rive/cmake/rive-cpp-src")
 set(RIVE_CPP_TARGET_DIR "zip")

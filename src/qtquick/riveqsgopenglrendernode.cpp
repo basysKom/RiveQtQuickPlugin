@@ -1,29 +1,12 @@
-/*
- * MIT License
- *
- * Copyright (C) 2023 by Jeremias Bosch
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+
+// SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
+// SPDX-FileCopyrightText: 2023 basysKom GmbH
+//
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "riveqsgopenglrendernode.h"
 #include "src/qtquick/riveqtquickitem.h"
+#include <QQuickWindow>
 
 void RiveQSGOpenGLRenderNode::updateArtboardInstance(rive::ArtboardInstance *artboardInstance)
 {
@@ -47,31 +30,44 @@ void RiveQSGOpenGLRenderNode::renderOpenGL(const RenderState *state)
 {
   if (m_artboardInstance) {
 
-    QPointF globalPos = globalPosition(m_item);
-    auto x = globalPos.x();
-    auto y = globalPos.y();
+    float devicePixelRatio = m_item->window()->devicePixelRatio();
 
-    auto aspectX = m_item->width() / (m_artboardInstance->width());
-    auto aspectY = m_item->height() / (m_artboardInstance->height());
+    QPointF globalPos = m_item->mapToItem(nullptr, QPointF(0, 0));
+
+    auto x = globalPos.x() * devicePixelRatio;
+    auto y = globalPos.y() * devicePixelRatio;
+
+    auto itemWidth = m_item->width() * devicePixelRatio;
+    auto itemHeight = m_item->height() * devicePixelRatio;
+
+    auto artBoardWidth = m_artboardInstance->width() * devicePixelRatio;
+    auto artBoardHeight = m_artboardInstance->height() * devicePixelRatio;
+
+    auto aspectX = itemWidth / artBoardWidth;
+    auto aspectY = itemHeight / artBoardHeight;
 
     // Calculate the uniform scale factor to preserve the aspect ratio
     auto scaleFactor = qMin(aspectX, aspectY);
 
     // Calculate the new width and height of the item while preserving the aspect ratio
-    auto newWidth = m_artboardInstance->width() * scaleFactor;
-    auto newHeight = m_artboardInstance->height() * scaleFactor;
+    auto newWidth = artBoardWidth * scaleFactor;
+    auto newHeight = artBoardHeight * scaleFactor;
 
     // Calculate the offsets needed to center the item within its bounding rectangle
-    auto offsetX = (m_item->width() - newWidth) / 2.0;
-    auto offsetY = (m_item->height() - newHeight) / 2.0;
+    auto offsetX = (itemWidth - newWidth) / 2.0;
+    auto offsetY = (itemHeight - newHeight) / 2.0;
+
+    QMatrix4x4 projectionMatrix = *state->projectionMatrix();
+    projectionMatrix.scale(1 / devicePixelRatio, 1 / devicePixelRatio);
 
     QMatrix4x4 modelMatrix;
-    modelMatrix.translate(x + offsetX, y + offsetY);
-    modelMatrix.scale(scaleFactor, scaleFactor);
+    modelMatrix.translate(x, y);
+    modelMatrix.translate(offsetX, offsetY);
+    modelMatrix.scale(scaleFactor * devicePixelRatio, scaleFactor * devicePixelRatio);
 
     m_renderer.updateViewportSize();
     m_renderer.updateModelMatrix(modelMatrix);
-    m_renderer.updateProjectionMatrix(*state->projectionMatrix());
+    m_renderer.updateProjectionMatrix(projectionMatrix);
 
     // TODO: sicssorRect of RenderState is 0x0 width,
     // just create it for now.
@@ -80,10 +76,10 @@ void RiveQSGOpenGLRenderNode::renderOpenGL(const RenderState *state)
     int viewportHeight = viewport[3];
 
     glEnable(GL_SCISSOR_TEST);
-    int scissorX = static_cast<int>(x);
-    int scissorY = static_cast<int>(viewportHeight - y - m_item->height());
-    int scissorWidth = static_cast<int>(m_item->width());
-    int scissorHeight = static_cast<int>(m_item->height());
+    int scissorX = static_cast<int>(x + offsetX);
+    int scissorY = static_cast<int>(viewportHeight - y - itemHeight);
+    int scissorWidth = static_cast<int>(newWidth);
+    int scissorHeight = static_cast<int>(newHeight);
     glScissor(scissorX, scissorY, scissorWidth, scissorHeight);
 
     // this renders the artboard!

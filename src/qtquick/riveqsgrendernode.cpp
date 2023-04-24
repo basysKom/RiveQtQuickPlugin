@@ -1,56 +1,29 @@
-/*
- * MIT License
- *
- * Copyright (C) 2023 by Jeremias Bosch
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+
+// SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
+// SPDX-FileCopyrightText: 2023 basysKom GmbH
+//
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "riveqsgrendernode.h"
 #include "src/qtquick/riveqtquickitem.h"
 
 QRectF RiveQSGRenderNode::rect() const
 {
-  // Return the bounding rectangle of your item
-  // You should update m_rect with the actual bounding rectangle
   return m_item->boundingRect();
 }
 
-void RiveQSGRenderNode::updateArtboardInstance(rive::ArtboardInstance *artboardInstance)
+RiveQSGRenderNode::RiveQSGRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
+  : RiveQSGBaseNode(artboardInstance, item)
 {
-  m_artboardInstance = artboardInstance;
 }
 
-RiveQSGRenderNode::RiveQSGRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
+RiveQSGBaseNode::RiveQSGBaseNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
   : m_artboardInstance(artboardInstance)
   , m_item(item)
 {
 }
 
-QPointF RiveQSGRenderNode::globalPosition(QQuickItem *item)
+void RiveQSGBaseNode::setRect(const QRectF &bounds)
 {
-  if (!item)
-    return QPointF(0, 0);
-  QQuickItem *parentItem = item->parentItem();
-  if (parentItem) {
-    return item->position() + globalPosition(parentItem);
-  } else {
-    return item->position();
-  }
+  m_rect = bounds;
 }

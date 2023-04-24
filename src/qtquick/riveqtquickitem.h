@@ -1,26 +1,8 @@
-/*
- * MIT License
- *
- * Copyright (C) 2023 by Jeremias Bosch
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+
+// SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
+// SPDX-FileCopyrightText: 2023 basysKom GmbH
+//
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 #pragma once
 
@@ -38,7 +20,7 @@
 #include "riveqtfactory.h"
 #include "riveqtstatemachineinputmap.h"
 
-class RiveQSGOpenGLRenderNode;
+class RiveQSGRenderNode;
 
 // TODO: Move Structs in extra file
 struct AnimationInfo
@@ -87,9 +69,9 @@ class RiveQtQuickItem : public QQuickItem
 
   Q_PROPERTY(QString fileSource READ fileSource WRITE setFileSource NOTIFY fileSourceChanged)
   Q_PROPERTY(LoadingStatus loadingStatus READ loadingStatus NOTIFY loadingStatusChanged)
-  Q_PROPERTY(QList<ArtBoardInfo> artboards READ artboards NOTIFY artboardsChanged)
-  Q_PROPERTY(QList<AnimationInfo> animations READ animations NOTIFY animationsChanged)
-  Q_PROPERTY(QList<StateMachineInfo> stateMachines READ stateMachines NOTIFY stateMachinesChanged)
+  Q_PROPERTY(QVector<ArtBoardInfo> artboards READ artboards NOTIFY artboardsChanged)
+  Q_PROPERTY(QVector<AnimationInfo> animations READ animations NOTIFY animationsChanged)
+  Q_PROPERTY(QVector<StateMachineInfo> stateMachines READ stateMachines NOTIFY stateMachinesChanged)
 
   Q_PROPERTY(int currentArtboardIndex READ currentArtboardIndex WRITE setCurrentArtboardIndex NOTIFY currentArtboardIndexChanged)
   Q_PROPERTY(
@@ -126,9 +108,9 @@ public:
   int currentArtboardIndex() const;
   void setCurrentArtboardIndex(int newCurrentArtboardIndex);
 
-  const QList<ArtBoardInfo> &artboards() const;
-  const QList<StateMachineInfo> &stateMachines() const { return m_stateMachineList; }
-  const QList<AnimationInfo> &animations() const;
+  const QVector<ArtBoardInfo> &artboards() const;
+  const QVector<StateMachineInfo> &stateMachines() const { return m_stateMachineList; }
+  const QVector<AnimationInfo> &animations() const;
 
   int currentStateMachineIndex() const;
   void setCurrentStateMachineIndex(int newCurrentStateMachineIndex);
@@ -158,6 +140,10 @@ signals:
 protected:
   QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+  void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+#endif
+
   void mousePressEvent(QMouseEvent *event) override;
   void mouseReleaseEvent(QMouseEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;
@@ -166,12 +152,15 @@ private:
   void loadRiveFile(const QString &source);
   void updateAnimations();
   void updateStateMachines();
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+  void renderOffscreen();
+#endif
 
   bool hitTest(const QPointF &pos, const rive::ListenerType &type);
 
-  QList<ArtBoardInfo> m_artboards;
-  QList<AnimationInfo> m_animationList;
-  QList<StateMachineInfo> m_stateMachineList;
+  QVector<ArtBoardInfo> m_artboardInfoList;
+  QVector<AnimationInfo> m_animationList;
+  QVector<StateMachineInfo> m_stateMachineList;
 
   std::unique_ptr<rive::File> m_riveFile;
 
@@ -197,4 +186,7 @@ private:
 
   QElapsedTimer m_elapsedTimer;
   qint64 m_lastUpdateTime;
+  bool m_geometryChanged = true;
+
+  RiveQSGRenderNode *node { nullptr };
 };

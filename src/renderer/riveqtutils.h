@@ -1,26 +1,8 @@
-/*
- * MIT License
- *
- * Copyright (C) 2023 by Jeremias Bosch
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+
+// SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
+// SPDX-FileCopyrightText: 2023 basysKom GmbH
+//
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 #pragma once
 
@@ -31,7 +13,7 @@
 #include "rive/shapes/paint/stroke_cap.hpp"
 #include "rive/shapes/paint/stroke_join.hpp"
 #include <rive/math/mat2d.hpp>
-#include <QMatrix>
+#include <QMatrix4x4>
 #include <QColor>
 #include <QPainterPath>
 
@@ -41,7 +23,7 @@ namespace RiveQtUtils {
   QColor riveColorToQt(rive::ColorInt value);
   Qt::PenJoinStyle riveStrokeJoinToQt(rive::StrokeJoin join);
   Qt::PenCapStyle riveStrokeCapToQt(rive::StrokeCap cap);
-  QMatrix riveMat2DToQt(const rive::Mat2D &riveMatrix);
+  QMatrix4x4 riveMat2DToQt(const rive::Mat2D &riveMatrix);
   Qt::FillRule riveFillRuleToQt(rive::FillRule fillRule);
   QPainterPath transformPathWithMatrix4x4(const QPainterPath &path, const QMatrix4x4 &matrix);
 }
@@ -103,6 +85,8 @@ public:
   RiveQtImage(const QImage &image)
     : m_image(image)
   {
+    m_Width = m_image.width();
+    m_Height = m_image.height();
   }
 
   const QImage &image() const { return m_image; }
@@ -117,22 +101,14 @@ public:
   RiveQtShader() = default;
 
   virtual QSharedPointer<QGradient> gradient() const = 0;
+
+  float m_opacity { 1.0 };
 };
 
 class RiveQtRadialGradient : public RiveQtShader
 {
 public:
-  RiveQtRadialGradient(float centerX, float centerY, float radius, const rive::ColorInt colors[], const float positions[], size_t count)
-  {
-    m_gradient = QRadialGradient(centerX, centerY, radius);
-
-    for (size_t i = 0; i < count; i++) {
-      QColor color(RiveQtUtils::riveColorToQt(colors[i]));
-      m_gradient.setColorAt(positions[i], color);
-    }
-
-    m_brush = QBrush(m_gradient);
-  }
+  RiveQtRadialGradient(float centerX, float centerY, float radius, const rive::ColorInt colors[], const float positions[], size_t count);
 
   QSharedPointer<QGradient> gradient() const override { return QSharedPointer<QGradient>::create(m_gradient); }
 
@@ -172,6 +148,7 @@ public:
   const QColor &color() const { return m_color; }
   const QBrush &brush() const { return m_Brush; }
   const QPen &pen() const { return m_Pen; }
+  const float &opacity() const { return m_opacity; }
 
   virtual void shader(rive::rcp<rive::RenderShader> shader) override;
   virtual void invalidateStroke() override {}; // maybe we need to reset something here
@@ -179,9 +156,11 @@ public:
 private:
   rive::RenderPaintStyle m_paintStyle;
   rive::BlendMode m_BlendMode;
+
   QColor m_color;
   QBrush m_Brush;
   QPen m_Pen;
+  float m_opacity { 1.0 };
 
   rive::rcp<rive::RenderShader> m_shader;
   QSharedPointer<QGradient> m_qtGradient;
