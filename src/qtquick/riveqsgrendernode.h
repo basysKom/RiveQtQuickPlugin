@@ -1,26 +1,7 @@
-/*
- * MIT License
- *
- * Copyright (C) 2023 by Jeremias Bosch
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+// SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
+// SPDX-FileCopyrightText: 2023 basysKom GmbH
+//
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 #pragma once
 
@@ -35,21 +16,28 @@
 
 class RiveQtQuickItem;
 
-class RiveQSGRenderNode : public QSGRenderNode
+class RiveQSGBaseNode
+{
+public:
+  RiveQSGBaseNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
+
+  virtual void renderOffscreen() { }
+  virtual void setRect(const QRectF &bounds);
+
+  virtual void updateArtboardInstance(rive::ArtboardInstance *artboardInstance) { m_artboardInstance = artboardInstance; }
+
+protected:
+  rive::ArtboardInstance *m_artboardInstance { nullptr };
+  RiveQtQuickItem *m_item { nullptr };
+  QRectF m_rect;
+};
+
+class RiveQSGRenderNode : public QSGRenderNode, public RiveQSGBaseNode
 {
 public:
   RiveQSGRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
 
-  QRectF rect() const override;
-
   StateFlags changedStates() const override { return QSGRenderNode::BlendState; }
   RenderingFlags flags() const override { return QSGRenderNode::BoundedRectRendering | QSGRenderNode::DepthAwareRendering; }
-
-  virtual void updateArtboardInstance(rive::ArtboardInstance *artboardInstance);
-
-protected:
-  QPointF globalPosition(QQuickItem *item);
-
-  rive::ArtboardInstance *m_artboardInstance { nullptr };
-  RiveQtQuickItem *m_item { nullptr };
+  QRectF rect() const override;
 };

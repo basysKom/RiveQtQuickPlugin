@@ -1,26 +1,8 @@
-/*
- * MIT License
- *
- * Copyright (C) 2023 by Jeremias Bosch
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+
+// SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
+// SPDX-FileCopyrightText: 2023 basysKom GmbH
+//
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "riveqtopenglrenderer.h"
 
@@ -679,7 +661,7 @@ void RiveQtOpenGLRenderer::configureGradientShader(const QGradient *gradient)
 
   m_pathShaderProgram->setUniformValueArray("u_stopColors", gradientColors.constData(), gradientColors.size());
   m_pathShaderProgram->setUniformValueArray("u_stopPositions", gradientPositions.constData(), gradientPositions.size());
-  m_pathShaderProgram->setUniformValue("u_numStops", gradientStops.size());
+  m_pathShaderProgram->setUniformValue("u_numStops", static_cast<GLint>(gradientStops.size()));
 
   // Check the gradient type and set the appropriate shader uniforms
   if (gradient->type() == QGradient::LinearGradient) {
@@ -954,7 +936,6 @@ void RiveQtOpenGLRenderer::drawImageMesh(const rive::RenderImage *image, rive::r
                                          rive::rcp<rive::RenderBuffer> uvCoords_f32, rive::rcp<rive::RenderBuffer> indices_u16,
                                          rive::BlendMode blendMode, float opacity)
 {
-  return;
   const QImage &qImage = static_cast<const RiveQtImage *>(image)->image();
   QOpenGLTexture texture(qImage);
 

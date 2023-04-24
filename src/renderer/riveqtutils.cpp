@@ -1,26 +1,8 @@
-/*
- * MIT License
- *
- * Copyright (C) 2023 by Jeremias Bosch
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+
+// SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
+// SPDX-FileCopyrightText: 2023 basysKom GmbH
+//
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "riveqtutils.h"
 #include <QVector4D>
@@ -62,9 +44,9 @@ Qt::PenCapStyle RiveQtUtils::riveStrokeCapToQt(rive::StrokeCap cap)
   return Qt::PenCapStyle::FlatCap;
 }
 
-QMatrix RiveQtUtils::riveMat2DToQt(const rive::Mat2D &riveMatrix)
+QMatrix4x4 RiveQtUtils::riveMat2DToQt(const rive::Mat2D &riveMatrix)
 {
-  return QMatrix(riveMatrix[0], riveMatrix[1], riveMatrix[2], riveMatrix[3], riveMatrix[4], riveMatrix[5]);
+  return QMatrix4x4(riveMatrix[0], riveMatrix[1], 0, riveMatrix[4], riveMatrix[2], riveMatrix[3], 0, riveMatrix[5], 0, 0, 1, 0, 0, 0, 0, 1);
 }
 
 Qt::FillRule RiveQtUtils::riveFillRuleToQt(rive::FillRule fillRule)
@@ -124,9 +106,9 @@ RiveQtPaint::RiveQtPaint() { }
 void RiveQtPaint::color(rive::ColorInt value)
 {
   m_color = RiveQtUtils::riveColorToQt(value);
+  m_opacity = rive::colorOpacity(value);
 
   if (!m_color.isValid()) {
-
     qDebug() << "INVALID COLOR";
   }
 
@@ -197,9 +179,29 @@ RiveQtLinearGradient::RiveQtLinearGradient(float x1, float y1, float x2, float y
                                            size_t count)
   : m_gradient(x1, y1, x2, y2)
 {
+  m_opacity = 0;
+
   for (size_t i = 0; i < count; ++i) {
     QColor color = RiveQtUtils::riveColorToQt(colors[i]);
+    m_opacity = qMax(m_opacity, rive::colorOpacity(colors[i]));
+    if (m_opacity < 0.6 && m_opacity > 0.4) {
+      qDebug() << " LAKSJDALKSJD";
+    }
     qreal stop = stops[i];
     m_gradient.setColorAt(stop, color);
   }
+}
+
+RiveQtRadialGradient::RiveQtRadialGradient(float centerX, float centerY, float radius, const rive::ColorInt colors[],
+                                           const float positions[], size_t count)
+{
+  m_gradient = QRadialGradient(centerX, centerY, radius);
+
+  for (size_t i = 0; i < count; i++) {
+    QColor color(RiveQtUtils::riveColorToQt(colors[i]));
+    m_opacity = rive::colorOpacity(colors[i]);
+    m_gradient.setColorAt(positions[i], color);
+  }
+
+  m_brush = QBrush(m_gradient);
 }

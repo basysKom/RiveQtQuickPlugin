@@ -1,40 +1,28 @@
-/*
- * MIT License
- *
- * Copyright (C) 2023 by Jeremias Bosch
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+
+// SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
+// SPDX-FileCopyrightText: 2023 basysKom GmbH
+//
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "riveqtquickitem.h"
 #include "qqmlcontext.h"
 #include "rive/animation/state_machine_listener.hpp"
 #include "rive/file.hpp"
+
 #include "riveqtfactory.h"
 
-#include "src/qtquick/riveqsgopenglrendernode.h"
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#  include "src/qtquick/riveqsgrhirendernode.h"
+#else
+#  include "src/qtquick/riveqsgopenglrendernode.h"
+#endif
 #include "src/qtquick/riveqsgsoftwarerendernode.h"
 
 #include <QSGRendererInterface>
 #include <QSGRenderNode>
 #include <QQmlEngine>
 #include <QQuickWindow>
+#include <QFile>
 
 #include <rive/node.hpp>
 #include <rive/shapes/clipping_shape.hpp>
@@ -53,6 +41,13 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
   setFlag(QQuickItem::ItemHasContents, true);
   setAcceptedMouseButtons(Qt::AllButtons);
 
+  // we require a window to know the render backend and setup the correct
+  // factory
+  connect(this, &RiveQtQuickItem::windowChanged, this, [this]() {
+    if (m_loadingStatus == LoadingStatus::Loading) {
+      loadRiveFile(m_fileSource);
+    }
+  });
   // TODO: 1) shall we make this Interval match the FPS of the current selected animation
   // TODO: 2) we may want to move this into the render thread to allow the render thread control over the timer, the timer itself only
   // triggers Updates
@@ -103,7 +98,7 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 {
   QQuickWindow *currentWindow = window();
 
-  RiveQSGRenderNode *node = static_cast<RiveQSGRenderNode *>(oldNode);
+  node = static_cast<RiveQSGRenderNode *>(oldNode);
 
   if (m_scheduleArtboardChange) {
     m_currentArtboardInstance = m_riveFile->artboardAt(m_currentArtboardIndex);
@@ -120,7 +115,6 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     if (node) {
       node->updateArtboardInstance(m_currentArtboardInstance.get());
     }
-
     m_scheduleArtboardChange = false;
   }
 
@@ -132,13 +126,21 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
   if (!node && m_currentArtboardInstance) {
     switch (currentWindow->rendererInterface()->graphicsApi()) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    case QSGRendererInterface::GraphicsApi::OpenGLRhi:
+    case QSGRendererInterface::GraphicsApi::MetalRhi:
+    case QSGRendererInterface::GraphicsApi::VulkanRhi:
+    case QSGRendererInterface::GraphicsApi::Direct3D11Rhi: {
+      node = new RiveQSGRHIRenderNode(m_currentArtboardInstance.get(), this);
+      break;
+    }
+#else
     case QSGRendererInterface::GraphicsApi::OpenGL:
-      m_riveQtFactory.setRenderType(RiveQtFactory::RiveQtRenderType::QOpenGLRenderer);
       node = new RiveQSGOpenGLRenderNode(m_currentArtboardInstance.get(), this);
       break;
+#endif
     case QSGRendererInterface::GraphicsApi::Software:
     default:
-      m_riveQtFactory.setRenderType(RiveQtFactory::RiveQtRenderType::QPainterRenderer);
       node = new RiveQSGSoftwareRenderNode(currentWindow, m_currentArtboardInstance.get(), this);
     }
   }
@@ -165,10 +167,25 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
   if (node) {
     node->markDirty(QSGNode::DirtyForceUpdate);
   }
+  if (node && m_geometryChanged) {
+    node->setRect(QRectF(x(), y(), width(), height()));
+    m_geometryChanged = false;
+  }
+
   this->update();
 
   return node;
 }
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+void RiveQtQuickItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+  m_geometryChanged = true;
+
+  update();
+  QQuickItem::geometryChange(newGeometry, oldGeometry);
+}
+#endif
 
 void RiveQtQuickItem::mousePressEvent(QMouseEvent *event)
 {
@@ -196,6 +213,8 @@ void RiveQtQuickItem::setFileSource(const QString &source)
 
     // Load the Rive file when the fileSource is set
     loadRiveFile(source);
+    m_loadingStatus = Loading;
+    emit loadingStatusChanged();
   }
 }
 
@@ -205,8 +224,14 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
     return;
   }
 
-  m_loadingStatus = Loading;
-  emit loadingStatusChanged();
+  QQuickWindow *currentWindow = window();
+
+  if (!currentWindow) {
+    return;
+  }
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+  connect(currentWindow, &QQuickWindow::beforeFrameBegin, this, &RiveQtQuickItem::renderOffscreen, Qt::ConnectionType::DirectConnection);
+#endif
 
   QFile file(source);
 
@@ -215,6 +240,24 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
     m_loadingStatus = Error;
     emit loadingStatusChanged();
     return;
+  }
+
+  switch (currentWindow->rendererInterface()->graphicsApi()) {
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+  case QSGRendererInterface::GraphicsApi::Direct3D11Rhi:
+  case QSGRendererInterface::GraphicsApi::OpenGLRhi:
+  case QSGRendererInterface::GraphicsApi::MetalRhi:
+  case QSGRendererInterface::GraphicsApi::VulkanRhi:
+    m_riveQtFactory.setRenderType(RiveQtFactory::RiveQtRenderType::RHIRenderer);
+#else
+  case QSGRendererInterface::GraphicsApi::OpenGL:
+    m_riveQtFactory.setRenderType(RiveQtFactory::RiveQtRenderType::QOpenGLRenderer);
+    break;
+#endif
+  case QSGRendererInterface::GraphicsApi::Software:
+  default:
+    m_riveQtFactory.setRenderType(RiveQtFactory::RiveQtRenderType::QPainterRenderer);
   }
 
   QByteArray fileData = file.readAll();
@@ -228,6 +271,7 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
     qDebug("Successfully imported Rive file.");
     m_loadingStatus = Loaded;
 
+    m_artboardInfoList.clear();
     // Get info about the artboards
     for (size_t i = 0; i < m_riveFile->artboardCount(); i++) {
       const auto artBoard = m_riveFile->artboard(i);
@@ -236,10 +280,9 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
         ArtBoardInfo info;
         info.id = i;
         info.name = QString::fromStdString(m_riveFile->artboardNameAt(i));
-        m_artboards.append(info);
+        m_artboardInfoList.append(info);
       }
     }
-
     emit artboardsChanged();
 
     // todo allow to preselect the artboard and statemachine and animation at load
@@ -304,6 +347,15 @@ void RiveQtQuickItem::updateStateMachines()
   }
   emit stateMachinesChanged();
 }
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+void RiveQtQuickItem::renderOffscreen()
+{
+  if (node) {
+
+    node->renderOffscreen();
+  }
+}
+#endif
 
 bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type)
 {
@@ -362,14 +414,14 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
   return false;
 }
 
-const QList<AnimationInfo> &RiveQtQuickItem::animations() const
+const QVector<AnimationInfo> &RiveQtQuickItem::animations() const
 {
   return m_animationList;
 }
 
-const QList<ArtBoardInfo> &RiveQtQuickItem::artboards() const
+const QVector<ArtBoardInfo> &RiveQtQuickItem::artboards() const
 {
-  return m_artboards;
+  return m_artboardInfoList;
 }
 
 int RiveQtQuickItem::currentArtboardIndex() const

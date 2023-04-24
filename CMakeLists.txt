@@ -1,25 +1,8 @@
 #[[
-  MIT License
+  SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
+  SPDX-FileCopyrightText: 2023 basysKom GmbH
 
-  Copyright (C) 2023 by Jeremias Bosch
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-  SOFTWARE.
+  SPDX-License-Identifier: LGPL-3.0-or-later
 ]]
 
 cmake_minimum_required(VERSION 3.14)
@@ -42,8 +25,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find Qt package with a minimum version of 5.15.2 and not 6
-find_package(Qt5 5.15 COMPONENTS Core Gui Quick OpenGL REQUIRED)
+# Find Qt package
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Qml Quick OpenGL )
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Qml Gui Quick OpenGL)
 
 # Set the project sources
 set(PROJECT_SOURCES
@@ -73,13 +57,28 @@ set(PROJECT_SOURCES
     shader.qrc
 )
 
+if (${QT_VERSION_MAJOR} EQUAL 6)
+    set(QT6_PROJECT_SOURCES
+    #qt6
+    src/qtquick/rhi/texturetargetnode.h
+    src/qtquick/rhi/texturetargetnode.cpp
+    src/qtquick/riveqsgrhirendernode.h
+    src/qtquick/riveqsgrhirendernode.cpp
+    src/renderer/riveqtrhirenderer.h
+    src/renderer/riveqtrhirenderer.cpp
+)
+endif()
+
 # Add rive-cpp dependency if required
 if(${RQQRP_DOWNLOAD_BUILD_DEPENDENCIES})
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/rive/cmake)
 endif()
 
-# Create the plugin as a shared library
-add_library(${PROJECT_NAME} SHARED ${PROJECT_SOURCES})
+if (${QT_VERSION_MAJOR} EQUAL 6)
+    add_library(${PROJECT_NAME} SHARED ${PROJECT_SOURCES} ${QT6_PROJECT_SOURCES})
+else()
+    add_library(${PROJECT_NAME} SHARED ${PROJECT_SOURCES})
+endif()
 
 # Set compile definitions for debug configurations
 target_compile_definitions(${PROJECT_NAME}
@@ -87,17 +86,25 @@ target_compile_definitions(${PROJECT_NAME}
 
 # Link the plugin with required libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
-  Qt5::Core
-  Qt5::CorePrivate
-  Qt5::Quick
-  Qt5::Gui
-  Qt5::GuiPrivate
-  Qt5::OpenGL
+  Qt${QT_VERSION_MAJOR}::Core
+  Qt${QT_VERSION_MAJOR}::CorePrivate
+  Qt${QT_VERSION_MAJOR}::Quick
+  Qt${QT_VERSION_MAJOR}::Gui
+  Qt${QT_VERSION_MAJOR}::GuiPrivate
+  Qt${QT_VERSION_MAJOR}::OpenGL
+  Qt${QT_VERSION_MAJOR}::Qml
+  Qt${QT_VERSION_MAJOR}::QuickPrivate
   rive_cpp
 )
 
 # Include necessary directories
+if (${QT_VERSION_MAJOR} EQUAL 5)
 include_directories(${Qt5Gui_PRIVATE_INCLUDE_DIRS} ${Qt5Core_PRIVATE_INCLUDE_DIRS} "src/renderer")
+else()
+include_directories(${Qt6Gui_PRIVATE_INCLUDE_DIRS} ${Qt6Core_PRIVATE_INCLUDE_DIRS} "src/renderer")
+endif()
+
+include_directories(${Qt${QT_VERSION_MAJOR}Gui_PRIVATE_INCLUDE_DIRS})
 
 # Set the binary output directory for the plugin
 set(QML_BINARY_DIR "${CMAKE_BINARY_DIR}/binary/" CACHE PATH "Binary directory for QML plugins")
@@ -132,4 +139,32 @@ if(RQQRP_BUILD_EXAMPLES)
             COMMENT "Deploying ${PROJECT_NAME} to ${EXAMPLES_BINARY_DIR}"
         )
     endif()
+endif()
+
+if (${QT_VERSION_MAJOR} EQUAL 6)
+find_package(Qt6 COMPONENTS ShaderTools)
+qt6_add_shaders(${PROJECT_NAME} "graph-shaders"
+  BATCHABLE
+  PRECOMPILE
+  OPTIMIZED
+  PREFIX
+  "/"
+  FILES
+  "shaders/qt6/drawRiveTextureNode.frag"
+  "shaders/qt6/drawRiveTextureNode.vert"
+  "shaders/qt6/finalDraw.frag"
+  "shaders/qt6/finalDraw.vert"
+  "shaders/qt6/blendRiveTextureNode.frag"
+  "shaders/qt6/blendRiveTextureNode.vert"
+  )
+
+set(APP_RESOURCES
+    "shaders.qrc"
+    "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/drawRiveTextureNode.vert.qsb"
+    "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/drawRiveTextureNode.frag.qsb"
+    "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/finalDraw.vert.qsb"
+    "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/finalDraw.frag.qsb"
+    "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/blendRiveTextureNode.vert.qsb"
+    "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/blendRiveTextureNode.frag.qsb"
+)
 endif()

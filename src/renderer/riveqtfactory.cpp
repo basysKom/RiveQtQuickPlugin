@@ -1,29 +1,18 @@
-/*
- * MIT License
- *
- * Copyright (C) 2023 by Jeremias Bosch
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+
+// SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
+// SPDX-FileCopyrightText: 2023 basysKom GmbH
+//
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "riveqtfactory.h"
 #include "riveqtfont.h"
+#include "riveqtpainterrenderer.h"
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#  include "riveqtrhirenderer.h"
+#else
+#  include "riveqtopenglrenderer.h"
+#endif
 
 rive::rcp<rive::RenderBuffer> RiveQtFactory::makeBufferU16(rive::Span<const uint16_t> data)
 {
@@ -65,10 +54,17 @@ rive::rcp<rive::RenderShader> RiveQtFactory::makeRadialGradient(float centerX, f
 
 std::unique_ptr<rive::RenderPath> RiveQtFactory::makeRenderPath(rive::RawPath &rawPath, rive::FillRule fillRule)
 {
-  if (m_renderType == RiveQtRenderType::QOpenGLRenderer) {
+  switch (m_renderType) {
+  case RiveQtRenderType::QOpenGLRenderer:
     return std::make_unique<RiveQtOpenGLPath>(rawPath, fillRule);
-  } else {
+  case RiveQtRenderType::QPainterRenderer:
     return std::make_unique<RiveQtPainterPath>(rawPath, fillRule);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+  case RiveQtRenderType::RHIRenderer:
+    return std::make_unique<RiveQtRhiGLPath>(rawPath, fillRule);
+#endif
+  case RiveQtRenderType::None:
+    return std::make_unique<RiveQtPainterPath>(rawPath, fillRule); // TODO Add Empty Path
   }
 }
 
@@ -79,6 +75,10 @@ std::unique_ptr<rive::RenderPath> RiveQtFactory::makeEmptyRenderPath()
     return std::make_unique<RiveQtOpenGLPath>();
   case RiveQtRenderType::QPainterRenderer:
     return std::make_unique<RiveQtPainterPath>();
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+  case RiveQtRenderType::RHIRenderer:
+    return std::make_unique<RiveQtRhiGLPath>();
+#endif
   case RiveQtRenderType::None:
     return std::make_unique<RiveQtPainterPath>(); // TODO Add Empty Path
   }
@@ -97,7 +97,6 @@ std::unique_ptr<rive::RenderImage> RiveQtFactory::decodeImage(rive::Span<const u
   if (image.isNull()) {
     return nullptr;
   }
-
   return std::make_unique<RiveQtImage>(image);
 }
 
