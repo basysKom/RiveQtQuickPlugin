@@ -81,4 +81,4 @@ Contributions are welcome! If you encounter any issues or would like to request 
 
 ## License
 
-This project is released under the MIT License.
+This project is released under the LGPLv3.0-or-later License.
