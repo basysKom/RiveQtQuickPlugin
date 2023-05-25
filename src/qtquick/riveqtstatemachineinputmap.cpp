@@ -134,6 +134,4 @@ void RiveQtStateMachineInputMap::onInputValueChanged(const QString &key, const Q
   default:
     return;
   }
-
-  m_dirty = true;
 }
