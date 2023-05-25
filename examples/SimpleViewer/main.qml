@@ -127,7 +127,7 @@ ApplicationWindow {
 
                 Layout.minimumHeight: 500
 
-                fileSource: ":/bullet_man.riv"
+                fileSource: ":/juice.riv"
 
                 currentArtboardIndex: 0
                 currentStateMachineIndex: 0

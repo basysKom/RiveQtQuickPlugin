@@ -18,7 +18,7 @@ layout(binding = 1) uniform sampler2D u_texture_src;
 layout(binding = 2) uniform sampler2D u_texture_dest;
 
 //ok
-vec4 overlay(vec4 destColor, vec4 srcColor) {
+vec4 overlay(vec4 srcColor, vec4 destColor) {
     float ra = (destColor.r < 0.5) ? (2.0 * destColor.r * srcColor.r) : (1.0 - 2.0 * (1.0 - destColor.r) * (1.0 - srcColor.r));
     float ga = (destColor.g < 0.5) ? (2.0 * destColor.g * srcColor.g) : (1.0 - 2.0 * (1.0 - destColor.g) * (1.0 - srcColor.g));
     float ba = (destColor.b < 0.5) ? (2.0 * destColor.b * srcColor.b) : (1.0 - 2.0 * (1.0 - destColor.b) * (1.0 - srcColor.b));
@@ -220,8 +220,6 @@ vec4 blend(vec4 srcColor, vec4 destColor, int blendMode) {
         blendedColor = srcColor;
     } else if (blendMode == 14) {
         blendedColor = screen(srcColor, destColor);
-    } else if (blendMode == 15) { // 15 corresponds to the overlay blend mode
-        blendedColor = overlay(srcColor, destColor);
     } else if (blendMode == 15) { // 15 corresponds to the overlay blend mode
         blendedColor = overlay(srcColor, destColor);
     } else if (blendMode == 18) { // 18 corresponds to the color dodge blend mode

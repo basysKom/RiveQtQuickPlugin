@@ -1,7 +1,8 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
-        <file>bullet_man.riv</file>
+        <file>juice.riv</file>
         <file>water-bar-demo.riv</file>
+        <file>3507-7424-naridon-oni-fan-art.riv</file>
     </qresource>
 </RCC>

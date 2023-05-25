@@ -39,7 +39,7 @@ public:
 
   void setQPainterPath(QPainterPath path);
   QPainterPath toQPainterPath() const { return m_path; }
-  QPainterPath toQPainterPaths();
+  QPainterPath toQPainterPaths(const QMatrix4x4 &t);
 
   QVector<QVector<QVector2D>> toVertices() const;
   QVector<QVector<QVector2D>> toVerticesLine(const QPen &pen);
@@ -78,6 +78,7 @@ struct RhiRenderState
   QMatrix4x4 transform;
   float opacity { 1.0 };
   RiveQtRhiGLPath clipPath;
+  QVector<QVector<QVector2D>> clippingGeometry;
 };
 
 class RiveQtRhiRenderer : public rive::Renderer

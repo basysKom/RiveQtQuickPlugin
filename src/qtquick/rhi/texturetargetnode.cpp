@@ -31,7 +31,6 @@ TextureTargetNode::TextureTargetNode(QQuickItem *item, QRhiTexture *displayBuffe
   file.open(QFile::ReadOnly);
   m_pathShader.append(QRhiShaderStage(QRhiShaderStage::Fragment, QShader::fromSerialized(file.readAll())));
 
-  // only setup when advanced blending is needed?
   file.close();
   file.setFileName(":/shaders/qt6/blendRiveTextureNode.vert.qsb");
   file.open(QFile::ReadOnly);
@@ -52,6 +51,8 @@ TextureTargetNode::TextureTargetNode(QQuickItem *item, QRhiTexture *displayBuffe
   m_blendVertices.append(QVector2D(viewPortRect.x(), viewPortRect.y() + viewPortRect.height()));
   m_blendVertices.append(QVector2D(viewPortRect.x() + viewPortRect.width(), viewPortRect.y()));
   m_blendVertices.append(QVector2D(viewPortRect.x() + viewPortRect.width(), viewPortRect.y() + viewPortRect.height()));
+
+  m_bounds = viewPortRect;
 
   auto *renderInterface = m_window->rendererInterface();
   auto *rhi = static_cast<QRhi *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiResource));
@@ -165,6 +166,7 @@ void TextureTargetNode::updateViewport(const QRectF &bounds, QRhiTexture *displa
   m_blendVertices.append(QVector2D(bounds.x() + bounds.width(), bounds.y()));
   m_blendVertices.append(QVector2D(bounds.x() + bounds.width(), bounds.y() + bounds.height()));
 
+  m_bounds = bounds;
   m_blendVerticesDirty = true;
 }
 
@@ -215,7 +217,7 @@ void TextureTargetNode::prepareRender(QRhiCommandBuffer *cb)
   // we create a stencil buffer, even if clipping is not on
   // this my change later, but note that we would need to recreate all depending elements such as the RenderTargetDescription
   if (!m_stencilClippingBuffer) {
-    m_stencilClippingBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, QSize(m_item->width(), m_item->height()), 1);
+    m_stencilClippingBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, QSize(m_bounds.width(), m_bounds.height()), 1);
     m_stencilClippingBuffer->create();
     m_cleanupList.append(m_stencilClippingBuffer);
   }
@@ -228,7 +230,7 @@ void TextureTargetNode::prepareRender(QRhiCommandBuffer *cb)
       m_displayBufferTarget = rhi->newTextureRenderTarget(desc, QRhiTextureRenderTarget::PreserveColorContents);
     } else {
       if (!m_internalDisplayBufferTexture) {
-        m_internalDisplayBufferTexture = rhi->newTexture(QRhiTexture::RGBA8, QSize(m_item->width(), m_item->height()), 1,
+        m_internalDisplayBufferTexture = rhi->newTexture(QRhiTexture::RGBA8, QSize(m_bounds.width(), m_bounds.height()), 1,
                                                          QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource);
         m_internalDisplayBufferTexture->create();
         m_cleanupList.append(m_internalDisplayBufferTexture);
@@ -533,15 +535,9 @@ void TextureTargetNode::render(QRhiCommandBuffer *cb)
 
 void TextureTargetNode::renderBlend(QRhiCommandBuffer *cb)
 {
-  QSGRendererInterface *renderInterface = m_window->rendererInterface();
-
-  if (!cb) {
-    QRhiSwapChain *swapChain =
-      static_cast<QRhiSwapChain *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiSwapchainResource));
-    Q_ASSERT(swapChain);
-    cb = swapChain->currentFrameCommandBuffer();
-  }
   Q_ASSERT(cb);
+
+  QSGRendererInterface *renderInterface = m_window->rendererInterface();
   QRhi *rhi = static_cast<QRhi *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiResource));
   Q_ASSERT(rhi);
 
@@ -557,7 +553,7 @@ void TextureTargetNode::renderBlend(QRhiCommandBuffer *cb)
     }
 
     if (!m_blendSrc) {
-      m_blendSrc = rhi->newTexture(QRhiTexture::RGBA8, QSize(m_item->width(), m_item->height()), 1,
+      m_blendSrc = rhi->newTexture(QRhiTexture::RGBA8, QSize(m_bounds.width(), m_bounds.height()), 1,
                                    QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource);
       m_blendSrc->create();
       m_cleanupList.append(m_blendSrc);
@@ -565,7 +561,7 @@ void TextureTargetNode::renderBlend(QRhiCommandBuffer *cb)
     m_blendResourceUpdates->copyTexture(m_blendSrc, m_displayBuffer);
 
     if (!m_blendDest) {
-      m_blendDest = rhi->newTexture(QRhiTexture::RGBA8, QSize(m_item->width(), m_item->height()), 1,
+      m_blendDest = rhi->newTexture(QRhiTexture::RGBA8, QSize(m_bounds.width(), m_bounds.height()), 1,
                                     QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource);
       m_blendDest->create();
       m_cleanupList.append(m_blendDest);
@@ -579,6 +575,7 @@ void TextureTargetNode::renderBlend(QRhiCommandBuffer *cb)
       QRhiColorAttachment colorAttachment(m_displayBuffer);
 
       QRhiTextureRenderTargetDescription desc(colorAttachment);
+      desc.setDepthStencilBuffer(m_stencilClippingBuffer);
       m_blendTextureRenderTarget = rhi->newTextureRenderTarget(desc);
 
       m_cleanupList.append(m_blendTextureRenderTarget);
@@ -651,7 +648,7 @@ void TextureTargetNode::renderBlend(QRhiCommandBuffer *cb)
       // order to work around this.
       //
       m_blendPipeLine->setFrontFace(rhi->isYUpInFramebuffer() ? QRhiGraphicsPipeline::CW : QRhiGraphicsPipeline::CCW);
-      m_blendPipeLine->setCullMode(QRhiGraphicsPipeline::None);
+      m_blendPipeLine->setCullMode(QRhiGraphicsPipeline::Back);
       m_blendPipeLine->setTopology(QRhiGraphicsPipeline::TriangleStrip);
 
       m_blendPipeLine->setStencilTest(false);
@@ -675,7 +672,9 @@ void TextureTargetNode::renderBlend(QRhiCommandBuffer *cb)
     }
 
     if (m_shaderBlending) {
-      m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 0, 64, (*m_projectionMatrix).constData());
+      QMatrix4x4 mvp = (*m_projectionMatrix);
+      mvp.translate(-m_bounds.x(), -m_bounds.y());
+      m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 0, 64, mvp.constData());
       m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 64, 4, &m_blendMode);
     }
 

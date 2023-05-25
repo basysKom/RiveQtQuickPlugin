@@ -96,27 +96,25 @@ void RiveQtRhiGLPath::setQPainterPath(QPainterPath path)
   m_path = path;
 }
 
-QPainterPath RiveQtRhiGLPath::toQPainterPaths()
+QPainterPath RiveQtRhiGLPath::toQPainterPaths(const QMatrix4x4 &t)
 {
   QPainterPath m_fullPath;
 
+  qreal tm11 = t(0, 0);
+  qreal tm12 = t(0, 1);
+  qreal tm21 = t(1, 0);
+  qreal tm22 = t(1, 1);
+  qreal tdx = t(0, 3);
+  qreal tdy = t(1, 3);
+  QTransform transformT(tm11, tm12, tm21, tm22, tdx, tdy);
   if (!m_path.isEmpty()) {
     m_fullPath.addPath(m_path);
   }
 
   for (auto &subPath : m_subPaths) {
-    const auto &path = subPath.path()->toQPainterPaths();
+    const auto &path = subPath.path()->toQPainterPaths(subPath.transform());
     if (!path.isEmpty()) {
-      qreal m11 = subPath.transform()(0, 0);
-      qreal m12 = subPath.transform()(0, 1);
-      qreal m21 = subPath.transform()(1, 0);
-      qreal m22 = subPath.transform()(1, 1);
-      qreal dx = subPath.transform()(0, 3);
-      qreal dy = subPath.transform()(1, 3);
-
-      QTransform transform(m11, m12, m21, m22, dx, dy);
-
-      m_fullPath.addPath(path * transform);
+      m_fullPath.addPath(path);
     }
   }
   return m_fullPath;
@@ -525,16 +523,14 @@ void RiveQtRhiRenderer::drawPath(rive::RenderPath *path, rive::RenderPaint *pain
     node->setGradient(qtPaint->brush().gradient());
   }
 
-  QVector<QVector<QVector2D>> c = m_rhiRenderStack.back().clipPath.toVertices();
-
 #if 0 // this allows to draw the clipping area which it usefull for debugging :)
-  TextureTargetNode *drawClipping = getNode();
+  TextureTargetNode *drawClipping = getRiveDrawTargetNode();
   drawClipping->setOpacity(currentOpacity()); // inherit the opacity from the parent
-  drawClipping->setColor(QColor(255, 0, 0, 50));
-  drawClipping->updateGeometry(c, QMatrix4x4());
+  drawClipping->setColor(QColor(255, 0, 0, 5));
+  drawClipping->updateGeometry(m_rhiRenderStack.back().clippingGeometry, QMatrix4x4());
 #endif
 
-  node->updateClippingGeometry(c);
+  node->updateClippingGeometry(m_rhiRenderStack.back().clippingGeometry);
   node->updateGeometry(pathData, transformMatrix());
 }
 
@@ -544,18 +540,31 @@ void RiveQtRhiRenderer::clipPath(rive::RenderPath *path)
   // though there are very likely to be more effective approaches
   // TODO: make this less expensive
 
+  // RiveQtRhiGLPath *qtPath = static_cast<RiveQtRhiGLPath *>(path);
+  //  //RiveQtRhiGLPath &clipPath = m_rhiRenderStack.back().clipPath;
+
+  //  //QPainterPath currentClipPath = clipPath.toQPainterPath();
+  //  QPainterPath qPainterPath = qtPath->toQPainterPaths(transformMatrix());
+
+  //  if (!currentClipPath.isEmpty()) {
+  //    clipPath.setQPainterPath(currentClipPath.intersected(qPainterPath));
+  //  } else {
+  //    clipPath.setQPainterPath(qPainterPath);
+  //  }
+  //  clipPath.generateVerticies();
+
   RiveQtRhiGLPath *qtPath = static_cast<RiveQtRhiGLPath *>(path);
-  RiveQtRhiGLPath &clipPath = m_rhiRenderStack.back().clipPath;
+  auto c = qtPath->toVertices();
 
-  QPainterPath currentClipPath = clipPath.toQPainterPath();
-  QPainterPath qPainterPath = qtPath->toQPainterPaths();
+  //  for (auto &path : c) {
+  //    for (auto &point : path) {
+  //      QVector4D vec4(point, 0.0f, 1.0f);
+  //      vec4 = transformMatrix() * vec4;
+  //      point = vec4.toVector2D();
+  //    }
+  //  }
 
-  if (!currentClipPath.isEmpty()) {
-    clipPath.setQPainterPath(currentClipPath.intersected(qPainterPath));
-  } else {
-    clipPath.setQPainterPath(qPainterPath);
-  }
-  clipPath.generateVerticies();
+  m_rhiRenderStack.back().clippingGeometry = c;
 }
 
 void RiveQtRhiRenderer::drawImage(const rive::RenderImage *image, rive::BlendMode blendMode, float opacity)
@@ -570,16 +579,14 @@ void RiveQtRhiRenderer::drawImage(const rive::RenderImage *image, rive::BlendMod
                    nullptr, nullptr, nullptr,
                    transformMatrix()); //
 
-  QVector<QVector<QVector2D>> c = m_rhiRenderStack.back().clipPath.toVertices();
-
 #if 0 // this allows to draw the clipping area which it usefull for debugging :)
   TextureTargetNode *drawClipping = getNode();
   drawClipping->setOpacity(currentOpacity()); // inherit the opacity from the parent
   drawClipping->setColor(QColor(255, 0, 0, 50));
-  drawClipping->updateGeometry(c, QMatrix4x4());
+  drawClipping->updateGeometry(m_rhiRenderStack.back().clippingGeometry, QMatrix4x4());
 #endif
 
-  node->updateClippingGeometry(c);
+  node->updateClippingGeometry(m_rhiRenderStack.back().clippingGeometry);
 }
 
 void RiveQtRhiRenderer::drawImageMesh(const rive::RenderImage *image, rive::rcp<rive::RenderBuffer> vertices_f32,
@@ -599,16 +606,14 @@ void RiveQtRhiRenderer::drawImageMesh(const rive::RenderImage *image, rive::rcp<
                    static_cast<RiveQtBufferU16 *>(indices_u16.get()),
                    transformMatrix()); //
 
-  QVector<QVector<QVector2D>> c = m_rhiRenderStack.back().clipPath.toVertices();
-
 #if 0 // this allows to draw the clipping area which it usefull for debugging :)
   TextureTargetNode *drawClipping = getNode();
   drawClipping->setOpacity(currentOpacity()); // inherit the opacity from the parent
   drawClipping->setColor(QColor(255, 0, 0, 50));
-  drawClipping->updateGeometry(c, QMatrix4x4());
+  drawClipping->updateGeometry(m_rhiRenderStack.back().clippingGeometry, QMatrix4x4());
 #endif
 
-  node->updateClippingGeometry(c);
+  node->updateClippingGeometry(m_rhiRenderStack.back().clippingGeometry);
 }
 
 void RiveQtRhiRenderer::render(QRhiCommandBuffer *cb)

@@ -177,4 +177,6 @@ private:
   const QMatrix4x4 *m_combinedMatrix;
   const QMatrix4x4 *m_projectionMatrix;
   QMatrix4x4 m_transform;
+
+  QRectF m_bounds;
 };
