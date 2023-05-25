@@ -280,9 +280,10 @@ void TextureTargetNode::prepareRender(QRhiCommandBuffer *cb)
     QRhiGraphicsPipeline::StencilOpState stencilOpState = { QRhiGraphicsPipeline::Keep, QRhiGraphicsPipeline::Keep,
                                                             QRhiGraphicsPipeline::Replace, QRhiGraphicsPipeline::Always };
     m_clipPipeLine->setStencilFront(stencilOpState);
+    m_clipPipeLine->setStencilBack(stencilOpState);
+    m_clipPipeLine->setStencilTest(true);
     m_clipPipeLine->setCullMode(QRhiGraphicsPipeline::None);
     m_clipPipeLine->setTopology(QRhiGraphicsPipeline::Triangles);
-    m_clipPipeLine->setStencilTest(true);
     m_clipPipeLine->setVertexInputLayout(inputLayout);
     m_clipPipeLine->setRenderPassDescriptor(m_displayBufferTargetDescriptor);
 
@@ -481,8 +482,8 @@ void TextureTargetNode::render(QRhiCommandBuffer *cb)
   Q_ASSERT(cb);
 
   if (m_recycled) {
-    cb->beginPass(m_displayBufferTarget, QColor(0, 0, 0, 0), { 1.0f, 0 });
-    cb->endPass();
+    //    cb->beginPass(m_displayBufferTarget, QColor(0, 0, 0, 0), { 1.0f, 0 });
+    //    cb->endPass();
   } else {
     prepareRender(cb);
 
@@ -575,7 +576,7 @@ void TextureTargetNode::renderBlend(QRhiCommandBuffer *cb)
       QRhiColorAttachment colorAttachment(m_displayBuffer);
 
       QRhiTextureRenderTargetDescription desc(colorAttachment);
-      desc.setDepthStencilBuffer(m_stencilClippingBuffer);
+      // desc.setDepthStencilBuffer(m_stencilClippingBuffer);
       m_blendTextureRenderTarget = rhi->newTextureRenderTarget(desc);
 
       m_cleanupList.append(m_blendTextureRenderTarget);
@@ -679,8 +680,9 @@ void TextureTargetNode::renderBlend(QRhiCommandBuffer *cb)
     }
 
     cb->beginPass(m_blendTextureRenderTarget, QColor(0, 0, 0, 0), { 1.0f, 0 }, m_blendResourceUpdates);
-    cb->setGraphicsPipeline(m_blendPipeLine);
     QSize blendRenderTargetSize = m_blendTextureRenderTarget->pixelSize();
+
+    cb->setGraphicsPipeline(m_blendPipeLine);
     cb->setViewport(QRhiViewport(0, 0, blendRenderTargetSize.width(), blendRenderTargetSize.height()));
     cb->setShaderResources(m_blendResourceBindings);
     QRhiCommandBuffer::VertexInput blendVertexBindings[] = { { m_blendVertexBuffer, 0 }, { m_blendTexCoordBuffer, 0 } };

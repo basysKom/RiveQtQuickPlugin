@@ -20,6 +20,8 @@ public:
 
   Q_INVOKABLE void activateTrigger(const QString &trigger);
 
+  bool hasDirtyStateMachine() const { return m_dirty; }
+
 public slots:
   void updateValues();
 
@@ -28,4 +30,5 @@ private slots:
 
 private:
   rive::StateMachineInstance *m_stateMachineInstance;
+  bool m_dirty { false };
 };

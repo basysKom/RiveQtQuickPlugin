@@ -15,159 +15,482 @@ ApplicationWindow {
     height: 1024
     color: "#222222"
 
-    RowLayout {
-        anchors.fill: parent
+    TabBar {
+        id: bar
+        width: parent.width
+        TabButton {
+            text: qsTr("Home")
+        }
+        TabButton {
+            text: qsTr("Discover")
+        }
+        TabButton {
+            text: qsTr("Activity")
+        }
+        TabButton {
+            text: qsTr("Jelly")
+        }
+        TabButton {
+            text: qsTr("Icons")
+        }
+    }
 
-        ScrollView {
-            Layout.fillHeight: true
-            Layout.preferredWidth: 200
-            clip: true
-            background: Rectangle { color: "white" }
+    StackLayout {
+        anchors.top: bar.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
 
-            Column {
-                id: columnArtboards
+        currentIndex: bar.currentIndex
+        Item {
+            id: homeTab
+
+            RowLayout {
                 anchors.fill: parent
-                spacing: 16
-                padding: 16
 
-                Repeater {
-                    model: bulletMan.artboards
+                ScrollView {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 200
+                    clip: true
+                    background: Rectangle { color: "white" }
 
-                    delegate: Button {
-                        text: "id: " + modelData.id + "Name: " + modelData.name
+                    Column {
+                        id: columnArtboards
+                        anchors.fill: parent
+                        spacing: 16
+                        padding: 16
 
-                        onClicked: bulletMan.currentArtboardIndex = modelData.id
+                        Repeater {
+                            model: bulletMan.artboards
+
+                            delegate: Button {
+                                text: "id: " + modelData.id + "Name: " + modelData.name
+
+                                onClicked: bulletMan.currentArtboardIndex = modelData.id
+                            }
+                        }
+                    }
+                }
+
+                ScrollView {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 200
+                    clip: true
+                    background: Rectangle { color: "white" }
+
+                    Column {
+                        id: columnAnimations
+                        anchors.fill: parent
+                        spacing: 16
+                        padding: 16
+
+                        Repeater {
+                            model: bulletMan.animations
+
+                            delegate: Button {
+                                text: "id: " + modelData.id + "Name: " + modelData.name + ", Duration: " + modelData.duration + ", FPS: " + modelData.fps
+
+                                onClicked: bulletMan.triggerAnimation(modelData.id)
+                            }
+                        }
+                    }
+                }
+
+                ScrollView {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 200
+
+                    clip: true
+                    background: Rectangle { color: "white" }
+
+                    Column {
+                        id: columnStateMachines
+                        anchors.fill: parent
+                        spacing: 16
+                        padding: 16
+
+                        Repeater {
+                            model: bulletMan.stateMachines
+
+                            delegate: Button {
+                                text: "id: " + modelData.id + "Name: " + modelData.name
+                                onClicked: bulletMan.currentStateMachineIndex = modelData.id
+                            }
+                        }
+                    }
+                }
+
+                ScrollView {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 200
+
+                    clip: true
+                    background: Rectangle { color: "white" }
+
+                    Column {
+                        id: columnStateMachinesTriggers
+                        anchors.fill: parent
+                        spacing: 16
+                        padding: 16
+
+                        Repeater {
+                            model: bulletMan.stateMachineInterface ? bulletMan.stateMachineInterface.triggers : 0
+
+                            delegate: Button {
+                                text: "Trigger: " + modelData
+                                onClicked: bulletMan.stateMachineInterface.activateTrigger(modelData)
+                            }
+                        }
+                    }
+                }
+
+                RiveQtQuickItem {
+                    id: bulletMan
+
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    Layout.minimumHeight: 500
+
+                    fileSource: ":/bullet_man.riv"
+
+                    currentArtboardIndex: 0
+                    currentStateMachineIndex: 0
+
+                    onStateMachineInterfaceChanged: {
+                        if (stateMachineInterface) {
+                            console.log(Object.keys(stateMachineInterface))
+                        }
                     }
                 }
             }
         }
 
-        ScrollView {
-            Layout.fillHeight: true
-            Layout.preferredWidth: 200
-            clip: true
-            background: Rectangle { color: "white" }
+        Item {
+            id: discoverTab
 
-            Column {
-                id: columnAnimations
+            ColumnLayout {
                 anchors.fill: parent
-                spacing: 16
-                padding: 16
 
-                Repeater {
-                    model: bulletMan.animations
+                RiveQtQuickItem {
+                    id: riveItem
 
-                    delegate: Button {
-                        text: "id: " + modelData.id + "Name: " + modelData.name + ", Duration: " + modelData.duration + ", FPS: " + modelData.fps
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.minimumHeight: 500
+                    fileSource: ":/water-bar-demo.riv"
 
-                        onClicked: bulletMan.triggerAnimation(modelData.id)
+                    currentArtboardIndex: 0
+                    currentStateMachineIndex: 0
+
+                    interactive: false
+
+                    Binding {
+                        target: riveItem.stateMachineInterface
+                        property: "Level"
+                        value: slider.value
+                        when: riveItem.currentStateMachineIndex !== null
                     }
+                }
+
+                Slider {
+                    id: slider
+
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    from: 1
+                    value: 25
+                    to: 100
+                    stepSize: 0.1
                 }
             }
         }
 
-        ScrollView {
-            Layout.fillHeight: true
-            Layout.preferredWidth: 200
+        Item {
+            id: activityTab
 
-            clip: true
-            background: Rectangle { color: "white" }
-
-            Column {
-                id: columnStateMachines
+            RowLayout {
                 anchors.fill: parent
-                spacing: 16
-                padding: 16
 
-                Repeater {
-                    model: bulletMan.stateMachines
+                ScrollView {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 200
+                    clip: true
+                    background: Rectangle { color: "white" }
 
-                    delegate: Button {
-                        text: "id: " + modelData.id + "Name: " + modelData.name
-                        onClicked: bulletMan.currentStateMachineIndex = modelData.id
+                    Column {
+                        id: columnAnimations_juice
+                        anchors.fill: parent
+                        spacing: 16
+                        padding: 16
+
+                        Repeater {
+                            model: juice.animations
+
+                            delegate: Button {
+                                text: "id: " + modelData.id + "Name: " + modelData.name + ", Duration: " + modelData.duration + ", FPS: " + modelData.fps
+
+                                onClicked: juice.triggerAnimation(modelData.id)
+                            }
+                        }
                     }
+                }
+
+                RiveQtQuickItem {
+                    id: juice
+
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    Layout.minimumHeight: 500
+
+                    fileSource: ":/juice.riv"
+
+                    currentArtboardIndex: 0
+                    currentStateMachineIndex: 0
                 }
             }
         }
 
-        ScrollView {
-            Layout.fillHeight: true
-            Layout.preferredWidth: 200
+        Item {
+            id: jellyTab
 
-            clip: true
-            background: Rectangle { color: "white" }
-
-            Column {
-                id: columnStateMachinesTriggers
+            RowLayout {
                 anchors.fill: parent
-                spacing: 16
-                padding: 16
 
-                Repeater {
-                    model: bulletMan.stateMachineInterface ? bulletMan.stateMachineInterface.triggers : 0
 
-                    delegate: Button {
-                        text: "Trigger: " + modelData
-                        onClicked: bulletMan.stateMachineInterface.activateTrigger(modelData)
+                ScrollView {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 200
+                    clip: true
+                    background: Rectangle { color: "white" }
+
+                    Column {
+                        id: jelly_columnArtboards
+                        anchors.fill: parent
+                        spacing: 16
+                        padding: 16
+
+                        Repeater {
+                            model: jelly.artboards
+
+                            delegate: Button {
+                                text: "id: " + modelData.id + "Name: " + modelData.name
+
+                                onClicked: jelly.currentArtboardIndex = modelData.id
+                            }
+                        }
                     }
+                }
+
+                ScrollView {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 200
+                    clip: true
+                    background: Rectangle { color: "white" }
+
+                    Column {
+                        id: jelly_columnAnimations
+                        anchors.fill: parent
+                        spacing: 16
+                        padding: 16
+
+                        Repeater {
+                            model: jelly.animations
+
+                            delegate: Button {
+                                text: "id: " + modelData.id + "Name: " + modelData.name + ", Duration: " + modelData.duration + ", FPS: " + modelData.fps
+
+                                onClicked: jelly.triggerAnimation(modelData.id)
+                            }
+                        }
+                    }
+                }
+
+                ScrollView {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 200
+
+                    clip: true
+                    background: Rectangle { color: "white" }
+
+                    Column {
+                        id: jelly_columnStateMachines
+                        anchors.fill: parent
+                        spacing: 16
+                        padding: 16
+
+                        Repeater {
+                            model: jelly.stateMachines
+
+                            delegate: Button {
+                                text: "id: " + modelData.id + "Name: " + modelData.name
+                                onClicked: jelly.currentStateMachineIndex = modelData.id
+                            }
+                        }
+                    }
+                }
+
+                ScrollView {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 200
+
+                    clip: true
+                    background: Rectangle { color: "white" }
+
+                    Column {
+                        id: jellyTriggers
+                        anchors.fill: parent
+                        spacing: 16
+                        padding: 16
+
+                        Repeater {
+                            model: jelly.stateMachineInterface ? jelly.stateMachineInterface.triggers : 0
+
+                            delegate: Button {
+                                text: "Trigger: " + modelData
+                                onClicked: jelly.stateMachineInterface.activateTrigger(modelData)
+                            }
+                        }
+                    }
+                }
+
+                RiveQtQuickItem {
+                    id: jelly
+
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    Layout.minimumHeight: 500
+
+                    fileSource: ":/jellyfish_test.riv"
+
+                    currentArtboardIndex: 0
+                    currentStateMachineIndex: 0
                 }
             }
         }
 
-        ColumnLayout {
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-            Layout.preferredWidth: 400
+        Item {
+            id: iconsTab
 
-            RiveQtQuickItem {
-                id: bulletMan
+            RowLayout {
+                anchors.fill: parent
 
-                Layout.fillWidth: true
-                Layout.fillHeight: true
+                ScrollView {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 200
+                    clip: true
+                    background: Rectangle { color: "white" }
 
-                Layout.minimumHeight: 500
+                    Column {
+                        id: columnArtboards_iconsTab
+                        anchors.fill: parent
+                        spacing: 16
+                        padding: 16
 
-                fileSource: ":/juice.riv"
+                        Repeater {
+                            model: icons.artboards
 
-                currentArtboardIndex: 0
-                currentStateMachineIndex: 0
+                            delegate: Button {
+                                text: "id: " + modelData.id + "Name: " + modelData.name
 
-                onStateMachineInterfaceChanged: {
-                    if (stateMachineInterface) {
-                        console.log(Object.keys(stateMachineInterface))
+                                onClicked: icons.currentArtboardIndex = modelData.id
+                            }
+                        }
                     }
                 }
-            }
 
-            Slider {
-                id: slider
+                ScrollView {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 200
+                    clip: true
+                    background: Rectangle { color: "white" }
 
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                from: 1
-                value: 25
-                to: 100
-                stepSize: 0.1
-            }
+                    Column {
+                        id: columnAnimations_iconsTab
+                        anchors.fill: parent
+                        spacing: 16
+                        padding: 16
 
-            RiveQtQuickItem {
-                id: riveItem
+                        Repeater {
+                            model: icons.animations
 
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.minimumHeight: 500
-                fileSource: ":/water-bar-demo.riv"
+                            delegate: Button {
+                                text: "id: " + modelData.id + "Name: " + modelData.name + ", Duration: " + modelData.duration + ", FPS: " + modelData.fps
 
-                currentArtboardIndex: 0
-                currentStateMachineIndex: 0
+                                onClicked: icons.triggerAnimation(modelData.id)
+                            }
+                        }
+                    }
+                }
 
-                interactive: false
+                ScrollView {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 200
 
-                Binding {
-                    target: riveItem.stateMachineInterface
-                    property: "Level"
-                    value: slider.value
-                    when: riveItem.currentStateMachineIndex !== null
+                    clip: true
+                    background: Rectangle { color: "white" }
+
+                    Column {
+                        id: columnStateMachines_iconsTab
+                        anchors.fill: parent
+                        spacing: 16
+                        padding: 16
+
+                        Repeater {
+                            model: icons.stateMachines
+
+                            delegate: Button {
+                                text: "id: " + modelData.id + "Name: " + modelData.name
+                                onClicked: icons.currentStateMachineIndex = modelData.id
+                            }
+                        }
+                    }
+                }
+
+                ScrollView {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 200
+
+                    clip: true
+                    background: Rectangle { color: "white" }
+
+                    Column {
+                        id: columnStateMachinesTriggers_iconsTab
+                        anchors.fill: parent
+                        spacing: 16
+                        padding: 16
+
+                        Repeater {
+                            model: icons.stateMachineInterface ? icons.stateMachineInterface.triggers : 0
+
+                            delegate: Button {
+                                text: "Trigger: " + modelData
+                                onClicked: icons.stateMachineInterface.activateTrigger(modelData)
+                            }
+                        }
+                    }
+                }
+
+                RiveQtQuickItem {
+                    id: icons
+
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    Layout.minimumHeight: 500
+
+                    fileSource: ":/1298-2487-animated-icon-set-1-color.riv"
+
+                    currentArtboardIndex: 0
+                    currentStateMachineIndex: 0
+
+                    onStateMachineInterfaceChanged: {
+                        if (stateMachineInterface) {
+                            console.log(Object.keys(stateMachineInterface))
+                        }
+                    }
                 }
             }
         }

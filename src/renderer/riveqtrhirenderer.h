@@ -41,12 +41,13 @@ public:
   QPainterPath toQPainterPath() const { return m_path; }
   QPainterPath toQPainterPaths(const QMatrix4x4 &t);
 
-  QVector<QVector<QVector2D>> toVertices() const;
+  QVector<QVector<QVector2D>> toVertices();
   QVector<QVector<QVector2D>> toVerticesLine(const QPen &pen);
 
-  void generateVerticies();
-
 private:
+  void generateVerticies();
+  void generateOutlineVerticies();
+
   QVector<QVector2D> qpainterPathToVector2D(const QPainterPath &path);
   QVector<QVector2D> qpainterPathToOutlineVector2D(const QPainterPath &path);
   QPointF cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2, const QPointF &endPoint,
@@ -56,8 +57,11 @@ private:
   std::vector<RhiSubPath> m_subPaths;
   QVector<QVector<QVector2D>> m_pathSegmentsData;
   QVector<QVector<QVector2D>> m_pathSegmentsOutlineData;
+  QVector<QVector<QVector2D>> m_pathOutlineData;
 
   bool m_isClosed { false };
+  bool m_pathSegmentDataDirty { true };
+  bool m_pathSegmentOutlineDataDirty { true };
 };
 
 class RhiSubPath
@@ -79,6 +83,7 @@ struct RhiRenderState
   float opacity { 1.0 };
   RiveQtRhiGLPath clipPath;
   QVector<QVector<QVector2D>> clippingGeometry;
+  QVector<TextureTargetNode *> stackNodes;
 };
 
 class RiveQtRhiRenderer : public rive::Renderer

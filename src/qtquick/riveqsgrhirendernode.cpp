@@ -50,6 +50,13 @@ RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(rive::ArtboardInstance *artboardInsta
 
 RiveQSGRHIRenderNode::~RiveQSGRHIRenderNode()
 {
+  // tell my item that I'm gone.
+  if (m_item) {
+    if (m_item->m_renderNode == this) {
+      m_item->m_renderNode = nullptr;
+    }
+  }
+
   while (!m_cleanupList.empty()) {
     auto *resource = m_cleanupList.first();
     m_cleanupList.removeAll(resource);
@@ -106,7 +113,7 @@ void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
 
 void RiveQSGRHIRenderNode::renderOffscreen()
 {
-  if (!m_displayBuffer)
+  if (!m_displayBuffer || m_rect.width() == 0 || m_rect.height() == 0 || !m_item)
     return;
 
   QSGRendererInterface *renderInterface = m_window->rendererInterface();
@@ -163,6 +170,7 @@ void RiveQSGRHIRenderNode::releaseResources()
   m_pipeLine = nullptr;
   m_resourceBindings = nullptr;
   m_sampler = nullptr;
+  m_displayBuffer = nullptr;
 }
 
 QSGRenderNode::RenderingFlags RiveQSGRHIRenderNode::flags() const

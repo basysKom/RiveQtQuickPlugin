@@ -19,8 +19,11 @@
 #include "rive/artboard.hpp"
 #include "riveqtfactory.h"
 #include "riveqtstatemachineinputmap.h"
+#include "rive/listener_type.hpp"
 
 class RiveQSGRenderNode;
+
+class RiveQSGRHIRenderNode;
 
 // TODO: Move Structs in extra file
 struct AnimationInfo
@@ -148,11 +151,14 @@ protected:
   void mouseReleaseEvent(QMouseEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;
 
+  void hoverMoveEvent(QHoverEvent *event) override;
+
 private:
   void loadRiveFile(const QString &source);
   void updateAnimations();
   void updateStateMachines();
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+  friend RiveQSGRHIRenderNode;
   void renderOffscreen();
 #endif
 
@@ -188,5 +194,10 @@ private:
   qint64 m_lastUpdateTime;
   bool m_geometryChanged = true;
 
-  RiveQSGRenderNode *node { nullptr };
+  bool m_hasValidRenderNode = false;
+  float m_lastMouseX { 0 };
+  float m_lastMouseY { 0 };
+  rive::ListenerType m_listenerType { rive::ListenerType::enter };
+
+  RiveQSGRenderNode *m_renderNode { nullptr };
 };

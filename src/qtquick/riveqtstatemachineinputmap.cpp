@@ -96,6 +96,7 @@ void RiveQtStateMachineInputMap::activateTrigger(const QString &trigger)
     return;
 
   targetInput->fire();
+  m_dirty = true;
 }
 
 void RiveQtStateMachineInputMap::onInputValueChanged(const QString &key, const QVariant &value)
@@ -133,4 +134,6 @@ void RiveQtStateMachineInputMap::onInputValueChanged(const QString &key, const Q
   default:
     return;
   }
+
+  m_dirty = true;
 }

@@ -98,9 +98,15 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 {
   QQuickWindow *currentWindow = window();
 
-  node = static_cast<RiveQSGRenderNode *>(oldNode);
+  m_renderNode = static_cast<RiveQSGRenderNode *>(oldNode);
+
+  if (m_stateMachineInputMap && m_stateMachineInputMap->hasDirtyStateMachine()) {
+    m_scheduleStateMachineChange = true;
+    m_scheduleArtboardChange = true;
+  }
 
   if (m_scheduleArtboardChange) {
+    m_hasValidRenderNode = false;
     m_currentArtboardInstance = m_riveFile->artboardAt(m_currentArtboardIndex);
     if (m_currentArtboardInstance) {
       m_animationInstance = m_currentArtboardInstance->animationNamed(m_currentArtboardInstance->firstAnimation()->name());
@@ -112,8 +118,8 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     }
     emit internalArtboardChanged();
 
-    if (node) {
-      node->updateArtboardInstance(m_currentArtboardInstance.get());
+    if (m_renderNode) {
+      m_renderNode->updateArtboardInstance(m_currentArtboardInstance.get());
     }
     m_scheduleArtboardChange = false;
   }
@@ -124,14 +130,14 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     m_scheduleStateMachineChange = false;
   }
 
-  if (!node && m_currentArtboardInstance) {
+  if (!m_renderNode && m_currentArtboardInstance) {
     switch (currentWindow->rendererInterface()->graphicsApi()) {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     case QSGRendererInterface::GraphicsApi::OpenGLRhi:
     case QSGRendererInterface::GraphicsApi::MetalRhi:
     case QSGRendererInterface::GraphicsApi::VulkanRhi:
     case QSGRendererInterface::GraphicsApi::Direct3D11Rhi: {
-      node = new RiveQSGRHIRenderNode(m_currentArtboardInstance.get(), this);
+      m_renderNode = new RiveQSGRHIRenderNode(m_currentArtboardInstance.get(), this);
       break;
     }
 #else
@@ -141,7 +147,7 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 #endif
     case QSGRendererInterface::GraphicsApi::Software:
     default:
-      node = new RiveQSGSoftwareRenderNode(currentWindow, m_currentArtboardInstance.get(), this);
+      m_renderNode = new RiveQSGSoftwareRenderNode(currentWindow, m_currentArtboardInstance.get(), this);
     }
   }
 
@@ -164,17 +170,18 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     m_currentArtboardInstance->update(rive::ComponentDirt::Filthy);
   }
 
-  if (node) {
-    node->markDirty(QSGNode::DirtyForceUpdate);
+  if (m_renderNode) {
+    m_renderNode->markDirty(QSGNode::DirtyForceUpdate);
   }
-  if (node && m_geometryChanged) {
-    node->setRect(QRectF(x(), y(), width(), height()));
+  if (m_renderNode && m_geometryChanged) {
+    m_renderNode->setRect(QRectF(x(), y(), width(), height()));
     m_geometryChanged = false;
   }
 
   this->update();
 
-  return node;
+  m_hasValidRenderNode = true;
+  return m_renderNode;
 }
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -194,6 +201,12 @@ void RiveQtQuickItem::mousePressEvent(QMouseEvent *event)
 }
 
 void RiveQtQuickItem::mouseMoveEvent(QMouseEvent *event)
+{
+  hitTest(event->pos(), rive::ListenerType::move);
+  // todo: shall we tell qml about a hit and details about that?
+}
+
+void RiveQtQuickItem::hoverMoveEvent(QHoverEvent *event)
 {
   hitTest(event->pos(), rive::ListenerType::move);
   // todo: shall we tell qml about a hit and details about that?
@@ -350,9 +363,8 @@ void RiveQtQuickItem::updateStateMachines()
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 void RiveQtQuickItem::renderOffscreen()
 {
-  if (node) {
-
-    node->renderOffscreen();
+  if (m_renderNode && isVisible() && m_hasValidRenderNode) {
+    m_renderNode->renderOffscreen();
   }
 }
 #endif
@@ -380,8 +392,9 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
   rive::HitInfo hitInfo;
   rive::Mat2D transform;
 
-  float x = (pos.x() - offsetX) / scaleFactor;
-  float y = (pos.y() - offsetY) / scaleFactor;
+  m_lastMouseX = (pos.x() - offsetX) / scaleFactor;
+  m_lastMouseY = (pos.y() - offsetY) / scaleFactor;
+  m_listenerType = type;
 
   for (int i = 0; i < m_currentStateMachineInstance->stateMachine()->listenerCount(); ++i) {
     auto *listener = m_currentStateMachineInstance->stateMachine()->listener(i);
@@ -390,28 +403,28 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
         qDebug() << "Enter and Exit Actions are not yet supported";
       }
 
-      if (listener->listenerType() == type) {
+      if (listener->listenerType() == m_listenerType) {
         for (const auto &id : listener->hitShapeIds()) {
           auto *coreElement = m_currentStateMachineInstance->artboard()->resolve(id);
 
           if (coreElement->is<rive::Shape>()) {
             rive::Shape *shape = dynamic_cast<rive::Shape *>(coreElement);
 
-            const rive::IAABB area = { static_cast<int32_t>(x), static_cast<int32_t>(y), static_cast<int32_t>(x + 1),
-                                       static_cast<int32_t>(y + 1) };
+            const rive::IAABB area = { static_cast<int32_t>(m_lastMouseX), static_cast<int32_t>(m_lastMouseY),
+                                       static_cast<int32_t>(m_lastMouseX + 1), static_cast<int32_t>(m_lastMouseY + 1) };
             bool hit = shape->hitTest(area);
 
             if (hit) {
-              listener->performChanges(m_currentStateMachineInstance.get(), rive::Vec2D(x, y));
-              return true;
+              listener->performChanges(m_currentStateMachineInstance.get(), rive::Vec2D(m_lastMouseX, m_lastMouseY));
+              m_scheduleStateMachineChange = true;
+              m_scheduleArtboardChange = true;
             }
           }
         }
       }
     }
   }
-
-  return false;
+  return true;
 }
 
 const QVector<AnimationInfo> &RiveQtQuickItem::animations() const
@@ -446,6 +459,8 @@ void RiveQtQuickItem::setCurrentArtboardIndex(int newCurrentArtboardIndex)
   m_currentArtboardIndex = newCurrentArtboardIndex;
 
   m_scheduleArtboardChange = true; // we have to do this in the render thread.
+  m_renderNode = nullptr;
+  setCurrentStateMachineIndex(-1);
 
   update();
 }
@@ -479,6 +494,10 @@ void RiveQtQuickItem::setCurrentStateMachineIndex(int newCurrentStateMachineInde
   m_currentStateMachineIndex = newCurrentStateMachineIndex;
 
   m_scheduleStateMachineChange = true; // we have to do this in the render thread.
+  m_stateMachineInputMap->deleteLater();
+  m_stateMachineInputMap = nullptr;
+  emit stateMachineInterfaceChanged();
+
   update();
 }
 

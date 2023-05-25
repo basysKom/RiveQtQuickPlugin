@@ -4,5 +4,42 @@
         <file>juice.riv</file>
         <file>water-bar-demo.riv</file>
         <file>3507-7424-naridon-oni-fan-art.riv</file>
+        <file>bullet_man.riv</file>
+        <file>jellyfish_test.riv</file>
+        <file>1298-2487-animated-icon-set-1-color.riv</file>
+        <file>artboardclipping.riv</file>
+        <file>blend_test.riv</file>
+        <file>circle_clips.riv</file>
+        <file>complex_ik_dependency.riv</file>
+        <file>cubic_value_test.riv</file>
+        <file>death_knight.riv</file>
+        <file>dependency_test.riv</file>
+        <file>distance_constraint.riv</file>
+        <file>draw_rule_cycle.riv</file>
+        <file>entry.riv</file>
+        <file>fix_rectangle.riv</file>
+        <file>hello_world.riv</file>
+        <file>light_switch.riv</file>
+        <file>long_name.riv</file>
+        <file>multiple_state_machines.riv</file>
+        <file>nested_solo.riv</file>
+        <file>new_text.riv</file>
+        <file>off_road_car.riv</file>
+        <file>oneshotblend.riv</file>
+        <file>rocket.riv</file>
+        <file>rotation_constraint.riv</file>
+        <file>scale_constraint.riv</file>
+        <file>shapetest.riv</file>
+        <file>solo_test.riv</file>
+        <file>stroke_name_test.riv</file>
+        <file>tape.riv</file>
+        <file>transform_constraint.riv</file>
+        <file>translation_constraint.riv</file>
+        <file>trim.riv</file>
+        <file>trim_path_linear.riv</file>
+        <file>two_artboards.riv</file>
+        <file>two_bone_ik.riv</file>
+        <file>walle.riv</file>
+        <file>zombie_skins.riv</file>
     </qresource>
 </RCC>

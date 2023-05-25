@@ -26,6 +26,7 @@ RiveQtRhiGLPath::RiveQtRhiGLPath(const RiveQtRhiGLPath &rqp)
   m_subPaths = rqp.m_subPaths;
   m_pathSegmentsData = rqp.m_pathSegmentsData;
   m_pathSegmentsOutlineData = rqp.m_pathSegmentsOutlineData;
+  m_pathOutlineData = rqp.m_pathOutlineData;
 }
 
 RiveQtRhiGLPath::RiveQtRhiGLPath(rive::RawPath &rawPath, rive::FillRule fillRule)
@@ -54,7 +55,8 @@ RiveQtRhiGLPath::RiveQtRhiGLPath(rive::RawPath &rawPath, rive::FillRule fillRule
     }
   }
 
-  generateVerticies();
+  m_pathSegmentOutlineDataDirty = true;
+  m_pathSegmentDataDirty = true;
 }
 
 void RiveQtRhiGLPath::rewind()
@@ -88,6 +90,10 @@ void RiveQtRhiGLPath::addRenderPath(RenderPath *path, const rive::Mat2D &m)
 
   m_subPaths.emplace_back(RhiSubPath(qtPath, matrix));
 
+  m_pathSegmentOutlineDataDirty = true;
+  m_pathSegmentDataDirty = true;
+
+  // calculate verticies directly when we add a path
   generateVerticies();
 }
 
@@ -96,32 +102,11 @@ void RiveQtRhiGLPath::setQPainterPath(QPainterPath path)
   m_path = path;
 }
 
-QPainterPath RiveQtRhiGLPath::toQPainterPaths(const QMatrix4x4 &t)
+QVector<QVector<QVector2D>> RiveQtRhiGLPath::toVertices()
 {
-  QPainterPath m_fullPath;
-
-  qreal tm11 = t(0, 0);
-  qreal tm12 = t(0, 1);
-  qreal tm21 = t(1, 0);
-  qreal tm22 = t(1, 1);
-  qreal tdx = t(0, 3);
-  qreal tdy = t(1, 3);
-  QTransform transformT(tm11, tm12, tm21, tm22, tdx, tdy);
-  if (!m_path.isEmpty()) {
-    m_fullPath.addPath(m_path);
+  if (m_pathSegmentDataDirty) {
+    generateVerticies();
   }
-
-  for (auto &subPath : m_subPaths) {
-    const auto &path = subPath.path()->toQPainterPaths(subPath.transform());
-    if (!path.isEmpty()) {
-      m_fullPath.addPath(path);
-    }
-  }
-  return m_fullPath;
-}
-
-QVector<QVector<QVector2D>> RiveQtRhiGLPath::toVertices() const
-{
   return m_pathSegmentsData;
 }
 
@@ -130,18 +115,26 @@ QVector<QVector<QVector2D>> RiveQtRhiGLPath::toVertices() const
 //
 QVector<QVector<QVector2D>> RiveQtRhiGLPath::toVerticesLine(const QPen &pen)
 {
+  if (m_pathSegmentOutlineDataDirty) {
+    generateOutlineVerticies();
+  }
+
+  m_pathOutlineData.clear();
+
+  if (m_pathSegmentsOutlineData.isEmpty()) {
+    return m_pathOutlineData;
+  }
+
   qreal lineWidth = pen.widthF();
 
   Qt::PenJoinStyle joinType = pen.joinStyle();
   Qt::PenCapStyle capStyle = pen.capStyle();
 
-  QVector<QVector<QVector2D>> lineData;
-
   if (m_pathSegmentsOutlineData.isEmpty()) {
     generateVerticies();
 
     if (m_pathSegmentsOutlineData.isEmpty()) {
-      return lineData;
+      return m_pathOutlineData;
     }
   }
 
@@ -330,10 +323,10 @@ QVector<QVector<QVector2D>> RiveQtRhiGLPath::toVerticesLine(const QPen &pen)
       }
     }
 
-    lineData.append(triangledSegmentData);
+    m_pathOutlineData.append(triangledSegmentData);
   }
 
-  return lineData;
+  return m_pathOutlineData;
 }
 
 QPointF RiveQtRhiGLPath::cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2,
@@ -432,24 +425,50 @@ QVector<QVector2D> RiveQtRhiGLPath::qpainterPathToOutlineVector2D(const QPainter
 
 void RiveQtRhiGLPath::generateVerticies()
 {
-  if (m_path.isEmpty() && m_subPaths.empty())
+  if (!m_pathSegmentDataDirty) {
     return;
+  }
+
+  if (m_path.isEmpty() && m_subPaths.empty()) {
+    m_pathSegmentsData.clear();
+    return;
+  }
 
   m_pathSegmentsData.clear();
-  m_pathSegmentsOutlineData.clear();
 
   m_pathSegmentsData.append(qpainterPathToVector2D(m_path));
-  m_pathSegmentsOutlineData.append(qpainterPathToOutlineVector2D(m_path));
-
   for (RhiSubPath &RhiSubPath : m_subPaths) {
     QPainterPath sourcePath = RhiSubPath.path()->toQPainterPath();
     QPainterPath transformedPath = RiveQtUtils::transformPathWithMatrix4x4(sourcePath, RhiSubPath.transform());
 
     m_pathSegmentsData.append(RhiSubPath.path()->m_pathSegmentsData);
     m_pathSegmentsData.append(qpainterPathToVector2D(transformedPath));
+  }
+  m_pathSegmentDataDirty = false;
+}
+
+void RiveQtRhiGLPath::generateOutlineVerticies()
+{
+  if (!m_pathSegmentOutlineDataDirty) {
+    return;
+  }
+
+  if (m_path.isEmpty() && m_subPaths.empty()) {
+    m_pathSegmentsOutlineData.clear();
+    return;
+  }
+
+  m_pathSegmentsOutlineData.clear();
+  m_pathSegmentsOutlineData.append(qpainterPathToOutlineVector2D(m_path));
+
+  for (RhiSubPath &RhiSubPath : m_subPaths) {
+    QPainterPath sourcePath = RhiSubPath.path()->toQPainterPath();
+    QPainterPath transformedPath = RiveQtUtils::transformPathWithMatrix4x4(sourcePath, RhiSubPath.transform());
+
     m_pathSegmentsOutlineData.append(qpainterPathToOutlineVector2D(transformedPath));
     m_pathSegmentsOutlineData.append(RhiSubPath.path()->m_pathSegmentsOutlineData);
   }
+  m_pathSegmentOutlineDataDirty = false;
 }
 
 RiveQtRhiRenderer::RiveQtRhiRenderer(QQuickItem *item)
@@ -469,6 +488,7 @@ RiveQtRhiRenderer::~RiveQtRhiRenderer()
 void RiveQtRhiRenderer::save()
 {
   m_rhiRenderStack.push_back(m_rhiRenderStack.back());
+  m_rhiRenderStack.back().stackNodes.clear();
 }
 
 void RiveQtRhiRenderer::restore()
@@ -532,39 +552,31 @@ void RiveQtRhiRenderer::drawPath(rive::RenderPath *path, rive::RenderPaint *pain
 
   node->updateClippingGeometry(m_rhiRenderStack.back().clippingGeometry);
   node->updateGeometry(pathData, transformMatrix());
+
+  m_rhiRenderStack.back().stackNodes.append(node);
 }
 
 void RiveQtRhiRenderer::clipPath(rive::RenderPath *path)
 {
-  // this is a seriously complex approach
-  // though there are very likely to be more effective approaches
-  // TODO: make this less expensive
-
-  // RiveQtRhiGLPath *qtPath = static_cast<RiveQtRhiGLPath *>(path);
-  //  //RiveQtRhiGLPath &clipPath = m_rhiRenderStack.back().clipPath;
-
-  //  //QPainterPath currentClipPath = clipPath.toQPainterPath();
-  //  QPainterPath qPainterPath = qtPath->toQPainterPaths(transformMatrix());
-
-  //  if (!currentClipPath.isEmpty()) {
-  //    clipPath.setQPainterPath(currentClipPath.intersected(qPainterPath));
-  //  } else {
-  //    clipPath.setQPainterPath(qPainterPath);
-  //  }
-  //  clipPath.generateVerticies();
-
+  // alternativly we could save the paths + transform to the node and
+  // draw each one by one to the stencil buffer
+  // -> I would guess that would be faster
   RiveQtRhiGLPath *qtPath = static_cast<RiveQtRhiGLPath *>(path);
   auto c = qtPath->toVertices();
 
-  //  for (auto &path : c) {
-  //    for (auto &point : path) {
-  //      QVector4D vec4(point, 0.0f, 1.0f);
-  //      vec4 = transformMatrix() * vec4;
-  //      point = vec4.toVector2D();
-  //    }
-  //  }
+  for (auto &path : c) {
+    for (auto &point : path) {
+      QVector4D vec4(point, 0.0f, 1.0f);
+      vec4 = transformMatrix() * vec4;
+      point = vec4.toVector2D();
+    }
+  }
 
   m_rhiRenderStack.back().clippingGeometry = c;
+
+  for (TextureTargetNode *textureTargetNode : m_rhiRenderStack.back().stackNodes) {
+    textureTargetNode->updateClippingGeometry(m_rhiRenderStack.back().clippingGeometry);
+  }
 }
 
 void RiveQtRhiRenderer::drawImage(const rive::RenderImage *image, rive::BlendMode blendMode, float opacity)
@@ -580,13 +592,14 @@ void RiveQtRhiRenderer::drawImage(const rive::RenderImage *image, rive::BlendMod
                    transformMatrix()); //
 
 #if 0 // this allows to draw the clipping area which it usefull for debugging :)
-  TextureTargetNode *drawClipping = getNode();
+  TextureTargetNode *drawClipping = getRiveDrawTargetNode();
   drawClipping->setOpacity(currentOpacity()); // inherit the opacity from the parent
   drawClipping->setColor(QColor(255, 0, 0, 50));
   drawClipping->updateGeometry(m_rhiRenderStack.back().clippingGeometry, QMatrix4x4());
 #endif
 
   node->updateClippingGeometry(m_rhiRenderStack.back().clippingGeometry);
+  m_rhiRenderStack.back().stackNodes.append(node);
 }
 
 void RiveQtRhiRenderer::drawImageMesh(const rive::RenderImage *image, rive::rcp<rive::RenderBuffer> vertices_f32,
@@ -607,13 +620,14 @@ void RiveQtRhiRenderer::drawImageMesh(const rive::RenderImage *image, rive::rcp<
                    transformMatrix()); //
 
 #if 0 // this allows to draw the clipping area which it usefull for debugging :)
-  TextureTargetNode *drawClipping = getNode();
+  TextureTargetNode *drawClipping = getRiveDrawTargetNode();
   drawClipping->setOpacity(currentOpacity()); // inherit the opacity from the parent
   drawClipping->setColor(QColor(255, 0, 0, 50));
   drawClipping->updateGeometry(m_rhiRenderStack.back().clippingGeometry, QMatrix4x4());
 #endif
 
   node->updateClippingGeometry(m_rhiRenderStack.back().clippingGeometry);
+  m_rhiRenderStack.back().stackNodes.append(node);
 }
 
 void RiveQtRhiRenderer::render(QRhiCommandBuffer *cb)
@@ -652,7 +666,7 @@ void RiveQtRhiRenderer::setProjectionMatrix(const QMatrix4x4 *projectionMatrix, 
   auto aspectX = m_item->width() / (m_artboardSize.width());
   auto aspectY = m_item->height() / (m_artboardSize.height());
 
-  //  // Calculate the uniform scale factor to preserve the aspect ratio
+  // Calculate the uniform scale factor to preserve the aspect ratio
   auto scaleFactor = qMin(aspectX, aspectY);
 
   m_projectionMatrix = *projectionMatrix;
