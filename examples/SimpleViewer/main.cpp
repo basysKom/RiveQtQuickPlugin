@@ -7,9 +7,12 @@
 #include <QDir>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQuickWindow>
 
 int main(int argc, char *argv[])
 {
+  // Force OpenGL
+  // QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
   QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
   QGuiApplication app(argc, argv);
 

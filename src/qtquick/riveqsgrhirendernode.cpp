@@ -295,11 +295,8 @@ void RiveQSGRHIRenderNode::prepare()
     // RHI backends with isYUpInFrameBuffer == false. We swap the triangle winding
     // order to work around this.
     //
-    m_pipeLine->setFrontFace(QSGRenderNodePrivate::get(this)->m_rt.rt->resourceType() == QRhiResource::TextureRenderTarget
-                                 && rhi->isYUpInFramebuffer()
-                               ? QRhiGraphicsPipeline::CW
-                               : QRhiGraphicsPipeline::CCW);
-    m_pipeLine->setCullMode(QRhiGraphicsPipeline::Back);
+    m_pipeLine->setFrontFace(rhi->isYUpInFramebuffer() ? QRhiGraphicsPipeline::CCW : QRhiGraphicsPipeline::CW);
+    m_pipeLine->setCullMode(QRhiGraphicsPipeline::None);
     m_pipeLine->setTopology(QRhiGraphicsPipeline::TriangleStrip);
 
     // this allows blending with the rest of the QML Scene
@@ -330,14 +327,14 @@ void RiveQSGRHIRenderNode::prepare()
   }
 
   QMatrix4x4 mvp = *projectionMatrix();
-
   QPointF globalPos = m_item->parentItem()->mapToItem(nullptr, QPointF(0, 0));
   mvp.translate(globalPos.x(), globalPos.y());
 
   float opacity = inheritedOpacity();
-
+  int flipped = rhi->isYUpInFramebuffer() ? 1 : 0;
   resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 0, 64, mvp.constData());
   resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 64, 4, &opacity);
+  resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 68, 4, &flipped);
 
   swapChain->currentFrameCommandBuffer()->resourceUpdate(resourceUpdates);
 }

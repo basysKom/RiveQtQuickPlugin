@@ -649,7 +649,7 @@ void TextureTargetNode::renderBlend(QRhiCommandBuffer *cb)
       // order to work around this.
       //
       m_blendPipeLine->setFrontFace(rhi->isYUpInFramebuffer() ? QRhiGraphicsPipeline::CW : QRhiGraphicsPipeline::CCW);
-      m_blendPipeLine->setCullMode(QRhiGraphicsPipeline::Back);
+      m_blendPipeLine->setCullMode(QRhiGraphicsPipeline::None);
       m_blendPipeLine->setTopology(QRhiGraphicsPipeline::TriangleStrip);
 
       m_blendPipeLine->setStencilTest(false);
@@ -675,8 +675,10 @@ void TextureTargetNode::renderBlend(QRhiCommandBuffer *cb)
     if (m_shaderBlending) {
       QMatrix4x4 mvp = (*m_projectionMatrix);
       mvp.translate(-m_bounds.x(), -m_bounds.y());
+      int flipped = rhi->isYUpInFramebuffer() ? 1 : 0;
       m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 0, 64, mvp.constData());
       m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 64, 4, &m_blendMode);
+      m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 68, 4, &flipped);
     }
 
     cb->beginPass(m_blendTextureRenderTarget, QColor(0, 0, 0, 0), { 1.0f, 0 }, m_blendResourceUpdates);

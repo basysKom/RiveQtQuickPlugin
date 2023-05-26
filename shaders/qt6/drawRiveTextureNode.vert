@@ -28,12 +28,12 @@ layout(std140, binding = 0) uniform buf {
 
 out gl_PerVertex { vec4 gl_Position; };
 
-layout(location = 0) out vec2 vTexCoord; // Pass texture coordinates to the fragment shader
+layout(location = 0) out vec2 texCoord; // Pass texture coordinates to the fragment shader
 layout(location = 1) out vec2 originalVertex;
 
 void main()
 {
-    vTexCoord = aTexCoord;
+    texCoord = aTexCoord;
     originalVertex = vertex;
 
     gl_Position = qt_Matrix * tranformMatrix * vec4(vertex, 0.0, 1.0);
