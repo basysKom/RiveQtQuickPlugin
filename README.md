@@ -22,7 +22,7 @@ The plugin has been tested on:
 
 - Windows using the MSVC 2019 compiler and Qt 5.15.2
 
-- Linux (Ubuntu 22.04 LTS) using Clang14 and Qt 6.5.0
+- Linux (Ubuntu 22.04 LTS) using Clang14 and Qt 5.15.2, Qt 6.5.0
 
   - Ensure that all clang dependencies are installed 
 
@@ -39,7 +39,7 @@ The plugin has been tested on:
 
 ## Building
 
-- Install missing dependencies (`libxkbcommon-dev` might be missing in Ubuntu 22.04)
+- Install missing dependencies (`libxkbcommon-dev` might be missing on Ubuntu 22.04)
 - Building using cmake and make should work just fine
 
 ## Usage
@@ -76,9 +76,15 @@ Check out the "example" folder in this repository for a complete example project
 
 In order to run the example project, set the import path correctly
 
+Qt 5.15.2:
+
+`export QML2_IMPORT_PATH=YOUR/BUILD/DIR/binary/`
+
+Qt 6.5.0:
+
 `export QML_IMPORT_PATH=YOUR/BUILD/DIR/binary/`
 
-**Hint:** In QtCreator you can set the variable in the project settings under "Environment"
+**Hint:** In QtCreator you can set the variable(s) in the project settings under "Environment"
 
 ### Windows
 
