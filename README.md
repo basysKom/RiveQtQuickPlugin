@@ -17,25 +17,30 @@ https://user-images.githubusercontent.com/1797537/233192955-7360403b-b51b-422a-8
 - Data bindings for reading and writing data to and from Rive animations
 - Support for managing multiple artboards, animations, and state machines
 
+## Compatibility
+The plugin has been tested on:
+
+- Windows using the MSVC 2019 compiler and Qt 5.15.2
+
+- Linux (Ubuntu 22.04 LTS) using Clang14 and Qt 6.5.0
+
+  - Ensure that all clang dependencies are installed 
+
+  - `apt-get install clang-format clang-tidy clang-tools clang clangd libc++-dev libc++1 libc++abi-dev libc++abi1 libclang-dev libclang1 liblldb-dev libllvm-ocaml-dev libomp-dev libomp5 lld lldb llvm-dev llvm-runtime llvm python3-clang`
+
+  - Use the automatic installation script if you get issues: https://apt.llvm.org/ 
+  - `chmod +x llvm.sh` and `sudo ./llvm.sh 14`
+
 ## Dependencies
 
-- Qt 5.15.2 or later (not Qt6 yet :( )
+- Qt 5.15.2 or Qt 6.5.0
 - Rive C++ Runtime (available at [https://github.com/rive-app/rive-cpp](https://github.com/rive-app/rive-cpp))
-  * To ease things up, the plugin source codes cmake will download rive-cpp and its dependencies and build them using cmake. The result is a static lib the plugin links against. 
-    
+  * **Hint:** You don't have to compile the it from the repo. Cmake will download rive-cpp and its dependencies and build them using cmake. The result is a static lib the plugin links against.
+
 ## Building
 
-1. Clone this repository:
-
-```
-git clone https://github.com/jebos/RiveQtQuickPlugin.git
-```
-
-#### Note:
-  You can download and build the Rive C++ Runtime, following the instructions in the Rive C++ Runtime repository.
-  You can also just use the CMake I put into 3rdParty, it will download, build and link rive-cpp and its dependencies
-
-2. Just build using cmake and make.
+- Install missing dependencies (`libxkbcommon-dev` might be missing in Ubuntu 22.04)
+- Building using cmake and make should work just fine
 
 ## Usage
 
@@ -63,17 +68,21 @@ RiveQtQuickItem {
 
 ```
 
-## Example Project
+### Example Project
 
 Check out the "example" folder in this repository for a complete example project demonstrating how to use the `RiveQtQuickPlugin`.
-When you build with examples, dont forget to set the correct import path in Linux.
-In Windows everything is deployed in your build directory into a directory called "binary"
 
-## Compatibility
+### Linux
 
-The plugin has been tested on:
- * Windows using the MSVC 2019 compiler and Qt 5.15.2
- * Linux/Ubuntu using CLANG12 and Qt and Qt 5.15.2
+In order to run the example project, set the import path correctly
+
+`export QML_IMPORT_PATH=YOUR/BUILD/DIR/binary/`
+
+**Hint:** In QtCreator you can set the variable in the project settings under "Environment"
+
+### Windows
+
+Everything is deployed in your build directory into a directory called "binary"
 
 ## Contributing
 

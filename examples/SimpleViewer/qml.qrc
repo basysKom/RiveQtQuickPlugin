@@ -1,45 +1,49 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
-        <file>juice.riv</file>
-        <file>water-bar-demo.riv</file>
-        <file>3507-7424-naridon-oni-fan-art.riv</file>
-        <file>bullet_man.riv</file>
-        <file>jellyfish_test.riv</file>
-        <file>1298-2487-animated-icon-set-1-color.riv</file>
-        <file>artboardclipping.riv</file>
-        <file>blend_test.riv</file>
-        <file>circle_clips.riv</file>
-        <file>complex_ik_dependency.riv</file>
-        <file>cubic_value_test.riv</file>
-        <file>death_knight.riv</file>
-        <file>dependency_test.riv</file>
-        <file>distance_constraint.riv</file>
-        <file>draw_rule_cycle.riv</file>
-        <file>entry.riv</file>
-        <file>fix_rectangle.riv</file>
-        <file>hello_world.riv</file>
-        <file>light_switch.riv</file>
-        <file>long_name.riv</file>
-        <file>multiple_state_machines.riv</file>
-        <file>nested_solo.riv</file>
-        <file>new_text.riv</file>
-        <file>off_road_car.riv</file>
-        <file>oneshotblend.riv</file>
-        <file>rocket.riv</file>
-        <file>rotation_constraint.riv</file>
-        <file>scale_constraint.riv</file>
-        <file>shapetest.riv</file>
-        <file>solo_test.riv</file>
-        <file>stroke_name_test.riv</file>
-        <file>tape.riv</file>
-        <file>transform_constraint.riv</file>
-        <file>translation_constraint.riv</file>
-        <file>trim.riv</file>
-        <file>trim_path_linear.riv</file>
-        <file>two_artboards.riv</file>
-        <file>two_bone_ik.riv</file>
-        <file>walle.riv</file>
-        <file>zombie_skins.riv</file>
+        <file>ControlPanel.qml</file>
+        <file>RiveInspectorView.qml</file>
+    </qresource>
+    <qresource prefix="/rive">
+        <file alias="1298-2487-animated-icon-set-1-color.riv">rive/1298-2487-animated-icon-set-1-color.riv</file>
+        <file>rive/3507-7424-naridon-oni-fan-art.riv</file>
+        <file>rive/artboardclipping.riv</file>
+        <file>rive/blend_test.riv</file>
+        <file alias="bullet_man.riv">rive/bullet_man.riv</file>
+        <file>rive/circle_clips.riv</file>
+        <file>rive/complex_ik_dependency.riv</file>
+        <file>rive/cubic_value_test.riv</file>
+        <file>rive/death_knight.riv</file>
+        <file>rive/dependency_test.riv</file>
+        <file>rive/distance_constraint.riv</file>
+        <file>rive/draw_rule_cycle.riv</file>
+        <file>rive/entry.riv</file>
+        <file>rive/fix_rectangle.riv</file>
+        <file>rive/hello_world.riv</file>
+        <file alias="jellyfish_test.riv">rive/jellyfish_test.riv</file>
+        <file alias="juice.riv">rive/juice.riv</file>
+        <file>rive/light_switch.riv</file>
+        <file>rive/long_name.riv</file>
+        <file>rive/multiple_state_machines.riv</file>
+        <file>rive/nested_solo.riv</file>
+        <file>rive/new_text.riv</file>
+        <file>rive/off_road_car.riv</file>
+        <file>rive/oneshotblend.riv</file>
+        <file>rive/rocket.riv</file>
+        <file>rive/rotation_constraint.riv</file>
+        <file>rive/scale_constraint.riv</file>
+        <file>rive/shapetest.riv</file>
+        <file>rive/solo_test.riv</file>
+        <file>rive/stroke_name_test.riv</file>
+        <file>rive/tape.riv</file>
+        <file>rive/transform_constraint.riv</file>
+        <file>rive/translation_constraint.riv</file>
+        <file>rive/trim_path_linear.riv</file>
+        <file>rive/trim.riv</file>
+        <file>rive/two_artboards.riv</file>
+        <file>rive/two_bone_ik.riv</file>
+        <file>rive/walle.riv</file>
+        <file alias="water-bar-demo.riv">rive/water-bar-demo.riv</file>
+        <file>rive/zombie_skins.riv</file>
     </qresource>
 </RCC>

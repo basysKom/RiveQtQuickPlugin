@@ -142,7 +142,7 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     }
 #else
     case QSGRendererInterface::GraphicsApi::OpenGL:
-      node = new RiveQSGOpenGLRenderNode(m_currentArtboardInstance.get(), this);
+      m_renderNode = new RiveQSGOpenGLRenderNode(m_currentArtboardInstance.get(), this);
       break;
 #endif
     case QSGRendererInterface::GraphicsApi::Software:
