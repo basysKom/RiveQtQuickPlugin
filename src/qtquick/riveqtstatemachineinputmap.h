@@ -13,22 +13,22 @@
 class QQmlEngine;
 class RiveQtStateMachineInputMap : public QQmlPropertyMap
 {
-  Q_OBJECT
+    Q_OBJECT
 
 public:
-  RiveQtStateMachineInputMap(rive::StateMachineInstance *stateMachineInstance, QObject *parent = nullptr);
+    RiveQtStateMachineInputMap(rive::StateMachineInstance *stateMachineInstance, QObject *parent = nullptr);
 
-  Q_INVOKABLE void activateTrigger(const QString &trigger);
+    Q_INVOKABLE void activateTrigger(const QString &trigger);
 
-  bool hasDirtyStateMachine() const { return m_dirty; }
+    bool hasDirtyStateMachine() const { return m_dirty; }
 
 public slots:
-  void updateValues();
+    void updateValues();
 
 private slots:
-  void onInputValueChanged(const QString &key, const QVariant &value);
+    void onInputValueChanged(const QString &key, const QVariant &value);
 
 private:
-  rive::StateMachineInstance *m_stateMachineInstance;
-  bool m_dirty { false };
+    rive::StateMachineInstance *m_stateMachineInstance;
+    bool m_dirty { false };
 };

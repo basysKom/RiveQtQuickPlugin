@@ -23,21 +23,21 @@ class QQuickWindow;
 class RiveQSGSoftwareRenderNode : public RiveQSGRenderNode
 {
 public:
-  RiveQSGSoftwareRenderNode(QQuickWindow *window, rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
+    RiveQSGSoftwareRenderNode(QQuickWindow *window, rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
 
-  QRectF rect() const override;
+    QRectF rect() const override;
 
-  StateFlags changedStates() const override { return QSGRenderNode::BlendState; }
-  RenderingFlags flags() const override { return QSGRenderNode::BoundedRectRendering; }
+    StateFlags changedStates() const override { return QSGRenderNode::BlendState; }
+    RenderingFlags flags() const override { return QSGRenderNode::BoundedRectRendering; }
 
-  void render(const RenderState *state) override;
+    void render(const RenderState *state) override;
 
 private:
-  void renderSoftware(const RenderState *state);
+    void renderSoftware(const RenderState *state);
 
-  RiveQtPainterRenderer m_renderer;
-  QQuickWindow *m_window { nullptr };
+    RiveQtPainterRenderer m_renderer;
+    QQuickWindow *m_window { nullptr };
 
-  QPainter m_fallbackPainter;
-  QPixmap m_fallbackPixmap;
+    QPainter m_fallbackPainter;
+    QPixmap m_fallbackPixmap;
 };

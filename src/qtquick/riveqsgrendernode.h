@@ -19,25 +19,25 @@ class RiveQtQuickItem;
 class RiveQSGBaseNode
 {
 public:
-  RiveQSGBaseNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
+    RiveQSGBaseNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
 
-  virtual void renderOffscreen() { }
-  virtual void setRect(const QRectF &bounds);
+    virtual void renderOffscreen() { }
+    virtual void setRect(const QRectF &bounds);
 
-  virtual void updateArtboardInstance(rive::ArtboardInstance *artboardInstance) { m_artboardInstance = artboardInstance; }
+    virtual void updateArtboardInstance(rive::ArtboardInstance *artboardInstance) { m_artboardInstance = artboardInstance; }
 
 protected:
-  rive::ArtboardInstance *m_artboardInstance { nullptr };
-  RiveQtQuickItem *m_item { nullptr };
-  QRectF m_rect;
+    rive::ArtboardInstance *m_artboardInstance { nullptr };
+    RiveQtQuickItem *m_item { nullptr };
+    QRectF m_rect;
 };
 
 class RiveQSGRenderNode : public QSGRenderNode, public RiveQSGBaseNode
 {
 public:
-  RiveQSGRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
+    RiveQSGRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
 
-  StateFlags changedStates() const override { return QSGRenderNode::BlendState; }
-  RenderingFlags flags() const override { return QSGRenderNode::BoundedRectRendering | QSGRenderNode::DepthAwareRendering; }
-  QRectF rect() const override;
+    StateFlags changedStates() const override { return QSGRenderNode::BlendState; }
+    RenderingFlags flags() const override { return QSGRenderNode::BoundedRectRendering | QSGRenderNode::DepthAwareRendering; }
+    QRectF rect() const override;
 };

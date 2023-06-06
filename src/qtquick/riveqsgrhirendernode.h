@@ -26,40 +26,40 @@ class RiveQtRhiRenderer;
 class RiveQSGRHIRenderNode : public RiveQSGRenderNode
 {
 public:
-  RiveQSGRHIRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
-  virtual ~RiveQSGRHIRenderNode();
+    RiveQSGRHIRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
+    virtual ~RiveQSGRHIRenderNode();
 
-  virtual void updateArtboardInstance(rive::ArtboardInstance *artboardInstance) override;
-  void setRect(const QRectF &bounds) override;
+    virtual void updateArtboardInstance(rive::ArtboardInstance *artboardInstance) override;
+    void setRect(const QRectF &bounds) override;
 
-  void renderOffscreen() override;
-  void prepare() override;
-  void render(const RenderState *state) override;
-  void releaseResources() override;
-  RenderingFlags flags() const override;
-  QSGRenderNode::StateFlags changedStates() const override;
+    void renderOffscreen() override;
+    void prepare() override;
+    void render(const RenderState *state) override;
+    void releaseResources() override;
+    RenderingFlags flags() const override;
+    QSGRenderNode::StateFlags changedStates() const override;
 
 protected:
-  QQuickWindow *m_window { nullptr };
+    QQuickWindow *m_window { nullptr };
 
-  QRhiBuffer *m_vertexBuffer { nullptr };
-  QRhiBuffer *m_texCoordBuffer { nullptr };
-  QRhiBuffer *m_uniformBuffer { nullptr };
+    QRhiBuffer *m_vertexBuffer { nullptr };
+    QRhiBuffer *m_texCoordBuffer { nullptr };
+    QRhiBuffer *m_uniformBuffer { nullptr };
 
-  QRhiShaderResourceBindings *m_resourceBindings { nullptr };
-  QRhiGraphicsPipeline *m_pipeLine { nullptr };
-  QRhiSampler *m_sampler { nullptr };
+    QRhiShaderResourceBindings *m_resourceBindings { nullptr };
+    QRhiGraphicsPipeline *m_pipeLine { nullptr };
+    QRhiSampler *m_sampler { nullptr };
 
-  QList<QRhiShaderStage> m_shaders;
+    QList<QRhiShaderStage> m_shaders;
 
-  QList<QVector2D> m_vertices;
-  QList<QVector2D> m_texCoords;
+    QList<QVector2D> m_vertices;
+    QList<QVector2D> m_texCoords;
 
-  QVector<QRhiResource *> m_cleanupList;
+    QVector<QRhiResource *> m_cleanupList;
 
-  RiveQtRhiRenderer *m_renderer { nullptr };
-  QRhiTexture *m_displayBuffer { nullptr };
-  QRhiTextureRenderTarget *m_cleanUpTextureTarget { nullptr };
+    RiveQtRhiRenderer *m_renderer { nullptr };
+    QRhiTexture *m_displayBuffer { nullptr };
+    QRhiTextureRenderTarget *m_cleanUpTextureTarget { nullptr };
 
-  bool m_verticesDirty = true;
+    bool m_verticesDirty = true;
 };

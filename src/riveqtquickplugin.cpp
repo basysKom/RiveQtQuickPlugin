@@ -13,14 +13,14 @@
 
 void RiveQtQuickPlugin::registerTypes(const char *uri)
 {
-  qmlRegisterType<RiveQtQuickItem>("RiveQtQuickPlugin", 1, 0, "RiveQtQuickItem");
-  qRegisterMetaType<AnimationInfo>("AnimationInfo");
-  qRegisterMetaType<QVector<AnimationInfo>>("QVector<AnimationInfo>");
+    qmlRegisterType<RiveQtQuickItem>("RiveQtQuickPlugin", 1, 0, "RiveQtQuickItem");
+    qRegisterMetaType<AnimationInfo>("AnimationInfo");
+    qRegisterMetaType<QVector<AnimationInfo>>("QVector<AnimationInfo>");
 
-  qRegisterMetaType<ArtBoardInfo>("ArtBoardInfo");
-  qRegisterMetaType<QVector<ArtBoardInfo>>("QVector<ArtBoardInfo>");
+    qRegisterMetaType<ArtBoardInfo>("ArtBoardInfo");
+    qRegisterMetaType<QVector<ArtBoardInfo>>("QVector<ArtBoardInfo>");
 
-  qRegisterMetaType<StateMachineInfo>("StateMachineInfo");
-  qRegisterMetaType<QVector<StateMachineInfo>>("QVector<StateMachineInfo>");
-  qRegisterMetaType<RiveQtStateMachineInputMap *>("RiveQtStateMachineInputMap*");
+    qRegisterMetaType<StateMachineInfo>("StateMachineInfo");
+    qRegisterMetaType<QVector<StateMachineInfo>>("QVector<StateMachineInfo>");
+    qRegisterMetaType<RiveQtStateMachineInputMap *>("RiveQtStateMachineInputMap*");
 }
