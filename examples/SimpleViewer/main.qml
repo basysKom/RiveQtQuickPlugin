@@ -41,7 +41,7 @@ ApplicationWindow {
             ScrollView {
                 id: scrollView
 
-                //                visible: !dropView.fileSource
+                visible: !dropView.fileSource
                 anchors {
                     top: parent.top
                     bottom: parent.bottom
