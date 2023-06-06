@@ -35,25 +35,20 @@ ApplicationWindow {
 
         currentIndex: bar.currentIndex
 
-        RiveInspectorView {
-            id: dropView
+        RowLayout {
+            anchors.fill: parent
 
             ScrollView {
                 id: scrollView
 
-                visible: !dropView.fileSource
-                anchors {
-                    top: parent.top
-                    bottom: parent.bottom
-                    left: parent.left
-                }
-                width: 300
+                Layout.fillHeight: true
+                Layout.preferredWidth: !dropView.fileSource ? 300 : 150
 
                 padding: 16
 
                 clip: true
                 background: Rectangle {
-                    color: "white"
+                    color: "lightgray"
                 }
 
                 FolderListModel {
@@ -71,7 +66,10 @@ ApplicationWindow {
 
                 Column {
                     id: buttonColumn
-                    anchors.fill: parent
+
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
+
                     spacing: 16
 
                     Repeater {
@@ -87,31 +85,32 @@ ApplicationWindow {
                     }
                 }
             }
+            RiveInspectorView {
+                id: dropView
 
-            Item {
-                anchors {
-                    left: scrollView.right
-                    top: parent.top
-                    bottom: parent.bottom
-                    right: parent.right
-                }
+                Layout.fillHeight: true
+                Layout.fillWidth: true
 
-                Text {
-                    visible: !dropView.fileSource
-                    text: "Drop some .riv file"
-                    color: "white"
-                    anchors.centerIn: parent
-                }
-
-                DropArea {
-                    id: dropArea
+                Item {
                     anchors.fill: parent
-                    onEntered: {
-                        drag.accept(Qt.LinkAction)
+
+                    Text {
+                        visible: !dropView.fileSource
+                        text: "Drop some .riv file"
+                        color: "white"
+                        anchors.centerIn: parent
                     }
-                    onDropped: {
-                        console.log(drop.urls)
-                        dropView.fileSource = drop.urls[0].toString().slice(7)
+
+                    DropArea {
+                        id: dropArea
+                        anchors.fill: parent
+                        onEntered: {
+                            drag.accept(Qt.LinkAction)
+                        }
+                        onDropped: {
+                            console.log(drop.urls)
+                            dropView.fileSource = drop.urls[0].toString().slice(7)
+                        }
                     }
                 }
             }

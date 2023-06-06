@@ -47,8 +47,9 @@ Rectangle {
                     id: buttonRepeater
 
                     delegate: Button {
+                        id: buttonDelegate
                         text: "ID: " + modelData.id + ", Name: " + modelData.name
-                              + (advandedText ? ", Duration: " + modelData.duration + ", FPS: " + modelData.fps : "")
+                              + (root.advandedText ? ", Duration: " + modelData.duration + ", FPS: " + modelData.fps : "")
                         onClicked: {
                             console.log("clicked", modelData.id)
                             root.lastClicked = modelData.id !== undefined ? modelData.id : 0
