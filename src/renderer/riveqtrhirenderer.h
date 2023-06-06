@@ -45,8 +45,8 @@ public:
   QVector<QVector<QVector2D>> toVerticesLine(const QPen &pen);
 
 private:
-  void generateVerticies();
-  void generateOutlineVerticies();
+  void generateVertices();
+    void generateOutlineVertices();
 
   QVector<QVector2D> qpainterPathToVector2D(const QPainterPath &path);
   QVector<QVector2D> qpainterPathToOutlineVector2D(const QPainterPath &path);

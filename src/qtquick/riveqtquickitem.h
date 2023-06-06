@@ -22,7 +22,6 @@
 #include "rive/listener_type.hpp"
 
 class RiveQSGRenderNode;
-
 class RiveQSGRHIRenderNode;
 
 // TODO: Move Structs in extra file
@@ -157,6 +156,7 @@ private:
   void loadRiveFile(const QString &source);
   void updateAnimations();
   void updateStateMachines();
+
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
   friend RiveQSGRHIRenderNode;
   void renderOffscreen();
