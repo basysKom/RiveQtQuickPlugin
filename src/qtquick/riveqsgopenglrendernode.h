@@ -21,13 +21,13 @@ class RiveQtQuickItem;
 class RiveQSGOpenGLRenderNode : public RiveQSGRenderNode, public QOpenGLFunctions
 {
 public:
-  RiveQSGOpenGLRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
+    RiveQSGOpenGLRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
 
-  void render(const RenderState *state) override;
+    void render(const RenderState *state) override;
 
-  virtual void updateArtboardInstance(rive::ArtboardInstance *artboardInstance) override;
+    virtual void updateArtboardInstance(rive::ArtboardInstance *artboardInstance) override;
 
 protected:
-  void renderOpenGL(const RenderState *state);
-  RiveQtOpenGLRenderer m_renderer;
+    void renderOpenGL(const RenderState *state);
+    RiveQtOpenGLRenderer m_renderer;
 };

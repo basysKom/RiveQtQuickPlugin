@@ -48,22 +48,22 @@ BraceWrapping:
     BeforeElse: false
     IndentBraces: false
 
-IndentWidth: 2
+IndentWidth: 4
 IndentCaseLabels: false
-AccessModifierOffset: -2
+AccessModifierOffset: -4
 #AlignConsecutiveDeclarations: false
 #AllowShortEnumsOnASingleLine: false
 
 # When constructor initializers do not fit on one line, put them each on a new line.
 #ConstructorInitializerAllOnOneLineOrOnePerLine: true
-# Indent initializers by 2 spaces
-ConstructorInitializerIndentWidth: 2
+# Indent initializers by 4 spaces
+ConstructorInitializerIndentWidth: 4
 
 # Indent width for line continuations.
-ContinuationIndentWidth: 2
+ContinuationIndentWidth: 4
 
 # No indentation for namespaces.
-NamespaceIndentation: All
+NamespaceIndentation: None
 
 # Allow indentation for preprocessing directives (if/ifdef/endif). https://reviews.llvm.org/rL312125
 IndentPPDirectives: AfterHash

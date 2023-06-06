@@ -25,106 +25,107 @@ class TextureTargetNode;
 class RiveQtRhiGLPath : public rive::RenderPath
 {
 public:
-  RiveQtRhiGLPath();
-  RiveQtRhiGLPath(const RiveQtRhiGLPath &rqp);
-  RiveQtRhiGLPath(rive::RawPath &rawPath, rive::FillRule fillRule);
+    RiveQtRhiGLPath();
+    RiveQtRhiGLPath(const RiveQtRhiGLPath &rqp);
+    RiveQtRhiGLPath(rive::RawPath &rawPath, rive::FillRule fillRule);
 
-  void rewind() override;
-  void moveTo(float x, float y) override { m_path.moveTo(x, y); }
-  void lineTo(float x, float y) override { m_path.lineTo(x, y); }
-  void cubicTo(float ox, float oy, float ix, float iy, float x, float y) override { m_path.cubicTo(ox, oy, ix, iy, x, y); }
-  void close() override { m_path.closeSubpath(); }
-  void fillRule(rive::FillRule value) override;
-  void addRenderPath(RenderPath *path, const rive::Mat2D &transform) override;
+    void rewind() override;
+    void moveTo(float x, float y) override { m_path.moveTo(x, y); }
+    void lineTo(float x, float y) override { m_path.lineTo(x, y); }
+    void cubicTo(float ox, float oy, float ix, float iy, float x, float y) override { m_path.cubicTo(ox, oy, ix, iy, x, y); }
+    void close() override { m_path.closeSubpath(); }
+    void fillRule(rive::FillRule value) override;
+    void addRenderPath(RenderPath *path, const rive::Mat2D &transform) override;
 
-  void setQPainterPath(QPainterPath path);
-  QPainterPath toQPainterPath() const { return m_path; }
-  QPainterPath toQPainterPaths(const QMatrix4x4 &t);
+    void setQPainterPath(QPainterPath path);
+    QPainterPath toQPainterPath() const { return m_path; }
+    QPainterPath toQPainterPaths(const QMatrix4x4 &t);
 
-  QVector<QVector<QVector2D>> toVertices();
-  QVector<QVector<QVector2D>> toVerticesLine(const QPen &pen);
+    QVector<QVector<QVector2D>> toVertices();
+    QVector<QVector<QVector2D>> toVerticesLine(const QPen &pen);
 
 private:
-  void generateVertices();
+    void generateVertices();
     void generateOutlineVertices();
 
-  QVector<QVector2D> qpainterPathToVector2D(const QPainterPath &path);
-  QVector<QVector2D> qpainterPathToOutlineVector2D(const QPainterPath &path);
-  QPointF cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2, const QPointF &endPoint,
-                      qreal t);
+    QVector<QVector2D> qpainterPathToVector2D(const QPainterPath &path);
+    QVector<QVector2D> qpainterPathToOutlineVector2D(const QPainterPath &path);
+    QPointF cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2, const QPointF &endPoint,
+                        qreal t);
 
-  QPainterPath m_path;
-  std::vector<RhiSubPath> m_subPaths;
-  QVector<QVector<QVector2D>> m_pathSegmentsData;
-  QVector<QVector<QVector2D>> m_pathSegmentsOutlineData;
-  QVector<QVector<QVector2D>> m_pathOutlineData;
+    QPainterPath m_path;
+    std::vector<RhiSubPath> m_subPaths;
+    QVector<QVector<QVector2D>> m_pathSegmentsData;
+    QVector<QVector<QVector2D>> m_pathSegmentsOutlineData;
+    QVector<QVector<QVector2D>> m_pathOutlineData;
 
-  bool m_isClosed { false };
-  bool m_pathSegmentDataDirty { true };
-  bool m_pathSegmentOutlineDataDirty { true };
+    bool m_isClosed { false };
+    bool m_pathSegmentDataDirty { true };
+    bool m_pathSegmentOutlineDataDirty { true };
 };
 
 class RhiSubPath
 {
 private:
-  RiveQtRhiGLPath *m_Path;
-  QMatrix4x4 m_Transform;
+    RiveQtRhiGLPath *m_Path;
+    QMatrix4x4 m_Transform;
 
 public:
-  RhiSubPath(RiveQtRhiGLPath *path, const QMatrix4x4 &transform);
+    RhiSubPath(RiveQtRhiGLPath *path, const QMatrix4x4 &transform);
 
-  RiveQtRhiGLPath *path() const;
-  QMatrix4x4 transform() const;
+    RiveQtRhiGLPath *path() const;
+    QMatrix4x4 transform() const;
 };
 
 struct RhiRenderState
 {
-  QMatrix4x4 transform;
-  float opacity { 1.0 };
-  RiveQtRhiGLPath clipPath;
-  QVector<QVector<QVector2D>> clippingGeometry;
-  QVector<TextureTargetNode *> stackNodes;
+    QMatrix4x4 transform;
+    float opacity { 1.0 };
+    RiveQtRhiGLPath clipPath;
+    QVector<QVector<QVector2D>> clippingGeometry;
+    QVector<TextureTargetNode *> stackNodes;
 };
 
 class RiveQtRhiRenderer : public rive::Renderer
 {
 public:
-  RiveQtRhiRenderer(QQuickItem *item);
-  virtual ~RiveQtRhiRenderer();
+    RiveQtRhiRenderer(QQuickItem *item);
+    virtual ~RiveQtRhiRenderer();
 
-  void save() override;
-  void restore() override;
-  void transform(const rive::Mat2D &transform) override;
-  void drawPath(rive::RenderPath *path, rive::RenderPaint *paint) override;
-  void clipPath(rive::RenderPath *path) override;
-  void drawImage(const rive::RenderImage *image, rive::BlendMode blendMode, float opacity) override;
-  void drawImageMesh(const rive::RenderImage *image, rive::rcp<rive::RenderBuffer> vertices_f32, rive::rcp<rive::RenderBuffer> uvCoords_f32,
-                     rive::rcp<rive::RenderBuffer> indices_u16, rive::BlendMode blendMode, float opacity) override;
+    void save() override;
+    void restore() override;
+    void transform(const rive::Mat2D &transform) override;
+    void drawPath(rive::RenderPath *path, rive::RenderPaint *paint) override;
+    void clipPath(rive::RenderPath *path) override;
+    void drawImage(const rive::RenderImage *image, rive::BlendMode blendMode, float opacity) override;
+    void drawImageMesh(const rive::RenderImage *image, rive::rcp<rive::RenderBuffer> vertices_f32,
+                       rive::rcp<rive::RenderBuffer> uvCoords_f32, rive::rcp<rive::RenderBuffer> indices_u16, rive::BlendMode blendMode,
+                       float opacity) override;
 
-  void setProjectionMatrix(const QMatrix4x4 *projectionMatrix, const QMatrix4x4 *modelMatrix);
-  void updateArtboardSize(const QSize &artboardSize) { m_artboardSize = artboardSize; }
-  void updateViewPort(const QRectF &viewportRect, QRhiTexture *displayBuffer);
-  void recycleRiveNodes();
+    void setProjectionMatrix(const QMatrix4x4 *projectionMatrix, const QMatrix4x4 *modelMatrix);
+    void updateArtboardSize(const QSize &artboardSize) { m_artboardSize = artboardSize; }
+    void updateViewPort(const QRectF &viewportRect, QRhiTexture *displayBuffer);
+    void recycleRiveNodes();
 
-  void render(QRhiCommandBuffer *cb);
+    void render(QRhiCommandBuffer *cb);
 
 private:
-  TextureTargetNode *getRiveDrawTargetNode();
+    TextureTargetNode *getRiveDrawTargetNode();
 
-  const QMatrix4x4 &transformMatrix() const;
-  float currentOpacity();
+    const QMatrix4x4 &transformMatrix() const;
+    float currentOpacity();
 
-  QQuickItem *m_item;
+    QQuickItem *m_item;
 
-  QVector<RhiRenderState> m_rhiRenderStack;
-  QVector<TextureTargetNode *> m_renderNodes;
+    QVector<RhiRenderState> m_rhiRenderStack;
+    QVector<TextureTargetNode *> m_renderNodes;
 
-  QRhiTexture *m_displayBuffer;
+    QRhiTexture *m_displayBuffer;
 
-  QMatrix4x4 m_projectionMatrix;
-  QMatrix4x4 m_modelMatrix;
-  QMatrix4x4 m_combinedMatrix;
+    QMatrix4x4 m_projectionMatrix;
+    QMatrix4x4 m_modelMatrix;
+    QMatrix4x4 m_combinedMatrix;
 
-  QSize m_artboardSize;
-  QRectF m_viewportRect;
+    QSize m_artboardSize;
+    QRectF m_viewportRect;
 };

@@ -9,21 +9,21 @@
 
 QRectF RiveQSGRenderNode::rect() const
 {
-  return m_item->boundingRect();
+    return m_item->boundingRect();
 }
 
 RiveQSGRenderNode::RiveQSGRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
-  : RiveQSGBaseNode(artboardInstance, item)
+    : RiveQSGBaseNode(artboardInstance, item)
 {
 }
 
 RiveQSGBaseNode::RiveQSGBaseNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
-  : m_artboardInstance(artboardInstance)
-  , m_item(item)
+    : m_artboardInstance(artboardInstance)
+    , m_item(item)
 {
 }
 
 void RiveQSGBaseNode::setRect(const QRectF &bounds)
 {
-  m_rect = bounds;
+    m_rect = bounds;
 }
