@@ -86,15 +86,18 @@ void RiveQtRhiGLPath::addRenderPath(RenderPath *path, const rive::Mat2D &m)
   }
 
   RiveQtRhiGLPath *qtPath = static_cast<RiveQtRhiGLPath *>(path);
-  QMatrix4x4 matrix(m[0], m[2], 0, m[4], m[1], m[3], 0, m[5], 0, 0, 1, 0, 0, 0, 0, 1);
+  QMatrix4x4 matrix(m[0], m[2],    0, m[4],
+                    m[1], m[3],    0, m[5],
+                       0,    0,    1,    0,
+                       0,    0,    0,    1);
 
   m_subPaths.emplace_back(RhiSubPath(qtPath, matrix));
 
   m_pathSegmentOutlineDataDirty = true;
   m_pathSegmentDataDirty = true;
 
-  // calculate verticies directly when we add a path
-  generateVerticies();
+  // calculate vertices directly when we add a path
+  generateVertices();
 }
 
 void RiveQtRhiGLPath::setQPainterPath(QPainterPath path)
@@ -105,18 +108,17 @@ void RiveQtRhiGLPath::setQPainterPath(QPainterPath path)
 QVector<QVector<QVector2D>> RiveQtRhiGLPath::toVertices()
 {
   if (m_pathSegmentDataDirty) {
-    generateVerticies();
+    generateVertices();
   }
   return m_pathSegmentsData;
 }
 
 // TODO: Optimize, this gets called each frame for a stroke/path
-// there will be shortcuts and cacheing possible
-//
+// there will be shortcuts and caching possible
 QVector<QVector<QVector2D>> RiveQtRhiGLPath::toVerticesLine(const QPen &pen)
 {
   if (m_pathSegmentOutlineDataDirty) {
-    generateOutlineVerticies();
+    generateOutlineVertices();
   }
 
   m_pathOutlineData.clear();
@@ -131,7 +133,7 @@ QVector<QVector<QVector2D>> RiveQtRhiGLPath::toVerticesLine(const QPen &pen)
   Qt::PenCapStyle capStyle = pen.capStyle();
 
   if (m_pathSegmentsOutlineData.isEmpty()) {
-    generateVerticies();
+    generateVertices();
 
     if (m_pathSegmentsOutlineData.isEmpty()) {
       return m_pathOutlineData;
@@ -260,13 +262,12 @@ QVector<QVector<QVector2D>> RiveQtRhiGLPath::toVerticesLine(const QPen &pen)
       }
     };
 
-    for (int i = 0; i < (m_isClosed ? endIndex : endIndex - 1); i++) {
+    for (int i = 0; i < (m_isClosed ? endIndex : endIndex - 1); ++i) {
       const QVector2D p1 = pathData[i];
-      const QVector2D p2 = pathData[(i + 1) % (endIndex)];
+      const QVector2D p2 = pathData[(i + 1) % (endIndex)]; // if endIndex, take 0
       const QVector2D diff = p2 - p1;
 
-      QVector2D normal(-diff.y(), diff.x());
-      normal.normalize();
+      const QVector2D normal = QVector2D(-diff.y(), diff.x()).normalized();
 
       const QVector2D offset = normal * (lineWidth / 2.0);
 
@@ -346,22 +347,25 @@ QPointF RiveQtRhiGLPath::cubicBezier(const QPointF &startPoint, const QPointF &c
 QVector<QVector2D> RiveQtRhiGLPath::qpainterPathToVector2D(const QPainterPath &path)
 {
   QVector<QVector2D> pathData;
-  if (!path.isEmpty()) {
-    QTriangleSet triangles = qTriangulate(path);
 
-    for (int i = 0; i < triangles.indices.size(); i++) {
-      int index;
-      if (triangles.indices.type() == QVertexIndexVector::UnsignedInt) {
-        index = static_cast<const quint32 *>(triangles.indices.data())[i];
-      } else {
-        index = static_cast<const quint16 *>(triangles.indices.data())[i];
-      }
+  if (path.isEmpty()) {
+    return pathData;
+  }
 
-      qreal x = triangles.vertices[2 * index];
-      qreal y = triangles.vertices[2 * index + 1];
+  QTriangleSet triangles = qTriangulate(path);
+  int index;
 
-      pathData.append(QVector2D(x, y));
+  for (int i = 0; i < triangles.indices.size(); i++) {
+    if (triangles.indices.type() == QVertexIndexVector::UnsignedInt) {
+      index = static_cast<const quint32 *>(triangles.indices.data())[i];
+    } else {
+      index = static_cast<const quint16 *>(triangles.indices.data())[i];
     }
+
+    const qreal x = triangles.vertices[2 * index];
+    const qreal y = triangles.vertices[2 * index + 1];
+
+    pathData.append(QVector2D(x, y));
   }
 
   return pathData;
@@ -371,59 +375,62 @@ QVector<QVector2D> RiveQtRhiGLPath::qpainterPathToOutlineVector2D(const QPainter
 {
   QVector<QVector2D> pathData;
 
-  if (!path.isEmpty()) {
-    QPointF point = path.elementAt(0);
-    QVector2D centerPoint = QVector2D(point.x(), point.y());
+  if (path.isEmpty()) {
+    return pathData;
+  }
 
-    // Add the center point of the triangle fan.
-    pathData.append(centerPoint);
+  const QPointF& point = path.elementAt(0);
+  const QVector2D& centerPoint = QVector2D(point.x(), point.y());
 
-    for (int i = 1; i < path.elementCount(); ++i) {
-      QPainterPath::Element element = path.elementAt(i);
+  // Add the center point of the triangle fan.
+  pathData.append(centerPoint);
 
-      switch (element.type) {
-      case QPainterPath::MoveToElement:
-      case QPainterPath::LineToElement: {
-        QPointF point = element;
-        pathData.append(QVector2D(point.x(), point.y()));
-        break;
-      }
+  for (int i = 1; i < path.elementCount(); ++i) {
+    QPainterPath::Element element = path.elementAt(i);
 
-      case QPainterPath::CurveToElement: {
-        QPointF startPoint = pathData.last().toPointF();
-        QPointF controlPoint1 = element;
-        QPointF controlPoint2 = path.elementAt(i + 1);
-        QPointF endPoint = path.elementAt(i + 2);
-
-        const int segments = 10; // should be good enough
-
-        for (int j = 1; j <= segments; ++j) {
-          qreal t = static_cast<qreal>(j) / segments;
-          QPointF point = cubicBezier(startPoint, controlPoint1, controlPoint2, endPoint, t);
-          pathData.append(QVector2D(point.x(), point.y()));
-        }
-
-        i += 2; // Skip the next two control points, as we already processed them.
-        break;
-      }
-      default:
-        break;
-      }
-    }
-
-    if (pathData.first() == pathData.last()) {
-      m_isClosed = true;
-    }
-
-    if (m_isClosed) {
-      // Connect the last point to the first point.
+    switch (element.type) {
+    case QPainterPath::MoveToElement:
+    case QPainterPath::LineToElement: {
+      QPointF point = element;
       pathData.append(QVector2D(point.x(), point.y()));
+      break;
+    }
+
+    case QPainterPath::CurveToElement: {
+      const QPointF& startPoint = pathData.last().toPointF();
+      const QPointF& controlPoint1 = element;
+      const QPointF& controlPoint2 = path.elementAt(i + 1);
+      const QPointF& endPoint = path.elementAt(i + 2);
+
+      const int segments = 10; // should be good enough
+
+      for (int j = 1; j <= segments; ++j) {
+        const qreal t = static_cast<qreal>(j) / segments;
+        const QPointF& point = cubicBezier(startPoint, controlPoint1, controlPoint2, endPoint, t);
+        pathData.append(QVector2D(point.x(), point.y()));
+      }
+
+      i += 2; // Skip the next two control points, as we already processed them.
+      break;
+    }
+    default:
+      break;
     }
   }
+
+  if (pathData.first() == pathData.last()) {
+    m_isClosed = true;
+  }
+
+  if (m_isClosed) {
+    // Connect the last point to the first point.
+    pathData.append(QVector2D(point.x(), point.y()));
+  }
+
   return pathData;
 }
 
-void RiveQtRhiGLPath::generateVerticies()
+void RiveQtRhiGLPath::generateVertices()
 {
   if (!m_pathSegmentDataDirty) {
     return;
@@ -447,7 +454,7 @@ void RiveQtRhiGLPath::generateVerticies()
   m_pathSegmentDataDirty = false;
 }
 
-void RiveQtRhiGLPath::generateOutlineVerticies()
+void RiveQtRhiGLPath::generateOutlineVertices()
 {
   if (!m_pathSegmentOutlineDataDirty) {
     return;
@@ -543,7 +550,7 @@ void RiveQtRhiRenderer::drawPath(rive::RenderPath *path, rive::RenderPaint *pain
     node->setGradient(qtPaint->brush().gradient());
   }
 
-#if 0 // this allows to draw the clipping area which it usefull for debugging :)
+#if 0 // this allows to draw the clipping area which it useful for debugging :)
   TextureTargetNode *drawClipping = getRiveDrawTargetNode();
   drawClipping->setOpacity(currentOpacity()); // inherit the opacity from the parent
   drawClipping->setColor(QColor(255, 0, 0, 5));
@@ -562,9 +569,9 @@ void RiveQtRhiRenderer::clipPath(rive::RenderPath *path)
   // draw each one by one to the stencil buffer
   // -> I would guess that would be faster
   RiveQtRhiGLPath *qtPath = static_cast<RiveQtRhiGLPath *>(path);
-  auto c = qtPath->toVertices();
+  auto pathVertices = qtPath->toVertices();
 
-  for (auto &path : c) {
+  for (auto &path : pathVertices) {
     for (auto &point : path) {
       QVector4D vec4(point, 0.0f, 1.0f);
       vec4 = transformMatrix() * vec4;
@@ -572,7 +579,7 @@ void RiveQtRhiRenderer::clipPath(rive::RenderPath *path)
     }
   }
 
-  m_rhiRenderStack.back().clippingGeometry = c;
+  m_rhiRenderStack.back().clippingGeometry = pathVertices;
 
   for (TextureTargetNode *textureTargetNode : m_rhiRenderStack.back().stackNodes) {
     textureTargetNode->updateClippingGeometry(m_rhiRenderStack.back().clippingGeometry);

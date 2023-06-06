@@ -48,11 +48,15 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
       loadRiveFile(m_fileSource);
     }
   });
+
+  // TODO Remove this mess of a comment
+
   // TODO: 1) shall we make this Interval match the FPS of the current selected animation
-  // TODO: 2) we may want to move this into the render thread to allow the render thread control over the timer, the timer itself only
-  // triggers Updates
-  //          all animations are done during the node update, from within the renderthread
-  //          Note: this is kind of scarry as all objects are created in the main thread
+  // TODO: 2) we may want to move this into the render thread to allow the render thread control over the timer,
+  //          the timer itself only triggers updates.
+
+  //          All animations are done during the node update, from within the render thread
+  //          Note: this is kind of scary as all objects are created in the main thread
   //                which means that we have to be really carefull here to not crash
 
   // those will be triggered by renderthread once an update was applied to the pipeline
@@ -60,9 +64,7 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
   connect(this, &RiveQtQuickItem::internalArtboardChanged, this, &RiveQtQuickItem::currentArtboardIndexChanged, Qt::QueuedConnection);
   connect(this, &RiveQtQuickItem::internalArtboardChanged, this, &RiveQtQuickItem::updateAnimations, Qt::QueuedConnection);
   connect(this, &RiveQtQuickItem::internalArtboardChanged, this, &RiveQtQuickItem::updateStateMachines, Qt::QueuedConnection);
-  connect(
-    this, &RiveQtQuickItem::internalStateMachineChanged, this,
-    [this]() {
+  connect(this, &RiveQtQuickItem::internalStateMachineChanged, this, [this]() {
       if (m_stateMachineInputMap) {
         m_stateMachineInputMap->deleteLater();
       }
@@ -71,9 +73,10 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
       m_stateMachineInputMap = new RiveQtStateMachineInputMap(m_currentStateMachineInstance.get(), this);
       emit stateMachineInterfaceChanged();
     },
-    Qt::QueuedConnection);
+    Qt::QueuedConnection
+  );
 
-  // do update the index only once we are setuped and happy
+  // do update the index only once we are set up and happy
   connect(this, &RiveQtQuickItem::stateMachineInterfaceChanged, this, &RiveQtQuickItem::currentStateMachineIndexChanged,
           Qt::QueuedConnection);
 
@@ -170,6 +173,7 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     m_currentArtboardInstance->update(rive::ComponentDirt::Filthy);
   }
 
+
   if (m_renderNode) {
     m_renderNode->markDirty(QSGNode::DirtyForceUpdate);
   }
@@ -220,15 +224,17 @@ void RiveQtQuickItem::mouseReleaseEvent(QMouseEvent *event)
 
 void RiveQtQuickItem::setFileSource(const QString &source)
 {
-  if (m_fileSource != source) {
-    m_fileSource = source;
-    emit fileSourceChanged();
-
-    // Load the Rive file when the fileSource is set
-    loadRiveFile(source);
-    m_loadingStatus = Loading;
-    emit loadingStatusChanged();
+  if (m_fileSource == source) {
+    return;
   }
+
+  m_fileSource = source;
+  emit fileSourceChanged();
+  m_loadingStatus = Loading;
+  emit loadingStatusChanged();
+
+  // Load the Rive file when the fileSource is set
+  loadRiveFile(source);
 }
 
 void RiveQtQuickItem::loadRiveFile(const QString &source)
@@ -281,10 +287,8 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
   m_riveFile = rive::File::import(dataSpan, &m_riveQtFactory, &importResult);
 
   if (importResult == rive::ImportResult::success) {
-    qDebug("Successfully imported Rive file.");
-    m_loadingStatus = Loaded;
-
     m_artboardInfoList.clear();
+
     // Get info about the artboards
     for (size_t i = 0; i < m_riveFile->artboardCount(); i++) {
       const auto artBoard = m_riveFile->artboard(i);
@@ -298,11 +302,18 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
     }
     emit artboardsChanged();
 
-    // todo allow to preselect the artboard and statemachine and animation at load
+    // TODO allow to preselect the artboard and statemachine and animation at load
     setCurrentArtboardIndex(0);
     if (m_initialStateMachineIndex != -1) {
       setCurrentStateMachineIndex(m_initialStateMachineIndex);
     }
+
+    m_scheduleArtboardChange = true;
+    m_scheduleStateMachineChange = true;
+
+    qDebug("Successfully imported Rive file.");
+    m_loadingStatus = Loaded;
+
   } else {
     qDebug("Failed to import Rive file.");
     m_loadingStatus = Error;
@@ -321,8 +332,8 @@ void RiveQtQuickItem::updateAnimations()
   for (size_t i = 0; i < m_currentArtboardInstance->animationCount(); i++) {
     const auto animation = m_currentArtboardInstance->animation(i);
     if (animation) {
-      qDebug() << "Animation" << i << "found.";
 
+      qDebug() << "Animation" << i << "found.";
       qDebug() << "  Duration:" << animation->duration();
       qDebug() << "  FPS:" << animation->fps();
 
