@@ -35,3 +35,4 @@
 *.user
 
 builds/
+.directory
