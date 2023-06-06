@@ -1,4 +1,3 @@
-
 // SPDX-FileCopyrightText: 2023 Jonas Kalinka <jonas.kalinka@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 
@@ -20,7 +19,7 @@ Item {
         ControlPanel {
             title: "Artboards"
             model: riveItem.artboards
-            visible: model.length > 0
+            visible: model !== undefined ? model.length > 0 : false
             onLastClickedChanged: riveItem.currentArtboardIndex = lastClicked
 
             Layout.fillHeight: true
@@ -31,7 +30,7 @@ Item {
             title: "Animations"
 
             model: riveItem.animations
-            visible: model.length > 0
+            visible: model !== undefined ? model.length > 0 : false
             onLastClickedChanged: riveItem.triggerAnimation(lastClicked)
             advandedText: true
 
@@ -43,7 +42,7 @@ Item {
             title: "State Machines"
 
             model: riveItem.stateMachines
-            visible: model.length > 0
+            visible: model !== undefined ? model.length > 0 : false
             onLastClickedChanged: riveItem.currentStateMachineIndex = lastClicked
 
             Layout.fillHeight: true
@@ -54,7 +53,7 @@ Item {
             title: "Triggers"
 
             model: riveItem.stateMachineInterface ? riveItem.stateMachineInterface.triggers : 0
-            visible: model.length > 0
+            visible: model !== undefined ? model.length > 0 : false
             onLastClickedChanged: riveItem.stateMachineInterface.activateTrigger(model[lastClicked])
 
             Layout.fillHeight: true
