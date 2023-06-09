@@ -42,7 +42,9 @@ ApplicationWindow {
                 id: scrollView
 
                 Layout.fillHeight: true
-                Layout.preferredWidth: !dropView.fileSource ? 300 : 150
+                Layout.preferredWidth: (!dropView.fileSource || hovered) ? 300 : 150
+
+                hoverEnabled: true
 
                 padding: 16
 
