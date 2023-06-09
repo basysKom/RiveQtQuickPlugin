@@ -4,12 +4,12 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "riveqtquickplugin.h"
-
 #include "qqml.h"
+
 #include "qtquick/riveqtquickitem.h"
 #include "qtquick/riveqtstatemachineinputmap.h"
 #include "qtquick/datatypes.h"
+#include "riveqtquickplugin.h"
 
 void RiveQtQuickPlugin::registerTypes(const char *uri)
 {

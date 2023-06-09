@@ -11,11 +11,11 @@
 #include <QPen>
 #include <QLinearGradient>
 
-#include <rive/renderer.hpp>
-#include <rive/math/raw_path.hpp>
-
 #include "private/qrhi_p.h"
 #include "qquickitem.h"
+
+#include <rive/renderer.hpp>
+#include <rive/math/raw_path.hpp>
 
 class RhiSubPath;
 class QSGRenderNode;
