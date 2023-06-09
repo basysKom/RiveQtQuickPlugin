@@ -1,4 +1,3 @@
-
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
@@ -30,7 +29,7 @@ uint32_t RiveQtFont::tagFromName(const char *name) const
 
 rive::Font::Axis RiveQtFont::getAxis(uint16_t index) const
 {
-    QFontDatabase db;
+    // QFontDatabase db;
     QRawFont rawFont = QRawFont::fromFont(m_font);
     QByteArray fontData = rawFont.fontTable("head");
 
@@ -41,7 +40,7 @@ rive::Font::Axis RiveQtFont::getAxis(uint16_t index) const
 
 uint16_t RiveQtFont::getAxisCount() const
 {
-    QFontDatabase db;
+    // QFontDatabase db;
     QRawFont rawFont = QRawFont::fromFont(m_font);
     QByteArray fontData = rawFont.fontTable("head");
 
@@ -52,7 +51,7 @@ uint16_t RiveQtFont::getAxisCount() const
 
 std::vector<rive::Font::Coord> RiveQtFont::getCoords() const
 {
-    QFontDatabase db;
+    // QFontDatabase db;
     QRawFont rawFont = QRawFont::fromFont(m_font);
     QByteArray fontData = rawFont.fontTable("head");
 
@@ -104,7 +103,7 @@ rive::RawPath RiveQtFont::getPath(rive::GlyphID glyphId) const
 
 rive::SimpleArray<rive::Paragraph> RiveQtFont::onShapeText(rive::Span<const rive::Unichar> text, rive::Span<const rive::TextRun> runs) const
 {
-    QString qText = QString::fromUcs4(text.begin(), text.size());
+    QString qText = QString::fromUcs4(reinterpret_cast<const char32_t *>(text.begin()), text.size());
     std::vector<rive::Paragraph> tempParagraphs;
 
     QTextLayout layout(qText, m_font);
