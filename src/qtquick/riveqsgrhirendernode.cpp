@@ -78,9 +78,9 @@ void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
     m_vertices.append(QVector2D(bounds.x() + bounds.width(), bounds.y()));
     m_vertices.append(QVector2D(bounds.x() + bounds.width(), bounds.y() + bounds.height()));
 
-    //  // todo this is not yet fully correct. Resize is super expensive due to resource destruction
-    //  // TODO: maybe we should only do this in case the texture gets larger and stays larger for some time
-    //  // that may cost us quality but will save us  a lot of issues
+    // todo this is not yet fully correct. Resize is super expensive due to resource destruction
+    // TODO: maybe we should only do this in case the texture gets larger and stays larger for some time
+    // that may cost us quality but will save us a lot of issues
     if (m_displayBuffer) {
         m_cleanupList.removeAll(m_displayBuffer);
         m_displayBuffer->destroy();

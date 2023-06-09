@@ -453,6 +453,7 @@ void RiveQtRhiGLPath::generateVertices()
     m_pathSegmentsData.clear();
 
     m_pathSegmentsData.append(qpainterPathToVector2D(m_path));
+
     for (RhiSubPath &RhiSubPath : m_subPaths) {
         QPainterPath sourcePath = RhiSubPath.path()->toQPainterPath();
         QPainterPath transformedPath = RiveQtUtils::transformPathWithMatrix4x4(sourcePath, RhiSubPath.transform());

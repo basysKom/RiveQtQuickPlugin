@@ -215,7 +215,7 @@ void RiveQtQuickItem::mouseMoveEvent(QMouseEvent *event)
 
 void RiveQtQuickItem::hoverMoveEvent(QHoverEvent *event)
 {
-    hitTest(event->pos(), rive::ListenerType::move);
+    hitTest(event->position(), rive::ListenerType::move);
     // todo: shall we tell qml about a hit and details about that?
 }
 
