@@ -3,36 +3,40 @@
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
+#define _USE_MATH_DEFINES
+
+#include <algorithm>
+#include <math.h>
+
+#include <QVector4D>
+#include <QSGRenderNode>
+#include <private/qtriangulator_p.h>
 
 #include "riveqtrhirenderer.h"
 #include "qquickwindow.h"
 #include "src/qtquick/rhi/texturetargetnode.h"
 
-#define _USE_MATH_DEFINES
-#include <QVector4D>
-#include <math.h>
-
-#include <QSGRenderNode>
-#include <private/qtriangulator_p.h>
-
-RiveQtRhiGLPath::RiveQtRhiGLPath()
+RiveQtRhiGLPath::RiveQtRhiGLPath(const unsigned segmentCount)
 {
     m_path.setFillRule(Qt::FillRule::WindingFill);
+    setSegmentCount(segmentCount);
 }
 
-RiveQtRhiGLPath::RiveQtRhiGLPath(const RiveQtRhiGLPath &rqp)
+RiveQtRhiGLPath::RiveQtRhiGLPath(const RiveQtRhiGLPath &other)
 {
-    m_path = rqp.m_path;
-    m_subPaths = rqp.m_subPaths;
-    m_pathSegmentsData = rqp.m_pathSegmentsData;
-    m_pathSegmentsOutlineData = rqp.m_pathSegmentsOutlineData;
-    m_pathOutlineData = rqp.m_pathOutlineData;
+    m_path = other.m_path;
+    m_subPaths = other.m_subPaths;
+    m_pathSegmentsData = other.m_pathSegmentsData;
+    m_pathSegmentsOutlineData = other.m_pathSegmentsOutlineData;
+    m_pathOutlineData = other.m_pathOutlineData;
+    m_segmentCount = other.m_segmentCount;
 }
 
-RiveQtRhiGLPath::RiveQtRhiGLPath(rive::RawPath &rawPath, rive::FillRule fillRule)
+RiveQtRhiGLPath::RiveQtRhiGLPath(rive::RawPath &rawPath, rive::FillRule fillRule, const unsigned segmentCount)
 {
     m_path.clear();
     m_path.setFillRule(RiveQtUtils::riveFillRuleToQt(fillRule));
+    setSegmentCount(segmentCount);
 
     for (const auto &[verb, pts] : rawPath) {
         switch (verb) {
@@ -100,6 +104,16 @@ void RiveQtRhiGLPath::addRenderPath(RenderPath *path, const rive::Mat2D &m)
 void RiveQtRhiGLPath::setQPainterPath(QPainterPath path)
 {
     m_path = path;
+}
+
+void RiveQtRhiGLPath::setSegmentCount(const unsigned segmentCount)
+{
+    if (segmentCount == 0u) {
+        m_segmentCount = 1u;
+        return;
+    }
+
+    m_segmentCount = std::min(segmentCount, 100u);
 }
 
 QVector<QVector<QVector2D>> RiveQtRhiGLPath::toVertices()
@@ -399,10 +413,8 @@ QVector<QVector2D> RiveQtRhiGLPath::qpainterPathToOutlineVector2D(const QPainter
             const QPointF &controlPoint2 = path.elementAt(i + 1);
             const QPointF &endPoint = path.elementAt(i + 2);
 
-            const int segments = 10; // should be good enough
-
-            for (int j = 1; j <= segments; ++j) {
-                const qreal t = static_cast<qreal>(j) / segments;
+            for (int j = 1; j <= m_segmentCount; ++j) {
+                const qreal t = static_cast<qreal>(j) / m_segmentCount;
                 const QPointF &point = cubicBezier(startPoint, controlPoint1, controlPoint2, endPoint, t);
                 pathData.append(QVector2D(point.x(), point.y()));
             }

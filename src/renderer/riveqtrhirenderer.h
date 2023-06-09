@@ -16,7 +16,6 @@
 
 #include "private/qrhi_p.h"
 #include "qquickitem.h"
-#include "riveqtutils.h"
 
 class RhiSubPath;
 class QSGRenderNode;
@@ -25,9 +24,9 @@ class TextureTargetNode;
 class RiveQtRhiGLPath : public rive::RenderPath
 {
 public:
-    RiveQtRhiGLPath();
-    RiveQtRhiGLPath(const RiveQtRhiGLPath &rqp);
-    RiveQtRhiGLPath(rive::RawPath &rawPath, rive::FillRule fillRule);
+    RiveQtRhiGLPath(const unsigned segmentCount);
+    RiveQtRhiGLPath(const RiveQtRhiGLPath &other);
+    RiveQtRhiGLPath(rive::RawPath &rawPath, rive::FillRule fillRule, const unsigned segmentCount);
 
     void rewind() override;
     void moveTo(float x, float y) override { m_path.moveTo(x, y); }
@@ -40,6 +39,8 @@ public:
     void setQPainterPath(QPainterPath path);
     QPainterPath toQPainterPath() const { return m_path; }
     QPainterPath toQPainterPaths(const QMatrix4x4 &t);
+
+    void setSegmentCount(const unsigned segmentCount);
 
     QVector<QVector<QVector2D>> toVertices();
     QVector<QVector<QVector2D>> toVerticesLine(const QPen &pen);
@@ -62,26 +63,28 @@ private:
     bool m_isClosed { false };
     bool m_pathSegmentDataDirty { true };
     bool m_pathSegmentOutlineDataDirty { true };
+
+    unsigned m_segmentCount { 10 };
 };
 
 class RhiSubPath
 {
-private:
-    RiveQtRhiGLPath *m_Path;
-    QMatrix4x4 m_Transform;
-
 public:
     RhiSubPath(RiveQtRhiGLPath *path, const QMatrix4x4 &transform);
 
     RiveQtRhiGLPath *path() const;
     QMatrix4x4 transform() const;
+
+private:
+    RiveQtRhiGLPath *m_Path;
+    QMatrix4x4 m_Transform;
 };
 
 struct RhiRenderState
 {
     QMatrix4x4 transform;
     float opacity { 1.0 };
-    RiveQtRhiGLPath clipPath;
+    RiveQtRhiGLPath clipPath { 10u };
     QVector<QVector<QVector2D>> clippingGeometry;
     QVector<TextureTargetNode *> stackNodes;
 };

@@ -11,59 +11,18 @@
 #include <QQuickPaintedItem>
 #include <QSGRenderNode>
 #include <QSGTextureProvider>
-
 #include <QImage>
 #include <QPainter>
-
 #include <QTimer>
+
 #include "rive/artboard.hpp"
 #include "riveqtfactory.h"
 #include "riveqtstatemachineinputmap.h"
 #include "rive/listener_type.hpp"
+#include "datatypes.h"
 
 class RiveQSGRenderNode;
 class RiveQSGRHIRenderNode;
-
-// TODO: Move Structs in extra file
-struct AnimationInfo
-{
-    Q_GADGET
-
-    Q_PROPERTY(int id MEMBER id CONSTANT)
-    Q_PROPERTY(QString name MEMBER name CONSTANT)
-    Q_PROPERTY(float duration MEMBER duration CONSTANT)
-    Q_PROPERTY(uint32_t fps MEMBER fps CONSTANT)
-
-public:
-    int id;
-    QString name;
-    float duration;
-    uint32_t fps;
-};
-
-class ArtBoardInfo
-{
-    Q_GADGET
-
-    Q_PROPERTY(int id MEMBER id CONSTANT)
-    Q_PROPERTY(QString name MEMBER name CONSTANT)
-
-public:
-    int id;
-    QString name;
-};
-
-struct StateMachineInfo
-{
-    Q_GADGET
-
-    Q_PROPERTY(int id MEMBER id CONSTANT)
-    Q_PROPERTY(QString name MEMBER name CONSTANT)
-
-public:
-    int id;
-    QString name;
-};
 
 class RiveQtQuickItem : public QQuickItem
 {
@@ -82,6 +41,8 @@ class RiveQtQuickItem : public QQuickItem
     Q_PROPERTY(bool interactive READ interactive WRITE setInteractive NOTIFY interactiveChanged)
 
     Q_PROPERTY(RiveQtStateMachineInputMap *stateMachineInterface READ stateMachineInterface NOTIFY stateMachineInterfaceChanged)
+
+    Q_PROPERTY(RenderSettings::RenderQuality renderQuality READ renderQuality WRITE setRenderQuality NOTIFY renderQualityChanged)
 public:
     enum LoadingStatus
     {
@@ -122,6 +83,13 @@ public:
     bool interactive() const;
     void setInteractive(bool newInteractive);
 
+    RenderSettings::RenderQuality renderQuality() { return m_renderSettings.renderQuality; }
+    void setRenderQuality(const RenderSettings::RenderQuality quality)
+    {
+        m_renderSettings.renderQuality = quality;
+        emit renderQualityChanged();
+    }
+
 signals:
     void animationsChanged();
     void artboardsChanged();
@@ -138,6 +106,8 @@ signals:
     void internalArtboardChanged();
     void internalStateMachineChanged();
     void stateMachineInterfaceChanged();
+
+    void renderQualityChanged();
 
 protected:
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
@@ -200,4 +170,6 @@ private:
     rive::ListenerType m_listenerType { rive::ListenerType::enter };
 
     RiveQSGRenderNode *m_renderNode { nullptr };
+
+    RenderSettings m_renderSettings { RenderSettings() };
 };

@@ -36,6 +36,8 @@
 RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     : QQuickItem(parent)
 {
+
+    m_renderSettings.renderQuality = RenderSettings::Medium;
     // set global flags and configs of our item
     // TODO: maybe we should also allow Hover Events to be used
     setFlag(QQuickItem::ItemHasContents, true);
@@ -261,6 +263,8 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
         emit loadingStatusChanged();
         return;
     }
+
+    m_riveQtFactory.setRenderSettings(m_renderSettings);
 
     switch (currentWindow->rendererInterface()->graphicsApi()) {
 

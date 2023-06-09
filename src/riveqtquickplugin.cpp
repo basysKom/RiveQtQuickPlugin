@@ -7,13 +7,15 @@
 #include "riveqtquickplugin.h"
 
 #include "qqml.h"
-#include "qqmlengine.h"
 #include "qtquick/riveqtquickitem.h"
 #include "qtquick/riveqtstatemachineinputmap.h"
+#include "qtquick/datatypes.h"
 
 void RiveQtQuickPlugin::registerTypes(const char *uri)
 {
     qmlRegisterType<RiveQtQuickItem>("RiveQtQuickPlugin", 1, 0, "RiveQtQuickItem");
+    qmlRegisterType<RenderSettings>("RiveQtQuickPlugin", 1, 0, "RenderSettings");
+
     qRegisterMetaType<AnimationInfo>("AnimationInfo");
     qRegisterMetaType<QVector<AnimationInfo>>("QVector<AnimationInfo>");
 

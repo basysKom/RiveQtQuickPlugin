@@ -71,6 +71,8 @@ Item {
             currentArtboardIndex: 0
             currentStateMachineIndex: 0
 
+            renderQuality: RenderSettings.Medium
+
             onStateMachineInterfaceChanged: {
                 if (stateMachineInterface) {
                     console.log(Object.keys(stateMachineInterface))
