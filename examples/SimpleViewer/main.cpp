@@ -13,14 +13,19 @@ int main(int argc, char *argv[])
 {
     // Force OpenGL
     // QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
+
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
 
-    for (const QString &path : engine.importPathList()) {
+    const auto &pathList = engine.importPathList();
+    for (const QString &path : pathList) {
         qDebug() << "  " << path;
     }
+
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreated, &app,
