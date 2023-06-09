@@ -60,14 +60,14 @@ set(PROJECT_SOURCES
 
 if (${QT_VERSION_MAJOR} EQUAL 6)
     set(QT6_PROJECT_SOURCES
-    #qt6
-    src/qtquick/rhi/texturetargetnode.h
-    src/qtquick/rhi/texturetargetnode.cpp
-    src/qtquick/riveqsgrhirendernode.h
-    src/qtquick/riveqsgrhirendernode.cpp
-    src/renderer/riveqtrhirenderer.h
-    src/renderer/riveqtrhirenderer.cpp
-)
+        #qt6
+        src/qtquick/rhi/texturetargetnode.h
+        src/qtquick/rhi/texturetargetnode.cpp
+        src/qtquick/riveqsgrhirendernode.h
+        src/qtquick/riveqsgrhirendernode.cpp
+        src/renderer/riveqtrhirenderer.h
+        src/renderer/riveqtrhirenderer.cpp
+    )
 endif()
 
 # Add rive-cpp dependency if required
@@ -83,26 +83,26 @@ endif()
 
 # Set compile definitions for debug configurations
 target_compile_definitions(${PROJECT_NAME}
-  PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
+    PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 
 # Link the plugin with required libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
-  Qt${QT_VERSION_MAJOR}::Core
-  Qt${QT_VERSION_MAJOR}::CorePrivate
-  Qt${QT_VERSION_MAJOR}::Quick
-  Qt${QT_VERSION_MAJOR}::Gui
-  Qt${QT_VERSION_MAJOR}::GuiPrivate
-  Qt${QT_VERSION_MAJOR}::OpenGL
-  Qt${QT_VERSION_MAJOR}::Qml
-  Qt${QT_VERSION_MAJOR}::QuickPrivate
-  rive_cpp
+    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::CorePrivate
+    Qt${QT_VERSION_MAJOR}::Quick
+    Qt${QT_VERSION_MAJOR}::Gui
+    Qt${QT_VERSION_MAJOR}::GuiPrivate
+    Qt${QT_VERSION_MAJOR}::OpenGL
+    Qt${QT_VERSION_MAJOR}::Qml
+    Qt${QT_VERSION_MAJOR}::QuickPrivate
+    rive_cpp
 )
 
 # Include necessary directories
 if (${QT_VERSION_MAJOR} EQUAL 5)
-include_directories(${Qt5Gui_PRIVATE_INCLUDE_DIRS} ${Qt5Core_PRIVATE_INCLUDE_DIRS} "src/renderer")
+    include_directories(${Qt5Gui_PRIVATE_INCLUDE_DIRS} ${Qt5Core_PRIVATE_INCLUDE_DIRS} "src/renderer")
 else()
-include_directories(${Qt6Gui_PRIVATE_INCLUDE_DIRS} ${Qt6Core_PRIVATE_INCLUDE_DIRS} "src/renderer")
+    include_directories(${Qt6Gui_PRIVATE_INCLUDE_DIRS} ${Qt6Core_PRIVATE_INCLUDE_DIRS} "src/renderer")
 endif()
 
 include_directories(${Qt${QT_VERSION_MAJOR}Gui_PRIVATE_INCLUDE_DIRS})
@@ -118,6 +118,47 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/src/qmldir ${QML_BINARY_DIR}/RiveQtQuickPlugin
     COMMENT "Copying plugin and qmldir to binary directory"
 )
+
+if (${QT_VERSION_MAJOR} EQUAL 6)
+    find_package(Qt6 COMPONENTS ShaderTools)
+    qt6_add_shaders(${PROJECT_NAME} "graph-shaders"
+        BATCHABLE
+        PRECOMPILE
+        OPTIMIZED
+        PREFIX
+            "/"
+        FILES
+            "shaders/qt6/drawRiveTextureNode.frag"
+            "shaders/qt6/drawRiveTextureNode.vert"
+            "shaders/qt6/finalDraw.frag"
+            "shaders/qt6/finalDraw.vert"
+            "shaders/qt6/blendRiveTextureNode.frag"
+            "shaders/qt6/blendRiveTextureNode.vert"
+      )
+
+    set(APP_RESOURCES
+        "shaders.qrc"
+        "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/drawRiveTextureNode.vert.qsb"
+        "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/drawRiveTextureNode.frag.qsb"
+        "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/finalDraw.vert.qsb"
+        "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/finalDraw.frag.qsb"
+        "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/blendRiveTextureNode.vert.qsb"
+        "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/blendRiveTextureNode.frag.qsb"
+    )
+
+#    qt_add_qml_module(
+#        ${PROJECT_NAME}
+#        URI
+#            ${PROJECT_NAME}
+#        VERSION
+#            1.0
+##        PLUGIN_TARGET ${PROJECT_NAME}
+##        OUTPUT_DIRECTORY
+##            ${QML_BINARY_DIR}
+#        SOURCES
+#            ${PROJECT_SOURCES}
+#    )
+endif()
 
 # Build examples if enabled
 if(RQQRP_BUILD_EXAMPLES)
@@ -141,33 +182,4 @@ if(RQQRP_BUILD_EXAMPLES)
         )
     endif()
 endif()
-
-if (${QT_VERSION_MAJOR} EQUAL 6)
-find_package(Qt6 COMPONENTS ShaderTools)
-qt6_add_shaders(${PROJECT_NAME} "graph-shaders"
-  BATCHABLE
-  PRECOMPILE
-  OPTIMIZED
-  PREFIX
-  "/"
-  FILES
-  "shaders/qt6/drawRiveTextureNode.frag"
-  "shaders/qt6/drawRiveTextureNode.vert"
-  "shaders/qt6/finalDraw.frag"
-  "shaders/qt6/finalDraw.vert"
-  "shaders/qt6/blendRiveTextureNode.frag"
-  "shaders/qt6/blendRiveTextureNode.vert"
-  )
-
-set(APP_RESOURCES
-    "shaders.qrc"
-    "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/drawRiveTextureNode.vert.qsb"
-    "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/drawRiveTextureNode.frag.qsb"
-    "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/finalDraw.vert.qsb"
-    "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/finalDraw.frag.qsb"
-    "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/blendRiveTextureNode.vert.qsb"
-    "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/blendRiveTextureNode.frag.qsb"
-)
-endif()
-
 

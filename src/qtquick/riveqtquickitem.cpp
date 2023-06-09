@@ -5,7 +5,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "riveqtquickitem.h"
-#include "qqmlcontext.h"
 #include "rive/animation/state_machine_listener.hpp"
 #include "rive/file.hpp"
 
@@ -215,7 +214,7 @@ void RiveQtQuickItem::mouseMoveEvent(QMouseEvent *event)
 
 void RiveQtQuickItem::hoverMoveEvent(QHoverEvent *event)
 {
-    hitTest(event->position(), rive::ListenerType::move);
+    hitTest(event->pos(), rive::ListenerType::move);
     // todo: shall we tell qml about a hit and details about that?
 }
 

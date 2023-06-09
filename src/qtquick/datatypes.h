@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <qqml.h>
 #include <QQuickItem>
 
 struct AnimationInfo
@@ -53,6 +54,8 @@ struct RenderSettings
     Q_GADGET
 
     Q_PROPERTY(RenderQuality renderQuality MEMBER renderQuality)
+    //    QML_ELEMENT
+
 public:
     enum RenderQuality
     {

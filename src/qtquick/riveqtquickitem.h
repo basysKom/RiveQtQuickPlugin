@@ -43,6 +43,9 @@ class RiveQtQuickItem : public QQuickItem
     Q_PROPERTY(RiveQtStateMachineInputMap *stateMachineInterface READ stateMachineInterface NOTIFY stateMachineInterfaceChanged)
 
     Q_PROPERTY(RenderSettings::RenderQuality renderQuality READ renderQuality WRITE setRenderQuality NOTIFY renderQualityChanged)
+
+    QML_ELEMENT
+
 public:
     enum LoadingStatus
     {
