@@ -43,6 +43,7 @@ set(PROJECT_SOURCES
     src/renderer/riveqtpainterrenderer.cpp
     src/renderer/riveqtfactory.h
     src/renderer/riveqtfactory.cpp
+    src/qtquick/datatypes.h
     src/qtquick/riveqtquickitem.h
     src/qtquick/riveqtquickitem.cpp
     src/qtquick/riveqtstatemachineinputmap.h
@@ -168,3 +169,5 @@ set(APP_RESOURCES
     "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/blendRiveTextureNode.frag.qsb"
 )
 endif()
+
+

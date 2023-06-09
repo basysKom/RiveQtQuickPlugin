@@ -5,6 +5,8 @@
   SPDX-License-Identifier: LGPL-3.0-or-later
 ]]
 
+cmake_minimum_required(VERSION 3.14)
+
 project(RiveQtQuickSimpleViewer
     VERSION 0.1.0.0
     DESCRIPTION "Simple Viewer Example to demonstrate the rive qt quick plugin"

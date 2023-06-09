@@ -5,16 +5,20 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #pragma once
+#include <vector>
 
 #include <QFont>
 #include <QFontDatabase>
 
+#include <rive/file.hpp>
+#include <rive/renderer.hpp>
+
 #include "rive/renderer.hpp"
 #include "rive/span.hpp"
-#include <rive/file.hpp>
 
-#include <rive/renderer.hpp>
-#include <vector>
+#include "../qtquick/datatypes.h"
+
+class RiveQtQuickItem;
 
 class RiveQtFactory : public rive::Factory
 {
@@ -27,9 +31,10 @@ public:
         RHIRenderer
     };
 
-    explicit RiveQtFactory(RiveQtRenderType renderType)
+    explicit RiveQtFactory(RiveQtRenderType renderType, const RenderSettings renderSettings = RenderSettings())
         : rive::Factory()
         , m_renderType(renderType)
+        , m_renderSettings(renderSettings)
     {
     }
 
@@ -40,6 +45,8 @@ public:
         }
         m_renderType = renderType;
     }
+
+    void setRenderSettings(const RenderSettings renderSettings) { m_renderSettings = renderSettings; }
 
     rive::rcp<rive::RenderBuffer> makeBufferU16(rive::Span<const uint16_t> data) override;
     rive::rcp<rive::RenderBuffer> makeBufferU32(rive::Span<const uint32_t> data) override;
@@ -53,5 +60,8 @@ public:
     rive::rcp<rive::Font> decodeFont(rive::Span<const uint8_t> span) override;
 
 private:
+    unsigned segmentCount();
+
     RiveQtRenderType m_renderType;
+    RenderSettings m_renderSettings;
 };

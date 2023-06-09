@@ -61,7 +61,7 @@ std::unique_ptr<rive::RenderPath> RiveQtFactory::makeRenderPath(rive::RawPath &r
         return std::make_unique<RiveQtPainterPath>(rawPath, fillRule);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     case RiveQtRenderType::RHIRenderer:
-        return std::make_unique<RiveQtRhiGLPath>(rawPath, fillRule);
+        return std::make_unique<RiveQtRhiGLPath>(rawPath, fillRule, segmentCount());
 #endif
     case RiveQtRenderType::None:
         return std::make_unique<RiveQtPainterPath>(rawPath, fillRule); // TODO Add Empty Path
@@ -77,7 +77,7 @@ std::unique_ptr<rive::RenderPath> RiveQtFactory::makeEmptyRenderPath()
         return std::make_unique<RiveQtPainterPath>();
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     case RiveQtRenderType::RHIRenderer:
-        return std::make_unique<RiveQtRhiGLPath>();
+        return std::make_unique<RiveQtRhiGLPath>(segmentCount());
 #endif
     case RiveQtRenderType::None:
         return std::make_unique<RiveQtPainterPath>(); // TODO Add Empty Path
@@ -116,4 +116,16 @@ rive::rcp<rive::Font> RiveQtFactory::decodeFont(rive::Span<const uint8_t> span)
 
     QFont font(fontFamilies.first());
     return rive::rcp<RiveQtFont>(new RiveQtFont(font, std::vector<rive::Font::Coord>()));
+}
+
+unsigned int RiveQtFactory::segmentCount()
+{
+    switch (m_renderSettings.renderQuality) {
+    case RenderSettings::Low:
+        return 1;
+    case RenderSettings::Medium:
+        return 10;
+    case RenderSettings::High:
+        return 15;
+    }
 }
