@@ -56,6 +56,7 @@ struct RenderSettings
 
     Q_PROPERTY(RenderQuality renderQuality MEMBER renderQuality)
     Q_PROPERTY(QSGRendererInterface::GraphicsApi graphicsApi MEMBER graphicsApi)
+    Q_PROPERTY(FillMode fillMode MEMBER fillMode)
 
     //    QML_ELEMENT
 
@@ -68,6 +69,15 @@ public:
     };
     Q_ENUM(RenderQuality)
 
+    enum FillMode
+    {
+        Stretch,
+        PreserveAspectFit,
+        PreserveAspectCrop
+    };
+    Q_ENUM(FillMode)
+
     RenderQuality renderQuality { Medium };
     QSGRendererInterface::GraphicsApi graphicsApi { QSGRendererInterface::GraphicsApi::Software };
+    FillMode fillMode { PreserveAspectFit };
 };

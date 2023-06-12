@@ -43,6 +43,7 @@ class RiveQtQuickItem : public QQuickItem
     Q_PROPERTY(RiveQtStateMachineInputMap *stateMachineInterface READ stateMachineInterface NOTIFY stateMachineInterfaceChanged)
 
     Q_PROPERTY(RenderSettings::RenderQuality renderQuality READ renderQuality WRITE setRenderQuality NOTIFY renderQualityChanged)
+    Q_PROPERTY(RenderSettings::FillMode fillMode READ fillMode WRITE setFillMode NOTIFY fillModeChanged)
 
     QML_ELEMENT
 
@@ -93,6 +94,13 @@ public:
         emit renderQualityChanged();
     }
 
+    RenderSettings::FillMode fillMode() { return m_renderSettings.fillMode; }
+    void setFillMode(const RenderSettings::FillMode fillMode)
+    {
+        m_renderSettings.fillMode = fillMode;
+        emit fillModeChanged();
+    }
+
 signals:
     void animationsChanged();
     void artboardsChanged();
@@ -111,6 +119,7 @@ signals:
     void stateMachineInterfaceChanged();
 
     void renderQualityChanged();
+    void fillModeChanged();
 
 protected:
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;

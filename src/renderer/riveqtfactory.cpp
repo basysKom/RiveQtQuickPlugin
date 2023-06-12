@@ -24,7 +24,9 @@ RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, rive::Artboar
     case QSGRendererInterface::GraphicsApi::MetalRhi:
     case QSGRendererInterface::GraphicsApi::VulkanRhi:
     case QSGRendererInterface::GraphicsApi::Direct3D11Rhi: {
-        return new RiveQSGRHIRenderNode(artboardInstance, item);
+        auto node = new RiveQSGRHIRenderNode(artboardInstance, item);
+        node->setFillMode(m_renderSettings.fillMode);
+        return node;
         break;
     }
 #else
