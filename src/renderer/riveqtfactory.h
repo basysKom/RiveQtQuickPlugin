@@ -16,7 +16,8 @@
 #include "rive/renderer.hpp"
 #include "rive/span.hpp"
 
-#include "../qtquick/datatypes.h"
+#include "src/qtquick/datatypes.h"
+#include "src/qtquick/riveqsgrendernode.h"
 
 class RiveQtQuickItem;
 
@@ -31,22 +32,15 @@ public:
         RHIRenderer
     };
 
-    explicit RiveQtFactory(RiveQtRenderType renderType, const RenderSettings renderSettings = RenderSettings())
+    explicit RiveQtFactory(const RenderSettings &renderSettings = RenderSettings())
         : rive::Factory()
-        , m_renderType(renderType)
         , m_renderSettings(renderSettings)
     {
     }
 
-    void setRenderType(RiveQtRenderType renderType)
-    {
-        if (m_renderType != RiveQtRenderType::None) {
-            return;
-        }
-        m_renderType = renderType;
-    }
+    void setRenderSettings(const RenderSettings &renderSettings) { m_renderSettings = renderSettings; }
 
-    void setRenderSettings(const RenderSettings renderSettings) { m_renderSettings = renderSettings; }
+    RiveQSGRenderNode *renderNode(QQuickWindow *window, rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
 
     rive::rcp<rive::RenderBuffer> makeBufferU16(rive::Span<const uint16_t> data) override;
     rive::rcp<rive::RenderBuffer> makeBufferU32(rive::Span<const uint32_t> data) override;
@@ -62,6 +56,7 @@ public:
 private:
     unsigned segmentCount();
 
-    RiveQtRenderType m_renderType;
+    RiveQtRenderType renderType();
+
     RenderSettings m_renderSettings;
 };

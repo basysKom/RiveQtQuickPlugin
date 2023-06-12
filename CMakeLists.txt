@@ -68,6 +68,21 @@ if (${QT_VERSION_MAJOR} EQUAL 6)
         src/renderer/riveqtrhirenderer.h
         src/renderer/riveqtrhirenderer.cpp
     )
+#    qt_add_qml_module(
+#        ${PROJECT_NAME}
+#        URI
+#            ${PROJECT_NAME}
+#        VERSION
+#            1.0
+#        PLUGIN_TARGET
+#            ${PROJECT_NAME}
+#        OUTPUT_DIRECTORY
+#            ${QML_BINARY_DIR}
+#        SOURCES
+#            ${PROJECT_SOURCES}
+#        NO_GENERATE_PLUGIN_SOURCE
+#            1
+#    )
 endif()
 
 # Add rive-cpp dependency if required
@@ -145,19 +160,6 @@ if (${QT_VERSION_MAJOR} EQUAL 6)
         "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/blendRiveTextureNode.vert.qsb"
         "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/blendRiveTextureNode.frag.qsb"
     )
-
-#    qt_add_qml_module(
-#        ${PROJECT_NAME}
-#        URI
-#            ${PROJECT_NAME}
-#        VERSION
-#            1.0
-##        PLUGIN_TARGET ${PROJECT_NAME}
-##        OUTPUT_DIRECTORY
-##            ${QML_BINARY_DIR}
-#        SOURCES
-#            ${PROJECT_SOURCES}
-#    )
 endif()
 
 # Build examples if enabled

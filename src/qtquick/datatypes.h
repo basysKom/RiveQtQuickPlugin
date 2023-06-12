@@ -8,6 +8,7 @@
 
 #include <qqml.h>
 #include <QQuickItem>
+#include <QSGRendererInterface>
 
 struct AnimationInfo
 {
@@ -54,6 +55,8 @@ struct RenderSettings
     Q_GADGET
 
     Q_PROPERTY(RenderQuality renderQuality MEMBER renderQuality)
+    Q_PROPERTY(QSGRendererInterface::GraphicsApi graphicsApi MEMBER graphicsApi)
+
     //    QML_ELEMENT
 
 public:
@@ -66,4 +69,5 @@ public:
     Q_ENUM(RenderQuality)
 
     RenderQuality renderQuality { Medium };
+    QSGRendererInterface::GraphicsApi graphicsApi { QSGRendererInterface::GraphicsApi::Software };
 };

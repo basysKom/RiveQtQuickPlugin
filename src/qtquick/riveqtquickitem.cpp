@@ -35,8 +35,6 @@
 RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     : QQuickItem(parent)
 {
-
-    m_renderSettings.renderQuality = RenderSettings::Medium;
     // set global flags and configs of our item
     // TODO: maybe we should also allow Hover Events to be used
     setFlag(QQuickItem::ItemHasContents, true);
@@ -137,24 +135,7 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     }
 
     if (!m_renderNode && m_currentArtboardInstance) {
-        switch (currentWindow->rendererInterface()->graphicsApi()) {
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        case QSGRendererInterface::GraphicsApi::OpenGLRhi:
-        case QSGRendererInterface::GraphicsApi::MetalRhi:
-        case QSGRendererInterface::GraphicsApi::VulkanRhi:
-        case QSGRendererInterface::GraphicsApi::Direct3D11Rhi: {
-            m_renderNode = new RiveQSGRHIRenderNode(m_currentArtboardInstance.get(), this);
-            break;
-        }
-#else
-        case QSGRendererInterface::GraphicsApi::OpenGL:
-            m_renderNode = new RiveQSGOpenGLRenderNode(m_currentArtboardInstance.get(), this);
-            break;
-#endif
-        case QSGRendererInterface::GraphicsApi::Software:
-        default:
-            m_renderNode = new RiveQSGSoftwareRenderNode(currentWindow, m_currentArtboardInstance.get(), this);
-        }
+        m_renderNode = m_riveQtFactory.renderNode(currentWindow, m_currentArtboardInstance.get(), this);
     }
 
     qint64 currentTime = m_elapsedTimer.elapsed();
@@ -263,25 +244,9 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
         return;
     }
 
+    m_renderSettings.graphicsApi = currentWindow->rendererInterface()->graphicsApi();
+
     m_riveQtFactory.setRenderSettings(m_renderSettings);
-
-    switch (currentWindow->rendererInterface()->graphicsApi()) {
-
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    case QSGRendererInterface::GraphicsApi::Direct3D11Rhi:
-    case QSGRendererInterface::GraphicsApi::OpenGLRhi:
-    case QSGRendererInterface::GraphicsApi::MetalRhi:
-    case QSGRendererInterface::GraphicsApi::VulkanRhi:
-        m_riveQtFactory.setRenderType(RiveQtFactory::RiveQtRenderType::RHIRenderer);
-#else
-    case QSGRendererInterface::GraphicsApi::OpenGL:
-        m_riveQtFactory.setRenderType(RiveQtFactory::RiveQtRenderType::QOpenGLRenderer);
-        break;
-#endif
-    case QSGRendererInterface::GraphicsApi::Software:
-    default:
-        m_riveQtFactory.setRenderType(RiveQtFactory::RiveQtRenderType::QPainterRenderer);
-    }
 
     QByteArray fileData = file.readAll();
 
