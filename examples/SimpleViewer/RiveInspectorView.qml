@@ -71,7 +71,7 @@ Item {
             currentArtboardIndex: 0
             currentStateMachineIndex: 0
 
-            renderQuality: RenderSettings.Low
+            renderQuality: RenderSettings.Medium
 
             onStateMachineInterfaceChanged: {
                 if (stateMachineInterface) {
