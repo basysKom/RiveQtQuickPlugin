@@ -13,7 +13,6 @@
 #include <QSGTextureProvider>
 
 #include "rive/artboard.hpp"
-#include "riveqtfactory.h"
 #include "riveqsgrendernode.h"
 #include "riveqtpainterrenderer.h"
 

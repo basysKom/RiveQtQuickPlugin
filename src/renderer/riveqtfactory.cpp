@@ -7,12 +7,36 @@
 #include "riveqtfactory.h"
 #include "riveqtfont.h"
 #include "riveqtpainterrenderer.h"
+#include "src/qtquick/riveqsgrhirendernode.h"
+#include "src/qtquick/riveqsgsoftwarerendernode.h"
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #    include "riveqtrhirenderer.h"
 #else
 #    include "riveqtopenglrenderer.h"
 #endif
+
+RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
+{
+    switch (window->rendererInterface()->graphicsApi()) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    case QSGRendererInterface::GraphicsApi::OpenGLRhi:
+    case QSGRendererInterface::GraphicsApi::MetalRhi:
+    case QSGRendererInterface::GraphicsApi::VulkanRhi:
+    case QSGRendererInterface::GraphicsApi::Direct3D11Rhi: {
+        return new RiveQSGRHIRenderNode(artboardInstance, item);
+        break;
+    }
+#else
+    case QSGRendererInterface::GraphicsApi::OpenGL:
+        return new RiveQSGOpenGLRenderNode(artboardInstance, item);
+        break;
+#endif
+    case QSGRendererInterface::GraphicsApi::Software:
+    default:
+        return new RiveQSGSoftwareRenderNode(window, artboardInstance, item);
+    }
+}
 
 rive::rcp<rive::RenderBuffer> RiveQtFactory::makeBufferU16(rive::Span<const uint16_t> data)
 {
@@ -54,7 +78,7 @@ rive::rcp<rive::RenderShader> RiveQtFactory::makeRadialGradient(float centerX, f
 
 std::unique_ptr<rive::RenderPath> RiveQtFactory::makeRenderPath(rive::RawPath &rawPath, rive::FillRule fillRule)
 {
-    switch (m_renderType) {
+    switch (renderType()) {
     case RiveQtRenderType::QOpenGLRenderer:
         return std::make_unique<RiveQtOpenGLPath>(rawPath, fillRule);
     case RiveQtRenderType::QPainterRenderer:
@@ -70,7 +94,7 @@ std::unique_ptr<rive::RenderPath> RiveQtFactory::makeRenderPath(rive::RawPath &r
 
 std::unique_ptr<rive::RenderPath> RiveQtFactory::makeEmptyRenderPath()
 {
-    switch (m_renderType) {
+    switch (renderType()) {
     case RiveQtRenderType::QOpenGLRenderer:
         return std::make_unique<RiveQtOpenGLPath>();
     case RiveQtRenderType::QPainterRenderer:
@@ -127,5 +151,24 @@ unsigned int RiveQtFactory::segmentCount()
         return 10;
     case RenderSettings::High:
         return 15;
+    }
+}
+
+RiveQtFactory::RiveQtRenderType RiveQtFactory::renderType()
+{
+    switch (m_renderSettings.graphicsApi) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    case QSGRendererInterface::GraphicsApi::Direct3D11Rhi:
+    case QSGRendererInterface::GraphicsApi::OpenGLRhi:
+    case QSGRendererInterface::GraphicsApi::MetalRhi:
+    case QSGRendererInterface::GraphicsApi::VulkanRhi:
+        return RiveQtFactory::RiveQtRenderType::RHIRenderer;
+#else
+    case QSGRendererInterface::GraphicsApi::OpenGL:
+        return RiveQtFactory::RiveQtRenderType::QOpenGLRenderer;
+#endif
+    case QSGRendererInterface::GraphicsApi::Software:
+    default:
+        return RiveQtFactory::RiveQtRenderType::QPainterRenderer;
     }
 }

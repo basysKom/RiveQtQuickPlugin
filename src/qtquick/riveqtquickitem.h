@@ -160,8 +160,9 @@ private:
     int m_initialStateMachineIndex { -1 };
 
     RiveQtStateMachineInputMap *m_stateMachineInputMap { nullptr };
+    RenderSettings m_renderSettings { RenderSettings() };
 
-    RiveQtFactory m_riveQtFactory { RiveQtFactory::RiveQtRenderType::None };
+    RiveQtFactory m_riveQtFactory { m_renderSettings };
 
     QElapsedTimer m_elapsedTimer;
     qint64 m_lastUpdateTime;
@@ -173,6 +174,4 @@ private:
     rive::ListenerType m_listenerType { rive::ListenerType::enter };
 
     RiveQSGRenderNode *m_renderNode { nullptr };
-
-    RenderSettings m_renderSettings { RenderSettings() };
 };

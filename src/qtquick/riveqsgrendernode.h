@@ -12,7 +12,6 @@
 #include <QSGTextureProvider>
 
 #include "rive/artboard.hpp"
-#include "riveqtfactory.h"
 
 class RiveQtQuickItem;
 
