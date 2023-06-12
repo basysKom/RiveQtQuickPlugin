@@ -17,6 +17,8 @@
 #include <rive/renderer.hpp>
 #include <rive/math/raw_path.hpp>
 
+#include "src/qtquick/datatypes.h"
+
 class RhiSubPath;
 class QSGRenderNode;
 class TextureTargetNode;
@@ -95,6 +97,8 @@ public:
     RiveQtRhiRenderer(QQuickItem *item);
     virtual ~RiveQtRhiRenderer();
 
+    void setFillMode(const RenderSettings::FillMode fillMode) { m_fillMode = fillMode; };
+
     void save() override;
     void restore() override;
     void transform(const rive::Mat2D &transform) override;
@@ -131,4 +135,6 @@ private:
 
     QSize m_artboardSize;
     QRectF m_viewportRect;
+
+    RenderSettings::FillMode m_fillMode;
 };

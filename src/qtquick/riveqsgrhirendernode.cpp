@@ -111,6 +111,11 @@ void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
     markDirty(QSGNode::DirtyGeometry);
 }
 
+void RiveQSGRHIRenderNode::setFillMode(const RenderSettings::FillMode fillMode)
+{
+    m_renderer->setFillMode(fillMode);
+}
+
 void RiveQSGRHIRenderNode::renderOffscreen()
 {
     if (!m_displayBuffer || m_rect.width() == 0 || m_rect.height() == 0 || !m_item)

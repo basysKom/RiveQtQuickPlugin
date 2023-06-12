@@ -684,7 +684,18 @@ void RiveQtRhiRenderer::setProjectionMatrix(const QMatrix4x4 *projectionMatrix, 
     auto aspectY = m_item->height() / (m_artboardSize.height());
 
     // Calculate the uniform scale factor to preserve the aspect ratio
-    auto scaleFactor = qMin(aspectX, aspectY);
+    qreal scaleFactor { 0.0 };
+
+    switch (m_fillMode) {
+    case RenderSettings::PreserveAspectCrop:
+        scaleFactor = qMax(aspectX, aspectY);
+        break;
+
+    case RenderSettings::PreserveAspectFit:
+    default:
+        scaleFactor = qMin(aspectX, aspectY);
+        break;
+    }
 
     m_projectionMatrix = *projectionMatrix;
     m_projectionMatrix.scale((m_item->window()->width() / m_item->width()), (m_item->window()->height() / m_item->height()));
