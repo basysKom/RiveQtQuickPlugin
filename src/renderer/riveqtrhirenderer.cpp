@@ -609,10 +609,10 @@ void RiveQtRhiRenderer::drawImage(const rive::RenderImage *image, rive::BlendMod
                      transformMatrix()); //
 
 #if 0 // this allows to draw the clipping area which it usefull for debugging :)
-  TextureTargetNode *drawClipping = getRiveDrawTargetNode();
-  drawClipping->setOpacity(currentOpacity()); // inherit the opacity from the parent
-  drawClipping->setColor(QColor(255, 0, 0, 50));
-  drawClipping->updateGeometry(m_rhiRenderStack.back().clippingGeometry, QMatrix4x4());
+    TextureTargetNode *drawClipping = getRiveDrawTargetNode();
+    drawClipping->setOpacity(currentOpacity()); // inherit the opacity from the parent
+    drawClipping->setColor(QColor(255, 0, 0, 50));
+    drawClipping->updateGeometry(m_rhiRenderStack.back().clippingGeometry, QMatrix4x4());
 #endif
 
     node->updateClippingGeometry(m_rhiRenderStack.back().clippingGeometry);
@@ -683,26 +683,31 @@ void RiveQtRhiRenderer::setProjectionMatrix(const QMatrix4x4 *projectionMatrix, 
     auto aspectX = m_item->width() / (m_artboardSize.width());
     auto aspectY = m_item->height() / (m_artboardSize.height());
 
-    // Calculate the uniform scale factor to preserve the aspect ratio
-    qreal scaleFactor { 0.0 };
-
-    switch (m_fillMode) {
-    case RenderSettings::PreserveAspectCrop:
-        scaleFactor = qMax(aspectX, aspectY);
-        break;
-
-    case RenderSettings::PreserveAspectFit:
-    default:
-        scaleFactor = qMin(aspectX, aspectY);
-        break;
-    }
-
     m_projectionMatrix = *projectionMatrix;
     m_projectionMatrix.scale((m_item->window()->width() / m_item->width()), (m_item->window()->height() / m_item->height()));
 
     m_combinedMatrix = *projectionMatrix;
-    m_combinedMatrix.scale((m_item->window()->width() / m_item->width()) * scaleFactor,
-                           (m_item->window()->height() / m_item->height()) * scaleFactor);
+
+    switch (m_fillMode) {
+    case RenderSettings::Stretch: {
+        m_combinedMatrix.scale((m_item->window()->width() / m_item->width()) * aspectX,
+                               (m_item->window()->height() / m_item->height()) * aspectY);
+        break;
+    }
+    case RenderSettings::PreserveAspectCrop: {
+        auto scaleFactor = qMax(aspectX, aspectY);
+        m_combinedMatrix.scale((m_item->window()->width() / m_item->width()) * scaleFactor,
+                               (m_item->window()->height() / m_item->height()) * scaleFactor);
+        break;
+    }
+    default:
+    case RenderSettings::PreserveAspectFit: {
+        auto scaleFactor = qMin(aspectX, aspectY);
+        m_combinedMatrix.scale((m_item->window()->width() / m_item->width()) * scaleFactor,
+                               (m_item->window()->height() / m_item->height()) * scaleFactor);
+        break;
+    }
+    }
 }
 
 void RiveQtRhiRenderer::updateViewPort(const QRectF &viewportRect, QRhiTexture *displayBuffer)
