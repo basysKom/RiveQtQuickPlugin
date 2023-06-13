@@ -60,7 +60,7 @@ TextureTargetNode::TextureTargetNode(QQuickItem *item, QRhiTexture *displayBuffe
     Q_ASSERT(displayBuffer);
     m_displayBuffer = displayBuffer;
 
-    // todo: make it so that we are not limited to MAX_VERTICES vertices,
+    // TODO: make it so that we are not limited to MAX_VERTICES vertices,
     // adjust the buffer dynamically on demand
 
     if (!m_vertexBuffer) {
@@ -479,61 +479,62 @@ void TextureTargetNode::prepareRender(QRhiCommandBuffer *cb)
     }
 }
 
-void TextureTargetNode::render(QRhiCommandBuffer *cb)
+void TextureTargetNode::render(QRhiCommandBuffer *commandBuffer)
 {
-    Q_ASSERT(cb);
+    Q_ASSERT(commandBuffer);
 
     if (m_recycled) {
         //    cb->beginPass(m_displayBufferTarget, QColor(0, 0, 0, 0), { 1.0f, 0 });
         //    cb->endPass();
-    } else {
-        prepareRender(cb);
-
-        cb->beginPass(m_displayBufferTarget, QColor(0, 0, 0, 0), { 1.0f, 0 }, m_resourceUpdates);
-
-        QSize renderTargetSize = m_displayBufferTarget->pixelSize();
-
-        if (m_clip) {
-            // Pass 1
-            cb->setGraphicsPipeline(m_clipPipeLine);
-            cb->setStencilRef(1);
-            cb->setViewport(QRhiViewport(0, 0, renderTargetSize.width(), renderTargetSize.height()));
-            cb->setShaderResources(m_clippingResourceBindings);
-            QRhiCommandBuffer::VertexInput clipVertexBindings[] = { { m_clippingVertexBuffer, 0 } };
-            cb->setVertexInput(0, 1, clipVertexBindings);
-            cb->draw(m_clippingData.size() / sizeof(QVector2D));
-            cb->setStencilRef(0);
-        }
-
-        // Pass 2
-        cb->setGraphicsPipeline(m_drawPipeLine);
-        cb->setViewport(QRhiViewport(0, 0, renderTargetSize.width(), renderTargetSize.height()));
-        cb->setShaderResources(m_resourceBindings);
-
-        if (m_qImageTexture) {
-            QRhiCommandBuffer::VertexInput vertexBindings[] = { { m_vertexBuffer, 0 }, { m_texCoordBuffer, 0 } };
-            cb->setVertexInput(0, 2, vertexBindings, m_indicesBuffer, 0, QRhiCommandBuffer::IndexUInt16);
-        } else {
-            QRhiCommandBuffer::VertexInput vertexBindings[] = { { m_vertexBuffer, 0 } };
-            cb->setVertexInput(0, 1, vertexBindings);
-        }
-
-        if (m_clip) {
-            cb->setStencilRef(1);
-        } else {
-            cb->setStencilRef(0);
-        }
-
-        if (m_qImageTexture) {
-            cb->drawIndexed(m_indicesBuffer->size() / sizeof(uint16_t));
-        } else {
-            cb->draw(m_geometryData.size() / sizeof(QVector2D));
-        }
-
-        cb->endPass();
-
-        renderBlend(cb);
+        return;
     }
+
+    prepareRender(commandBuffer);
+
+    commandBuffer->beginPass(m_displayBufferTarget, QColor(0, 0, 0, 0), { 1.0f, 0 }, m_resourceUpdates);
+
+    const QSize &renderTargetSize = m_displayBufferTarget->pixelSize();
+
+    if (m_clip) {
+        // Pass 1
+        commandBuffer->setGraphicsPipeline(m_clipPipeLine);
+        commandBuffer->setStencilRef(1);
+        commandBuffer->setViewport(QRhiViewport(0, 0, renderTargetSize.width(), renderTargetSize.height()));
+        commandBuffer->setShaderResources(m_clippingResourceBindings);
+        QRhiCommandBuffer::VertexInput clipVertexBindings[] = { { m_clippingVertexBuffer, 0 } };
+        commandBuffer->setVertexInput(0, 1, clipVertexBindings);
+        commandBuffer->draw(m_clippingData.size() / sizeof(QVector2D));
+        commandBuffer->setStencilRef(0);
+    }
+
+    // Pass 2
+    commandBuffer->setGraphicsPipeline(m_drawPipeLine);
+    commandBuffer->setViewport(QRhiViewport(0, 0, renderTargetSize.width(), renderTargetSize.height()));
+    commandBuffer->setShaderResources(m_resourceBindings);
+
+    if (m_qImageTexture) {
+        QRhiCommandBuffer::VertexInput vertexBindings[] = { { m_vertexBuffer, 0 }, { m_texCoordBuffer, 0 } };
+        commandBuffer->setVertexInput(0, 2, vertexBindings, m_indicesBuffer, 0, QRhiCommandBuffer::IndexUInt16);
+    } else {
+        QRhiCommandBuffer::VertexInput vertexBindings[] = { { m_vertexBuffer, 0 } };
+        commandBuffer->setVertexInput(0, 1, vertexBindings);
+    }
+
+    if (m_clip) {
+        commandBuffer->setStencilRef(1);
+    } else {
+        commandBuffer->setStencilRef(0);
+    }
+
+    if (m_qImageTexture) {
+        commandBuffer->drawIndexed(m_indicesBuffer->size() / sizeof(uint16_t));
+    } else {
+        commandBuffer->draw(m_geometryData.size() / sizeof(QVector2D));
+    }
+
+    commandBuffer->endPass();
+
+    renderBlend(commandBuffer);
 }
 
 void TextureTargetNode::renderBlend(QRhiCommandBuffer *cb)
