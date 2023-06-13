@@ -148,7 +148,7 @@ unsigned int RiveQtFactory::segmentCount()
 {
     switch (m_renderSettings.renderQuality) {
     case RenderSettings::Low:
-        return 1;
+        return 5;
     case RenderSettings::Medium:
         return 10;
     case RenderSettings::High:

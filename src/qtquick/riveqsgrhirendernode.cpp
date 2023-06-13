@@ -147,17 +147,17 @@ void RiveQSGRHIRenderNode::render(const RenderState *state)
         static_cast<QRhiSwapChain *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiSwapchainResource));
     Q_ASSERT(swapChain);
 
-    QRhiCommandBuffer *cb = swapChain->currentFrameCommandBuffer();
-    Q_ASSERT(cb);
+    QRhiCommandBuffer *commandBuffer = swapChain->currentFrameCommandBuffer();
+    Q_ASSERT(commandBuffer);
 
-    cb->setGraphicsPipeline(m_pipeLine);
+    commandBuffer->setGraphicsPipeline(m_pipeLine);
     QSize renderTargetSize = QSGRenderNodePrivate::get(this)->m_rt.rt->pixelSize();
-    cb->setViewport(QRhiViewport(0, 0, renderTargetSize.width(), renderTargetSize.height()));
-    cb->setShaderResources(m_resourceBindings);
+    commandBuffer->setViewport(QRhiViewport(0, 0, renderTargetSize.width(), renderTargetSize.height()));
+    commandBuffer->setShaderResources(m_resourceBindings);
     QRhiCommandBuffer::VertexInput vertexBindings[] = { { m_vertexBuffer, 0 }, { m_texCoordBuffer, 0 } };
-    cb->setVertexInput(0, 2, vertexBindings);
+    commandBuffer->setVertexInput(0, 2, vertexBindings);
 
-    cb->draw(m_vertices.count());
+    commandBuffer->draw(m_vertices.count());
 }
 
 void RiveQSGRHIRenderNode::releaseResources()

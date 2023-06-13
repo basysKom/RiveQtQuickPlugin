@@ -169,17 +169,18 @@ private:
     int m_initialStateMachineIndex { -1 };
 
     RiveQtStateMachineInputMap *m_stateMachineInputMap { nullptr };
-    RenderSettings m_renderSettings { RenderSettings() };
+
+    RenderSettings m_renderSettings;
 
     RiveQtFactory m_riveQtFactory { m_renderSettings };
 
     QElapsedTimer m_elapsedTimer;
     qint64 m_lastUpdateTime;
-    bool m_geometryChanged = true;
+    bool m_geometryChanged { true };
 
-    bool m_hasValidRenderNode = false;
-    float m_lastMouseX { 0 };
-    float m_lastMouseY { 0 };
+    bool m_hasValidRenderNode { false };
+    float m_lastMouseX { 0.f };
+    float m_lastMouseY { 0.f };
     rive::ListenerType m_listenerType { rive::ListenerType::enter };
 
     RiveQSGRenderNode *m_renderNode { nullptr };

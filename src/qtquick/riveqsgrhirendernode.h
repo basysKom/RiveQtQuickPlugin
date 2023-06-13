@@ -32,7 +32,6 @@ public:
 
     virtual void updateArtboardInstance(rive::ArtboardInstance *artboardInstance) override;
     void setRect(const QRectF &bounds) override;
-
     void setFillMode(RenderSettings::FillMode fillMode);
 
     void renderOffscreen() override;
