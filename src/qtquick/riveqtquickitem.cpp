@@ -4,19 +4,6 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "riveqtquickitem.h"
-#include "rive/animation/state_machine_listener.hpp"
-#include "rive/file.hpp"
-
-#include "riveqtfactory.h"
-
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-#    include "src/qtquick/riveqsgrhirendernode.h"
-#else
-#    include "src/qtquick/riveqsgopenglrendernode.h"
-#endif
-#include "src/qtquick/riveqsgsoftwarerendernode.h"
-
 #include <QSGRendererInterface>
 #include <QSGRenderNode>
 #include <QQmlEngine>
@@ -31,6 +18,11 @@
 #include <rive/assets/image_asset.hpp>
 #include <rive/animation/linear_animation_instance.hpp>
 #include <rive/generated/shapes/shape_base.hpp>
+#include <rive/animation/state_machine_listener.hpp>
+#include <rive/file.hpp>
+
+#include "riveqtquickitem.h"
+#include "riveqtfactory.h"
 
 RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     : QQuickItem(parent)
@@ -47,8 +39,6 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
             loadRiveFile(m_fileSource);
         }
     });
-
-    // TODO Remove this mess of a comment
 
     // TODO: 1) shall we make this Interval match the FPS of the current selected animation
     // TODO: 2) we may want to move this into the render thread to allow the render thread control over the timer,

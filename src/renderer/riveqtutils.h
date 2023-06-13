@@ -6,18 +6,18 @@
 
 #pragma once
 
-#include "qpainter.h"
-#include "rive/command_path.hpp"
-#include "rive/shapes/paint/blend_mode.hpp"
-#include "rive/shapes/paint/color.hpp"
-#include "rive/shapes/paint/stroke_cap.hpp"
-#include "rive/shapes/paint/stroke_join.hpp"
-#include <rive/math/mat2d.hpp>
 #include <QMatrix4x4>
 #include <QColor>
 #include <QPainterPath>
+#include <QPainter>
 
 #include <rive/renderer.hpp>
+#include <rive/command_path.hpp>
+#include <rive/shapes/paint/blend_mode.hpp>
+#include <rive/shapes/paint/color.hpp>
+#include <rive/shapes/paint/stroke_cap.hpp>
+#include <rive/shapes/paint/stroke_join.hpp>
+#include <rive/math/mat2d.hpp>
 
 namespace RiveQtUtils {
 QColor riveColorToQt(rive::ColorInt value);

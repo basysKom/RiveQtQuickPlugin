@@ -4,9 +4,10 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
+#include <QQuickWindow>
+
 #include "riveqsgopenglrendernode.h"
 #include "src/qtquick/riveqtquickitem.h"
-#include <QQuickWindow>
 
 void RiveQSGOpenGLRenderNode::updateArtboardInstance(rive::ArtboardInstance *artboardInstance)
 {

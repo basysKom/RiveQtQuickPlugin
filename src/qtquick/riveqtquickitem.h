@@ -15,10 +15,11 @@
 #include <QPainter>
 #include <QTimer>
 
-#include "rive/artboard.hpp"
+#include <rive/artboard.hpp>
+#include <rive/listener_type.hpp>
+
 #include "riveqtfactory.h"
 #include "riveqtstatemachineinputmap.h"
-#include "rive/listener_type.hpp"
 #include "datatypes.h"
 
 class RiveQSGRenderNode;

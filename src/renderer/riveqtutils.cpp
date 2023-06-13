@@ -4,14 +4,14 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "riveqtutils.h"
 #include <QVector4D>
 #include <QMatrix4x4>
+#include <QDebug>
 
 #include <rive/renderer.hpp>
 #include <rive/command_path.hpp>
 
-#include <QDebug>
+#include "riveqtutils.h"
 
 QColor RiveQtUtils::riveColorToQt(rive::ColorInt value)
 {

@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <qqml.h>
 #include <QQuickItem>
 #include <QSGRendererInterface>
+#include <qqml.h>
 
 struct AnimationInfo
 {

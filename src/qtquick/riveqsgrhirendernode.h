@@ -12,13 +12,14 @@
 #include <QSGRenderNode>
 #include <QSGTextureProvider>
 
-#include "rive/artboard.hpp"
-#include "riveqsgrendernode.h"
-
 #include <private/qrhi_p.h>
 #include <private/qsgrendernode_p.h>
 
+#include <rive/artboard.hpp>
+
+#include "riveqsgrendernode.h"
 #include "src/qtquick/datatypes.h"
+
 //-----------------
 class RiveQtQuickItem;
 class TextureTargetNode;

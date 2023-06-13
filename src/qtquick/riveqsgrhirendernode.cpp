@@ -3,17 +3,15 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "riveqsgrhirendernode.h"
-
-#include "src/qtquick/riveqtquickitem.h"
-#include "src/qtquick/rhi/texturetargetnode.h"
-#include "src/renderer/riveqtrhirenderer.h"
-
 #include <QQuickWindow>
 #include <QFile>
 
 #include <private/qrhi_p.h>
 #include <private/qsgrendernode_p.h>
+
+#include "riveqsgrhirendernode.h"
+#include "src/qtquick/riveqtquickitem.h"
+#include "src/renderer/riveqtrhirenderer.h"
 
 void RiveQSGRHIRenderNode::updateArtboardInstance(rive::ArtboardInstance *artboardInstance)
 {

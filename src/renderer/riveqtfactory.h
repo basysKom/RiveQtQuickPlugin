@@ -12,9 +12,7 @@
 
 #include <rive/file.hpp>
 #include <rive/renderer.hpp>
-
-#include "rive/renderer.hpp"
-#include "rive/span.hpp"
+#include <rive/span.hpp>
 
 #include "src/qtquick/datatypes.h"
 #include "src/qtquick/riveqsgrendernode.h"

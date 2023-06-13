@@ -6,10 +6,6 @@
 
 #pragma once
 
-#include "private/qfontengine_p.h"
-#include "rive/text_engine.hpp"
-#include <rive/core.hpp>
-
 #include <QFont>
 #include <QFontDatabase>
 #include <QFontInfo>
@@ -18,6 +14,11 @@
 #include <QGlyphRun>
 #include <QTextLayout>
 #include <QTextOption>
+
+#include "private/qfontengine_p.h"
+
+#include <rive/text_engine.hpp>
+#include <rive/core.hpp>
 
 #include "riveqtopenglrenderer.h"
 
