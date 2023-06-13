@@ -53,18 +53,7 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     connect(this, &RiveQtQuickItem::internalArtboardChanged, this, &RiveQtQuickItem::currentArtboardIndexChanged, Qt::QueuedConnection);
     connect(this, &RiveQtQuickItem::internalArtboardChanged, this, &RiveQtQuickItem::updateAnimations, Qt::QueuedConnection);
     connect(this, &RiveQtQuickItem::internalArtboardChanged, this, &RiveQtQuickItem::updateStateMachines, Qt::QueuedConnection);
-    connect(
-        this, &RiveQtQuickItem::internalStateMachineChanged, this,
-        [this]() {
-            if (m_stateMachineInputMap) {
-                m_stateMachineInputMap->deleteLater();
-            }
-            // maybe its a bit maniac and insane to push raw instance pointers around.
-            // well what could go wrong. aka TODO: dont do this
-            m_stateMachineInputMap = new RiveQtStateMachineInputMap(m_currentStateMachineInstance.get(), this);
-            emit stateMachineInterfaceChanged();
-        },
-        Qt::QueuedConnection);
+    connect(this, &RiveQtQuickItem::internalStateMachineChanged, this, &RiveQtQuickItem::updateStateMachineInputMap, Qt::QueuedConnection);
 
     // do update the index only once we are set up and happy
     connect(this, &RiveQtQuickItem::stateMachineInterfaceChanged, this, &RiveQtQuickItem::currentStateMachineIndexChanged,
@@ -80,11 +69,54 @@ RiveQtQuickItem::~RiveQtQuickItem() { }
 
 void RiveQtQuickItem::triggerAnimation(int id)
 {
-    if (m_currentArtboardInstance) {
-        if (id >= 0 && id < m_currentArtboardInstance->animationCount()) {
-            m_animationInstance = m_currentArtboardInstance->animationAt(id);
-        }
+    if (!m_currentArtboardInstance) {
+        return;
     }
+
+    if (id < 0 || id >= m_currentArtboardInstance->animationCount()) {
+        qDebug() << "Requested animation id:" << id << "out of bounds: 0 -" << m_currentArtboardInstance->animationCount();
+        m_animationInstance = nullptr;
+        return;
+    }
+
+    m_animationInstance = m_currentArtboardInstance->animationAt(id);
+}
+
+void RiveQtQuickItem::updateStateMachineInputMap()
+{
+    if (m_stateMachineInputMap) {
+        m_stateMachineInputMap->deleteLater();
+    }
+
+    // maybe its a bit maniac and insane to push raw instance pointers around.
+    // well what could go wrong. aka TODO: dont do this
+    m_stateMachineInputMap = new RiveQtStateMachineInputMap(m_currentStateMachineInstance.get(), this);
+    emit stateMachineInterfaceChanged();
+}
+
+void RiveQtQuickItem::updateInternalArtboard()
+{
+    m_hasValidRenderNode = false;
+    m_currentArtboardInstance = m_riveFile->artboardAt(m_currentArtboardIndex);
+
+    if (!m_currentArtboardInstance) {
+        qDebug() << "Artboard changed, but instance is null";
+        m_currentStateMachineInstance = nullptr;
+        m_animationInstance = nullptr;
+        emit internalArtboardChanged();
+        return;
+    }
+
+    m_currentArtboardInstance->updateComponents();
+
+    m_animationInstance = m_currentArtboardInstance->animationNamed(m_currentArtboardInstance->firstAnimation()->name());
+    m_currentStateMachineInstance = nullptr;
+
+    if (m_currentStateMachineIndex == -1) {
+        setCurrentStateMachineIndex(m_currentArtboardInstance->defaultStateMachineIndex()); // this will set m_scheduleStateMachineChange
+    }
+
+    emit internalArtboardChanged();
 }
 
 QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
@@ -93,25 +125,8 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
     m_renderNode = static_cast<RiveQSGRenderNode *>(oldNode);
 
-    if (m_stateMachineInputMap && m_stateMachineInputMap->hasDirtyStateMachine()) {
-        m_scheduleStateMachineChange = true;
-        m_scheduleArtboardChange = true;
-    }
-
     if (m_scheduleArtboardChange) {
-        m_hasValidRenderNode = false;
-        m_currentArtboardInstance = m_riveFile->artboardAt(m_currentArtboardIndex);
-        if (m_currentArtboardInstance) {
-            m_animationInstance = m_currentArtboardInstance->animationNamed(m_currentArtboardInstance->firstAnimation()->name());
-            m_currentStateMachineInstance = nullptr;
-            m_currentArtboardInstance->updateComponents();
-            if (m_currentStateMachineIndex == -1) {
-                setCurrentStateMachineIndex(
-                    m_currentArtboardInstance->defaultStateMachineIndex()); // this will set m_scheduleStateMachineChange
-            }
-        }
-        emit internalArtboardChanged();
-
+        updateInternalArtboard();
         if (m_renderNode) {
             m_renderNode->updateArtboardInstance(m_currentArtboardInstance.get());
         }
@@ -122,6 +137,11 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         m_currentStateMachineInstance = m_currentArtboardInstance->stateMachineAt(m_currentStateMachineIndex);
         emit internalStateMachineChanged();
         m_scheduleStateMachineChange = false;
+    }
+
+    if (m_stateMachineInputMap && m_stateMachineInputMap->hasDirtyStateMachine()) {
+        m_scheduleArtboardChange = true;
+        m_scheduleStateMachineChange = true;
     }
 
     if (!m_renderNode && m_currentArtboardInstance) {
@@ -174,6 +194,7 @@ void RiveQtQuickItem::geometryChange(const QRectF &newGeometry, const QRectF &ol
 void RiveQtQuickItem::mousePressEvent(QMouseEvent *event)
 {
     hitTest(event->pos(), rive::ListenerType::down);
+    qDebug() << "Click Event:" << event->position();
     // todo: shall we tell qml about a hit and details about that?
 }
 
@@ -318,7 +339,7 @@ void RiveQtQuickItem::updateStateMachines()
         return;
     }
 
-    for (size_t i = 0; i < m_currentArtboardInstance->stateMachineCount(); i++) {
+    for (size_t i = 0; i < m_currentArtboardInstance->stateMachineCount(); ++i) {
         const auto stateMachine = m_currentArtboardInstance->stateMachine(i);
         if (stateMachine) {
             StateMachineInfo info;
@@ -330,6 +351,7 @@ void RiveQtQuickItem::updateStateMachines()
     }
     emit stateMachinesChanged();
 }
+
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 void RiveQtQuickItem::renderOffscreen()
 {
@@ -341,23 +363,26 @@ void RiveQtQuickItem::renderOffscreen()
 
 bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type)
 {
-    if (!m_riveFile || !m_currentArtboardInstance || !m_currentStateMachineInstance)
+    if (!m_riveFile || !m_currentArtboardInstance || !m_currentStateMachineInstance) {
+        qDebug() << Q_FUNC_INFO << "File, Artboard, StateMachine is null:" << (m_riveFile == nullptr)
+                 << (m_currentArtboardInstance == nullptr) << (m_currentStateMachineInstance == nullptr);
         return false;
+    }
 
     // Scale mouse position based on current item size and artboard size
-    float scaleX = width() / m_currentArtboardInstance->width();
-    float scaleY = height() / m_currentArtboardInstance->height();
+    const float scaleX = width() / m_currentArtboardInstance->width();
+    const float scaleY = height() / m_currentArtboardInstance->height();
 
     // Calculate the uniform scale factor to preserve the aspect ratio
-    auto scaleFactor = qMin(scaleX, scaleY);
+    const auto scaleFactor = qMin(scaleX, scaleY);
 
     // Calculate the new width and height of the item while preserving the aspect ratio
-    auto newWidth = m_currentArtboardInstance->width() * scaleFactor;
-    auto newHeight = m_currentArtboardInstance->height() * scaleFactor;
+    const auto newWidth = m_currentArtboardInstance->width() * scaleFactor;
+    const auto newHeight = m_currentArtboardInstance->height() * scaleFactor;
 
     // Calculate the offsets needed to center the item within its bounding rectangle
-    auto offsetX = (width() - newWidth) / 2.0;
-    auto offsetY = (height() - newHeight) / 2.0;
+    const auto offsetX = (width() - newWidth) / 2.0;
+    const auto offsetY = (height() - newHeight) / 2.0;
 
     rive::HitInfo hitInfo;
     rive::Mat2D transform;
@@ -368,29 +393,36 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
 
     for (int i = 0; i < m_currentStateMachineInstance->stateMachine()->listenerCount(); ++i) {
         auto *listener = m_currentStateMachineInstance->stateMachine()->listener(i);
-        if (listener) {
-            if (listener->listenerType() == rive::ListenerType::enter || listener->listenerType() == rive::ListenerType::exit) {
-                qDebug() << "Enter and Exit Actions are not yet supported";
+
+        if (!listener) {
+            continue;
+        }
+
+        if (listener->listenerType() == rive::ListenerType::enter || listener->listenerType() == rive::ListenerType::exit) {
+            qDebug() << "Enter and Exit Actions are not yet supported";
+            continue;
+        }
+
+        if (listener->listenerType() != m_listenerType) {
+            continue;
+        }
+
+        for (const auto &id : listener->hitShapeIds()) {
+            auto *coreElement = m_currentStateMachineInstance->artboard()->resolve(id);
+
+            if (!coreElement->is<rive::Shape>()) {
+                continue;
             }
 
-            if (listener->listenerType() == m_listenerType) {
-                for (const auto &id : listener->hitShapeIds()) {
-                    auto *coreElement = m_currentStateMachineInstance->artboard()->resolve(id);
+            rive::Shape *shape = dynamic_cast<rive::Shape *>(coreElement);
+            const rive::IAABB area = { static_cast<int32_t>(m_lastMouseX), static_cast<int32_t>(m_lastMouseY),
+                                       static_cast<int32_t>(m_lastMouseX + 1), static_cast<int32_t>(m_lastMouseY + 1) };
+            const bool hit = shape->hitTest(area);
 
-                    if (coreElement->is<rive::Shape>()) {
-                        rive::Shape *shape = dynamic_cast<rive::Shape *>(coreElement);
-
-                        const rive::IAABB area = { static_cast<int32_t>(m_lastMouseX), static_cast<int32_t>(m_lastMouseY),
-                                                   static_cast<int32_t>(m_lastMouseX + 1), static_cast<int32_t>(m_lastMouseY + 1) };
-                        bool hit = shape->hitTest(area);
-
-                        if (hit) {
-                            listener->performChanges(m_currentStateMachineInstance.get(), rive::Vec2D(m_lastMouseX, m_lastMouseY));
-                            m_scheduleStateMachineChange = true;
-                            m_scheduleArtboardChange = true;
-                        }
-                    }
-                }
+            if (hit) {
+                listener->performChanges(m_currentStateMachineInstance.get(), rive::Vec2D(m_lastMouseX, m_lastMouseY));
+                m_scheduleStateMachineChange = true;
+                m_scheduleArtboardChange = true;
             }
         }
     }
@@ -451,15 +483,16 @@ void RiveQtQuickItem::setCurrentStateMachineIndex(int newCurrentStateMachineInde
         return;
     }
 
-    if (!m_riveFile->artboard())
+    if (!m_riveFile->artboard()) {
         return;
-
-    // -1 is a valid value!
-    if (newCurrentStateMachineIndex != -1) {
-        if (newCurrentStateMachineIndex >= m_riveFile->artboard()->stateMachineCount()) {
-            return;
-        }
     }
+
+    if (newCurrentStateMachineIndex >= m_riveFile->artboard(m_currentArtboardIndex)->stateMachineCount()) {
+        qDebug() << "Requested State Machine Index" << newCurrentStateMachineIndex << "out of bounds. Upper bound <"
+                 << m_riveFile->artboard()->stateMachineCount();
+        return;
+    }
+    // -1 is a valid value!
 
     m_currentStateMachineIndex = newCurrentStateMachineIndex;
 

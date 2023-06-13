@@ -72,7 +72,7 @@ Item {
             currentStateMachineIndex: 0
 
             renderQuality: RenderSettings.Low
-            fillMode: RenderSettings.Stretch
+            fillMode: RenderSettings.PreserveAspectFit
 
             onStateMachineInterfaceChanged: {
                 if (stateMachineInterface) {

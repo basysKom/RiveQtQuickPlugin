@@ -1,4 +1,3 @@
-
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
@@ -134,6 +133,8 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
 
     void hoverMoveEvent(QHoverEvent *event) override;
+private slots:
+    void updateStateMachineInputMap();
 
 private:
     void loadRiveFile(const QString &source);
@@ -146,6 +147,7 @@ private:
 #endif
 
     bool hitTest(const QPointF &pos, const rive::ListenerType &type);
+    void updateInternalArtboard();
 
     QVector<ArtBoardInfo> m_artboardInfoList;
     QVector<AnimationInfo> m_animationList;
