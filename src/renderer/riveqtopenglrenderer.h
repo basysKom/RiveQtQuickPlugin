@@ -10,10 +10,6 @@
 #include <QBrush>
 #include <QPen>
 #include <QLinearGradient>
-
-#include <rive/renderer.hpp>
-#include <rive/math/raw_path.hpp>
-
 #include <QOpenGLPaintDevice>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
@@ -21,8 +17,10 @@
 #include <QOpenGLTexture>
 #include <QOpenGLVertexArrayObject>
 
+#include <rive/renderer.hpp>
+#include <rive/math/raw_path.hpp>
+
 #include "qopenglframebufferobject.h"
-#include "riveqtutils.h"
 
 class SubPath;
 

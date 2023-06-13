@@ -10,10 +10,11 @@
 
 #include <QVector4D>
 #include <QSGRenderNode>
+#include <QQuickWindow>
+
 #include <private/qtriangulator_p.h>
 
 #include "riveqtrhirenderer.h"
-#include "qquickwindow.h"
 #include "src/qtquick/rhi/texturetargetnode.h"
 
 RiveQtRhiGLPath::RiveQtRhiGLPath(const unsigned segmentCount)

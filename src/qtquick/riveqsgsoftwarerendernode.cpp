@@ -4,10 +4,10 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
+#include <QQuickWindow>
+
 #include "riveqsgsoftwarerendernode.h"
 #include "src/qtquick/riveqtquickitem.h"
-
-#include <QQuickWindow>
 
 RiveQSGSoftwareRenderNode::RiveQSGSoftwareRenderNode(QQuickWindow *window, rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
     : RiveQSGRenderNode(artboardInstance, item)

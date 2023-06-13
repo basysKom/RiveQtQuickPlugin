@@ -11,8 +11,8 @@
 #include <QSGRenderNode>
 #include <QSGTextureProvider>
 
-#include "rive/artboard.hpp"
-#include "riveqtfactory.h"
+#include <rive/artboard.hpp>
+
 #include "riveqsgrendernode.h"
 #include "riveqtopenglrenderer.h"
 

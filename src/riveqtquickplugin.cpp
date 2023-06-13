@@ -4,7 +4,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "qqml.h"
+#include <QtQml>
 
 #include "qtquick/riveqtquickitem.h"
 #include "qtquick/riveqtstatemachineinputmap.h"

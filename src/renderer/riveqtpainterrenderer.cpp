@@ -4,11 +4,12 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "riveqtpainterrenderer.h"
-#include "qdebug.h"
+#include <QDebug>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
+
+#include "riveqtpainterrenderer.h"
 
 RiveQtPainterRenderer::RiveQtPainterRenderer()
     : rive::Renderer()

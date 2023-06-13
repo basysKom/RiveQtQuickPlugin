@@ -11,7 +11,7 @@
 #include <QSGRenderNode>
 #include <QSGTextureProvider>
 
-#include "rive/artboard.hpp"
+#include <rive/artboard.hpp>
 
 class RiveQtQuickItem;
 

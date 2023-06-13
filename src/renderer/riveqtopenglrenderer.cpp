@@ -4,8 +4,6 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "riveqtopenglrenderer.h"
-
 #define _USE_MATH_DEFINES
 #include <math.h>
 
@@ -13,6 +11,9 @@
 #include <QOpenGLTexture>
 #include <QOpenGLFramebufferObject>
 #include <private/qtriangulator_p.h>
+
+#include "riveqtopenglrenderer.h"
+#include "riveqtutils.h"
 
 RiveQtOpenGLPath::RiveQtOpenGLPath(const RiveQtOpenGLPath &rqp)
 {
