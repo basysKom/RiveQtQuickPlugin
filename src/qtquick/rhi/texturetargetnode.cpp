@@ -484,8 +484,8 @@ void TextureTargetNode::render(QRhiCommandBuffer *commandBuffer)
     Q_ASSERT(commandBuffer);
 
     if (m_recycled) {
-        //    cb->beginPass(m_displayBufferTarget, QColor(0, 0, 0, 0), { 1.0f, 0 });
-        //    cb->endPass();
+        //    commandBuffer->beginPass(m_displayBufferTarget, QColor(0, 0, 0, 0), { 1.0f, 0 });
+        //    commandBuffer->endPass();
         return;
     }
 
