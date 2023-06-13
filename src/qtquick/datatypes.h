@@ -58,8 +58,6 @@ struct RenderSettings
     Q_PROPERTY(QSGRendererInterface::GraphicsApi graphicsApi MEMBER graphicsApi)
     Q_PROPERTY(FillMode fillMode MEMBER fillMode)
 
-    //    QML_ELEMENT
-
 public:
     enum RenderQuality
     {
