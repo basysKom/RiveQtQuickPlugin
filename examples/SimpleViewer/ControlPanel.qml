@@ -9,14 +9,13 @@ import QtQuick.Controls 2.15
 Rectangle {
     id: root
 
-    color: "white"
-
-    property alias model: buttonRepeater.model
-    property int lastClicked: -1
     property bool advandedText: false
+    property int lastClicked: -1
+    property alias model: buttonRepeater.model
     property alias title: title.text
 
     clip: true
+    color: "white"
 
     ColumnLayout {
         anchors.fill: parent
