@@ -14,7 +14,9 @@
 void RiveQtQuickPlugin::registerTypes(const char *uri)
 {
     qmlRegisterType<RiveQtQuickItem>("RiveQtQuickPlugin", 1, 0, "RiveQtQuickItem");
-    qmlRegisterType<RenderSettings>("RiveQtQuickPlugin", 1, 0, "RenderSettings");
+
+    qRegisterMetaType<RenderSettings>("RenderSettings");
+    qmlRegisterType<RiveQtQuickItem>("RiveQtQuickPlugin", 1, 0, "RenderSettings");
 
     qRegisterMetaType<AnimationInfo>("AnimationInfo");
     qRegisterMetaType<QVector<AnimationInfo>>("QVector<AnimationInfo>");

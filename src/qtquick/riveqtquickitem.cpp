@@ -97,7 +97,12 @@ void RiveQtQuickItem::updateStateMachineInputMap()
 void RiveQtQuickItem::updateInternalArtboard()
 {
     m_hasValidRenderNode = false;
-    m_currentArtboardInstance = m_riveFile->artboardAt(m_currentArtboardIndex);
+
+    if (m_currentArtboardIndex == -1) {
+        m_currentArtboardInstance = m_riveFile->artboardDefault();
+    } else {
+        m_currentArtboardInstance = m_riveFile->artboardAt(m_currentArtboardIndex);
+    }
 
     if (!m_currentArtboardInstance) {
         qDebug() << "Artboard changed, but instance is null";
@@ -109,12 +114,17 @@ void RiveQtQuickItem::updateInternalArtboard()
 
     m_currentArtboardInstance->updateComponents();
 
-    m_animationInstance = m_currentArtboardInstance->animationNamed(m_currentArtboardInstance->firstAnimation()->name());
     m_currentStateMachineInstance = nullptr;
 
     if (m_currentStateMachineIndex == -1) {
-        setCurrentStateMachineIndex(m_currentArtboardInstance->defaultStateMachineIndex()); // this will set m_scheduleStateMachineChange
+        qDebug() << "Setting default state machine index:" << m_currentArtboardInstance->defaultStateMachineIndex();
+        setCurrentStateMachineIndex(m_currentArtboardInstance->defaultStateMachineIndex());
     }
+
+    m_scheduleStateMachineChange = true;
+
+    // we need the animation instance, that's why this looks weird.
+    m_animationInstance = m_currentArtboardInstance->animationNamed(m_currentArtboardInstance->firstAnimation()->name());
 
     emit internalArtboardChanged();
 }
@@ -265,38 +275,41 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
     rive::ImportResult importResult;
     m_riveFile = rive::File::import(dataSpan, &m_riveQtFactory, &importResult);
 
-    if (importResult == rive::ImportResult::success) {
-        m_artboardInfoList.clear();
-
-        // Get info about the artboards
-        for (size_t i = 0; i < m_riveFile->artboardCount(); i++) {
-            const auto artBoard = m_riveFile->artboard(i);
-
-            if (artBoard) {
-                ArtBoardInfo info;
-                info.id = i;
-                info.name = QString::fromStdString(m_riveFile->artboardNameAt(i));
-                m_artboardInfoList.append(info);
-            }
-        }
-        emit artboardsChanged();
-
-        // TODO allow to preselect the artboard and statemachine and animation at load
-        setCurrentArtboardIndex(0);
-        if (m_initialStateMachineIndex != -1) {
-            setCurrentStateMachineIndex(m_initialStateMachineIndex);
-        }
-
-        m_scheduleArtboardChange = true;
-        m_scheduleStateMachineChange = true;
-
-        qDebug("Successfully imported Rive file.");
-        m_loadingStatus = Loaded;
-
-    } else {
+    if (importResult != rive::ImportResult::success) {
         qDebug("Failed to import Rive file.");
         m_loadingStatus = Error;
+        emit loadingStatusChanged();
+        return;
     }
+
+    m_artboardInfoList.clear();
+
+    // Get info about the artboards
+    for (size_t i = 0; i < m_riveFile->artboardCount(); i++) {
+        const auto artBoard = m_riveFile->artboard(i);
+
+        if (artBoard) {
+            ArtBoardInfo info;
+            info.id = i;
+            info.name = QString::fromStdString(m_riveFile->artboardNameAt(i));
+            m_artboardInfoList.append(info);
+        }
+    }
+    emit artboardsChanged();
+
+    // TODO allow to preselect the artboard and statemachine and animation at load
+    if (m_initialArtboardIndex != -1) {
+        setCurrentArtboardIndex(m_initialArtboardIndex);
+    }
+    if (m_initialStateMachineIndex != -1) {
+        setCurrentStateMachineIndex(m_initialStateMachineIndex);
+    }
+
+    m_scheduleArtboardChange = true;
+    m_scheduleStateMachineChange = true;
+
+    qDebug("Successfully imported Rive file.");
+    m_loadingStatus = Loaded;
     emit loadingStatusChanged();
 }
 
@@ -310,21 +323,21 @@ void RiveQtQuickItem::updateAnimations()
 
     for (size_t i = 0; i < m_currentArtboardInstance->animationCount(); i++) {
         const auto animation = m_currentArtboardInstance->animation(i);
-        if (animation) {
 
-            qDebug() << "Animation" << i << "found.";
-            qDebug() << "  Duration:" << animation->duration();
-            qDebug() << "  FPS:" << animation->fps();
-
-            AnimationInfo info;
-            info.id = i;
-            info.name = QString::fromStdString(animation->name());
-            info.duration = animation->duration();
-            info.fps = animation->fps();
-
-            qDebug() << "  Name:" << info.name;
-            m_animationList.append(info);
+        if (!animation) {
+            continue;
         }
+
+        AnimationInfo info;
+        info.id = i;
+        info.name = QString::fromStdString(animation->name());
+        info.duration = animation->duration();
+        info.fps = animation->fps();
+
+        qDebug() << "Animation" << i << "found.\tDuration:" << animation->duration() << "\tFPS:" << animation->fps()
+                 << "\tName:" << info.name;
+
+        m_animationList.append(info);
     }
 
     emit animationsChanged();
@@ -458,6 +471,7 @@ void RiveQtQuickItem::setCurrentArtboardIndex(int newCurrentArtboardIndex)
     }
 
     if (!m_riveFile) {
+        m_initialArtboardIndex = newCurrentArtboardIndex;
         return;
     }
 
@@ -490,7 +504,7 @@ void RiveQtQuickItem::setCurrentStateMachineIndex(int newCurrentStateMachineInde
         return;
     }
 
-    if (!m_riveFile->artboard()) {
+    if (!m_riveFile->artboard(m_currentArtboardIndex)) {
         return;
     }
 
@@ -499,8 +513,8 @@ void RiveQtQuickItem::setCurrentStateMachineIndex(int newCurrentStateMachineInde
                  << m_riveFile->artboard()->stateMachineCount();
         return;
     }
-    // -1 is a valid value!
 
+    // -1 is a valid value!
     m_currentStateMachineIndex = newCurrentStateMachineIndex;
 
     m_scheduleStateMachineChange = true; // we have to do this in the render thread.

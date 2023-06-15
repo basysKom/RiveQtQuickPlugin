@@ -138,6 +138,8 @@ private slots:
 
 private:
     void loadRiveFile(const QString &source);
+
+    void updateInternalArtboard();
     void updateAnimations();
     void updateStateMachines();
 
@@ -147,7 +149,6 @@ private:
 #endif
 
     bool hitTest(const QPointF &pos, const rive::ListenerType &type);
-    void updateInternalArtboard();
 
     QVector<ArtBoardInfo> m_artboardInfoList;
     QVector<AnimationInfo> m_animationList;
@@ -168,6 +169,7 @@ private:
     bool m_scheduleStateMachineChange { false };
 
     int m_currentArtboardIndex { -1 };
+    int m_initialArtboardIndex { -1 };
     int m_currentStateMachineIndex { -1 };
     int m_initialStateMachineIndex { -1 };
 
