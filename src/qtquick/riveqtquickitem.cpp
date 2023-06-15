@@ -193,26 +193,25 @@ void RiveQtQuickItem::geometryChange(const QRectF &newGeometry, const QRectF &ol
 
 void RiveQtQuickItem::mousePressEvent(QMouseEvent *event)
 {
-    hitTest(event->pos(), rive::ListenerType::down);
-    qDebug() << "Click Event:" << event->position();
+    hitTest(event->position(), rive::ListenerType::down);
     // todo: shall we tell qml about a hit and details about that?
 }
 
 void RiveQtQuickItem::mouseMoveEvent(QMouseEvent *event)
 {
-    hitTest(event->pos(), rive::ListenerType::move);
+    hitTest(event->position(), rive::ListenerType::move);
     // todo: shall we tell qml about a hit and details about that?
 }
 
 void RiveQtQuickItem::hoverMoveEvent(QHoverEvent *event)
 {
-    hitTest(event->pos(), rive::ListenerType::move);
+    hitTest(event->position(), rive::ListenerType::move);
     // todo: shall we tell qml about a hit and details about that?
 }
 
 void RiveQtQuickItem::mouseReleaseEvent(QMouseEvent *event)
 {
-    hitTest(event->pos(), rive::ListenerType::up);
+    hitTest(event->position(), rive::ListenerType::up);
     // todo: shall we tell qml about a hit and details about that?
 }
 
@@ -369,6 +368,8 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
         return false;
     }
 
+    qDebug() << "Position:" << pos << "Type:" << (int)type;
+
     // Scale mouse position based on current item size and artboard size
     const float scaleX = width() / m_currentArtboardInstance->width();
     const float scaleY = height() / m_currentArtboardInstance->height();
@@ -377,8 +378,8 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
     const auto scaleFactor = qMin(scaleX, scaleY);
 
     // Calculate the new width and height of the item while preserving the aspect ratio
-    const auto newWidth = m_currentArtboardInstance->width() * scaleFactor;
-    const auto newHeight = m_currentArtboardInstance->height() * scaleFactor;
+    const auto newWidth = m_currentArtboardInstance->width() * scaleX;
+    const auto newHeight = m_currentArtboardInstance->height() * scaleY;
 
     // Calculate the offsets needed to center the item within its bounding rectangle
     const auto offsetX = (width() - newWidth) / 2.0;
@@ -395,15 +396,17 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
         auto *listener = m_currentStateMachineInstance->stateMachine()->listener(i);
 
         if (!listener) {
+            qDebug() << "Listener is nullptr";
             continue;
         }
 
         if (listener->listenerType() == rive::ListenerType::enter || listener->listenerType() == rive::ListenerType::exit) {
-            qDebug() << "Enter and Exit Actions are not yet supported";
+            qWarning() << "Enter and Exit Actions are not yet supported";
             continue;
         }
 
-        if (listener->listenerType() != m_listenerType) {
+        if (listener->listenerType() != type) {
+            qDebug() << "Skipping listener of type" << (int)listener->listenerType() << "expected:" << (int)type;
             continue;
         }
 
@@ -411,6 +414,7 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
             auto *coreElement = m_currentStateMachineInstance->artboard()->resolve(id);
 
             if (!coreElement->is<rive::Shape>()) {
+                qDebug() << "Skipping non shape";
                 continue;
             }
 
@@ -420,9 +424,12 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
             const bool hit = shape->hitTest(area);
 
             if (hit) {
+                qDebug() << "ID:" << listener->targetId() << "- Hit";
                 listener->performChanges(m_currentStateMachineInstance.get(), rive::Vec2D(m_lastMouseX, m_lastMouseY));
                 m_scheduleStateMachineChange = true;
                 m_scheduleArtboardChange = true;
+            } else {
+                qDebug() << "ID:" << listener->targetId() << "- No hit";
             }
         }
     }
