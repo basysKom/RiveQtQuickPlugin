@@ -96,8 +96,8 @@ class RiveQtRhiRenderer : public rive::Renderer
 public:
     RiveQtRhiRenderer(QQuickItem *item);
     virtual ~RiveQtRhiRenderer();
-
-    void setFillMode(const RenderSettings::FillMode fillMode) { m_fillMode = fillMode; };
+    
+    void setFillMode(const RiveRenderSettings::FillMode fillMode) { m_fillMode = fillMode; };
 
     void save() override;
     void restore() override;
@@ -135,6 +135,6 @@ private:
 
     QSize m_artboardSize;
     QRectF m_viewportRect;
-
-    RenderSettings::FillMode m_fillMode;
+    
+    RiveRenderSettings::FillMode m_fillMode;
 };
