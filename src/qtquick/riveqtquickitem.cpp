@@ -458,8 +458,6 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
             if (hit) {
                 qDebug() << "ID:" << listener->targetId() << "- Hit";
                 listener->performChanges(m_currentStateMachineInstance.get(), rive::Vec2D(m_lastMouseX, m_lastMouseY));
-                m_scheduleStateMachineChange = true;
-                m_scheduleArtboardChange = true;
             } else {
                 qDebug() << "ID:" << listener->targetId() << "- No hit";
             }
