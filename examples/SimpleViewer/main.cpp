@@ -11,7 +11,6 @@
 
 int main(int argc, char *argv[])
 {
-
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     // Force OpenGL
     QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
@@ -32,7 +31,9 @@ int main(int argc, char *argv[])
 
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(
-        &engine, &QQmlApplicationEngine::objectCreated, &app,
+        &engine,
+        &QQmlApplicationEngine::objectCreated,
+        &app,
         [url](QObject *obj, const QUrl &objUrl) {
             if (!obj && url == objUrl)
                 QCoreApplication::exit(-1);
