@@ -1,96 +1,120 @@
-# SPDX-FileCopyrightText: 2016 Olivier Goffart <ogoffart@woboq.com>
+# Copyright (C) 2023 The Qt Company Ltd.
+# SPDX-License-Identifier: GPL-3.0-only
 
-# SPDX-License-Identifier: BSD-3-Clause
-
-# Copyright (C) 2016 Olivier Goffart <ogoffart@woboq.com>
+# .clang-format for Qt Creator
 #
-# You may use this file under the terms of the 3-clause BSD license.
-# See the file LICENSE from this package for details.
-
-# This is the clang-format configuration style to be used by Qt,
-# based on the rules from https://wiki.qt.io/Qt_Coding_Style and
-# https://wiki.qt.io/Coding_Conventions
-
+# This is for clang-format >= 5.0.
+#
+# The configuration below follows the Qt Creator Coding Rules [1] as closely as
+# possible. For documentation of the options, see [2].
+#
+# Use ../../tests/manual/clang-format-for-qtc/test.cpp for documenting problems
+# or testing changes.
+#
+# In case you update this configuration please also update the qtcStyle() in src\plugins\clangformat\clangformatutils.cpp
+#
+# [1] https://doc-snapshots.qt.io/qtcreator-extending/coding-style.html
+# [2] https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+#
 ---
-# Webkit style was loosely based on the Qt style
-BasedOnStyle: WebKit
-
-Standard: Cpp11
-
-# Column width is limited to 100 in accordance with Qt Coding Style.
-# https://wiki.qt.io/Qt_Coding_Style
-# Note that this may be changed at some point in the future.
-ColumnLimit: 140
-# How much weight do extra characters after the line length limit have.
-# PenaltyExcessCharacter: 4
-
-# Disable reflow of qdoc comments: indentation rules are different.
-# Translation comments are also excluded.
-CommentPragmas: "^!|^:"
-
-# We want a space between the type and the star for pointer types.
-PointerBindsToType: false
-
-# We use template< without space.
-SpaceAfterTemplateKeyword: false
-
-# We want to break before the operators, but not before a '='.
-BreakBeforeBinaryOperators: NonAssignment
-
-# Braces are usually attached, but not after functions or class declarations.
-BreakBeforeBraces: Custom
-BraceWrapping:
-    AfterClass: true
-    AfterControlStatement: false
-    AfterEnum: true
-    AfterFunction: true
-    AfterNamespace: false
-    AfterObjCDeclaration: false
-    AfterStruct: true
-    AfterUnion: false
-    BeforeCatch: false
-    BeforeElse: false
-    IndentBraces: false
-
-IndentWidth: 4
-IndentCaseLabels: false
+Language:        Cpp
 AccessModifierOffset: -4
-#AlignConsecutiveDeclarations: false
-#AllowShortEnumsOnASingleLine: false
-
-# When constructor initializers do not fit on one line, put them each on a new line.
-#ConstructorInitializerAllOnOneLineOrOnePerLine: true
-# Indent initializers by 4 spaces
-ConstructorInitializerIndentWidth: 4
-
-# Indent width for line continuations.
-ContinuationIndentWidth: 4
-
-# No indentation for namespaces.
-NamespaceIndentation: None
-
-# Allow indentation for preprocessing directives (if/ifdef/endif). https://reviews.llvm.org/rL312125
-IndentPPDirectives: AfterHash
-
-# Horizontally align arguments after an open bracket.
-# The coding style does not specify the following, but this is what gives
-# results closest to the existing code.
-AlignAfterOpenBracket: true
-AlwaysBreakTemplateDeclarations: true
-
-# Ideally we should also allow less short function in a single line, but
-# clang-format does not handle that.
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignEscapedNewlines: DontAlign
+AlignOperands:   true
+AlignTrailingComments: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Inline
-
-# The coding style specifies some include order categories, but also tells to
-# separate categories with an empty line. It does not specify the order within
-# the categories. Since the SortInclude feature of clang-format does not
-# re-order includes separated by empty lines, the feature is not used.
-SortIncludes: false
-
-# macros for which the opening brace stays attached.
-ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH, forever, Q_FOREVER, QBENCHMARK, QBENCHMARK_ONCE ]
-
-# Break constructor initializers before the colon and after the commas.
-BreakConstructorInitializers: BeforeColon
-BreakConstructorInitializersBeforeComma: true
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: Yes
+BinPackArguments: false
+BinPackParameters: false
+BraceWrapping:
+  AfterClass:      true
+  AfterControlStatement: Never
+  AfterEnum:       false
+  AfterFunction:   true
+  AfterNamespace:  false
+  AfterObjCDeclaration: false
+  AfterStruct:     true
+  AfterUnion:      false
+  BeforeCatch:     false
+  BeforeElse:      false
+  IndentBraces:    false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+BreakBeforeBinaryOperators: All
+BreakBeforeBraces: Custom
+BreakBeforeInheritanceComma: false
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializersBeforeComma: false
+BreakConstructorInitializers: BeforeComma
+BreakAfterJavaFieldAnnotations: false
+BreakStringLiterals: true
+ColumnLimit:    140
+CommentPragmas:  '^ IWYU pragma:'
+CompactNamespaces: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+Cpp11BracedListStyle: true
+DerivePointerAlignment: false
+DisableFormat:   false
+ExperimentalAutoDetectBinPacking: false
+FixNamespaceComments: true
+ForEachMacros:
+  - forever # avoids { wrapped to next line
+  - foreach
+  - Q_FOREACH
+  - BOOST_FOREACH
+IncludeCategories:
+  - Regex:           '^<Q.*'
+    Priority:        200
+IncludeIsMainRegex: '(Test)?$'
+IndentCaseLabels: false
+IndentWidth:     4
+IndentWrappedFunctionNames: false
+JavaScriptQuotes: Leave
+JavaScriptWrapImports: true
+KeepEmptyLinesAtTheStartOfBlocks: false
+# Do not add QT_BEGIN_NAMESPACE/QT_END_NAMESPACE as this will indent lines in between.
+MacroBlockBegin: ""
+MacroBlockEnd:   ""
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: None
+ObjCBlockIndentWidth: 4
+ObjCSpaceAfterProperty: false
+ObjCSpaceBeforeProtocolList: true
+PenaltyBreakAssignment: 88
+PenaltyBreakBeforeFirstCallParameter: 300
+PenaltyBreakComment: 500
+PenaltyBreakFirstLessLess: 400
+PenaltyBreakString: 600
+PenaltyExcessCharacter: 50
+PenaltyReturnTypeOnItsOwnLine: 300
+PointerAlignment: Right
+ReflowComments:  false
+SortIncludes: CaseSensitive
+SortUsingDeclarations: true
+SpaceAfterCStyleCast: true
+SpaceAfterTemplateKeyword: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles:  false
+SpacesInContainerLiterals: false
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+Standard: c++11
+TabWidth:        4
+UseTab:          Never
