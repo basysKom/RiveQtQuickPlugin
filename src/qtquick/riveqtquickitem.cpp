@@ -203,25 +203,44 @@ void RiveQtQuickItem::geometryChange(const QRectF &newGeometry, const QRectF &ol
 
 void RiveQtQuickItem::mousePressEvent(QMouseEvent *event)
 {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     hitTest(event->position(), rive::ListenerType::down);
+#else
+    hitTest(event->pos(), rive::ListenerType::down);
+#endif
     // todo: shall we tell qml about a hit and details about that?
 }
 
 void RiveQtQuickItem::mouseMoveEvent(QMouseEvent *event)
 {
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     hitTest(event->position(), rive::ListenerType::move);
+#else
+    hitTest(event->pos(), rive::ListenerType::down);
+#endif
     // todo: shall we tell qml about a hit and details about that?
 }
 
 void RiveQtQuickItem::hoverMoveEvent(QHoverEvent *event)
 {
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     hitTest(event->position(), rive::ListenerType::move);
+#else
+    hitTest(event->pos(), rive::ListenerType::down);
+#endif
     // todo: shall we tell qml about a hit and details about that?
 }
 
 void RiveQtQuickItem::mouseReleaseEvent(QMouseEvent *event)
 {
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     hitTest(event->position(), rive::ListenerType::up);
+#else
+    hitTest(event->pos(), rive::ListenerType::down);
+#endif
     // todo: shall we tell qml about a hit and details about that?
 }
 

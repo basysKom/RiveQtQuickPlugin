@@ -10,10 +10,12 @@
 #include "src/qtquick/riveqsgrhirendernode.h"
 #include "src/qtquick/riveqsgsoftwarerendernode.h"
 
+#include <QQuickWindow>
+
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #    include "riveqtrhirenderer.h"
 #else
-#    include "riveqtopenglrenderer.h"
+#    include "src/qtquick/riveqsgopenglrendernode.h"
 #endif
 
 RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
@@ -90,6 +92,7 @@ std::unique_ptr<rive::RenderPath> RiveQtFactory::makeRenderPath(rive::RawPath &r
         return std::make_unique<RiveQtRhiGLPath>(rawPath, fillRule, segmentCount());
 #endif
     case RiveQtRenderType::None:
+    default:
         return std::make_unique<RiveQtPainterPath>(rawPath, fillRule); // TODO Add Empty Path
     }
 }
@@ -106,6 +109,7 @@ std::unique_ptr<rive::RenderPath> RiveQtFactory::makeEmptyRenderPath()
         return std::make_unique<RiveQtRhiGLPath>(segmentCount());
 #endif
     case RiveQtRenderType::None:
+    default:
         return std::make_unique<RiveQtPainterPath>(); // TODO Add Empty Path
     }
 }
@@ -154,6 +158,7 @@ unsigned int RiveQtFactory::segmentCount()
     case RiveRenderSettings::High:
         return 15;
     }
+    return 10;
 }
 
 RiveQtFactory::RiveQtRenderType RiveQtFactory::renderType()
