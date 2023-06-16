@@ -9,7 +9,6 @@ import QtQuick.Controls 2.15
 Rectangle {
     id: root
 
-    property bool advandedText: false
     property int lastClicked: -1
     property alias model: buttonRepeater.model
     property alias title: title.text
@@ -19,8 +18,7 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 32
+        anchors.margins: 2
 
         Text {
             id: title
@@ -31,7 +29,7 @@ Rectangle {
         ScrollView {
             id: scrollView
             Layout.fillHeight: true
-            Layout.preferredWidth: advandedText ? 300 : 200
+            Layout.fillWidth: true
             clip: true
             background: Rectangle {
                 color: "white"
@@ -40,15 +38,17 @@ Rectangle {
             Column {
                 id: buttonColumn
                 anchors.fill: parent
-                spacing: 16
+                spacing: 1
 
                 Repeater {
                     id: buttonRepeater
 
                     delegate: Button {
                         id: buttonDelegate
+                        flat: true
+                        padding: 2
                         text: "ID: " + modelData.id + ", Name: " + modelData.name
-                              + (root.advandedText ? ", Duration: " + modelData.duration + ", FPS: " + modelData.fps : "")
+                              + (", Duration: " + modelData.duration + ", FPS: " + modelData.fps)
                         onClicked: {
                             root.lastClicked = modelData.id !== undefined ? modelData.id : 0
                         }
