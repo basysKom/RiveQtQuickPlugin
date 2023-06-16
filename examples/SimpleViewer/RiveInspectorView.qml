@@ -23,7 +23,8 @@ Item {
             onLastClickedChanged: riveItem.currentArtboardIndex = lastClicked
 
             Layout.fillHeight: true
-            Layout.preferredWidth: advandedText ? 300 : 200
+            Layout.minimumWidth: 200
+            Layout.minimumHeight: 200
         }
 
         ControlPanel {
@@ -32,10 +33,10 @@ Item {
             model: riveItem.animations
             visible: model !== undefined ? model.length > 0 : false
             onLastClickedChanged: riveItem.triggerAnimation(lastClicked)
-            advandedText: true
 
             Layout.fillHeight: true
-            Layout.preferredWidth: advandedText ? 300 : 200
+            Layout.minimumWidth: 200
+            Layout.minimumHeight: 200
         }
 
         ControlPanel {
@@ -46,7 +47,8 @@ Item {
             onLastClickedChanged: riveItem.currentStateMachineIndex = lastClicked
 
             Layout.fillHeight: true
-            Layout.preferredWidth: advandedText ? 300 : 200
+            Layout.minimumWidth: 200
+            Layout.minimumHeight: 200
         }
 
         ControlPanel {
@@ -57,7 +59,15 @@ Item {
             onLastClickedChanged: riveItem.stateMachineInterface.activateTrigger(model[lastClicked])
 
             Layout.fillHeight: true
-            Layout.preferredWidth: advandedText ? 300 : 200
+            Layout.minimumWidth: 200
+            Layout.minimumHeight: 200
+        }
+
+        Item {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            Layout.minimumWidth: 50
         }
 
         RiveQtQuickItem {
@@ -66,7 +76,7 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            Layout.minimumHeight: 500
+            Layout.minimumWidth: 500
 
             currentArtboardIndex: 0
             currentStateMachineIndex: 0

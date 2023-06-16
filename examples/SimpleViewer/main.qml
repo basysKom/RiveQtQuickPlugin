@@ -26,6 +26,16 @@ ApplicationWindow {
         }
     }
 
+    Rectangle {
+        anchors.bottom: bar.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        height: 5
+
+        color: "black"
+    }
+
     StackLayout {
         anchors.top: bar.bottom
         anchors.left: parent.left
@@ -35,13 +45,12 @@ ApplicationWindow {
         currentIndex: bar.currentIndex
 
         RowLayout {
-            anchors.fill: parent
-
             ScrollView {
                 id: scrollView
 
                 Layout.fillHeight: true
-                Layout.preferredWidth: (!dropView.fileSource || hovered) ? 300 : 150
+                Layout.minimumWidth: 200
+                Layout.minimumHeight: 200
 
                 hoverEnabled: true
 
