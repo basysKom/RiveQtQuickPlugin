@@ -20,7 +20,9 @@ Item {
             title: "Artboards"
             model: riveItem.artboards
             visible: model !== undefined ? model.length > 0 : false
-            onClicked: riveItem.currentArtboardIndex = modelData.id
+            onClicked: modelData => {
+                           riveItem.currentArtboardIndex = modelData.id
+                       }
 
             Layout.fillHeight: true
             Layout.minimumWidth: 200
@@ -32,7 +34,9 @@ Item {
 
             model: riveItem.animations
             visible: model !== undefined ? model.length > 0 : false
-            onClicked: riveItem.triggerAnimation( modelData.id )
+            onClicked: modelData => {
+                           riveItem.triggerAnimation(modelData.id)
+                       }
 
             Layout.fillHeight: true
             Layout.minimumWidth: 200
@@ -44,7 +48,9 @@ Item {
 
             model: riveItem.stateMachines
             visible: model !== undefined ? model.length > 0 : false
-            onClicked: riveItem.currentStateMachineIndex = modelData.id
+            onClicked: modelData => {
+                           riveItem.currentStateMachineIndex = modelData.id
+                       }
 
             Layout.fillHeight: true
             Layout.minimumWidth: 200
@@ -56,7 +62,9 @@ Item {
 
             model: riveItem.stateMachineInterface ? riveItem.stateMachineInterface.triggers : 0
             visible: model !== undefined ? model.length > 0 : false
-            onClicked: riveItem.stateMachineInterface.activateTrigger( modelData )
+            onClicked: modelData => {
+                           riveItem.stateMachineInterface.activateTrigger(modelData)
+                       }
 
             Layout.fillHeight: true
             Layout.minimumWidth: 200

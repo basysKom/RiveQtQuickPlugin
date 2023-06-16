@@ -83,13 +83,14 @@ rive::rcp<rive::RenderShader> RiveQtFactory::makeRadialGradient(float centerX, f
 std::unique_ptr<rive::RenderPath> RiveQtFactory::makeRenderPath(rive::RawPath &rawPath, rive::FillRule fillRule)
 {
     switch (renderType()) {
-    case RiveQtRenderType::QOpenGLRenderer:
-        return std::make_unique<RiveQtOpenGLPath>(rawPath, fillRule);
     case RiveQtRenderType::QPainterRenderer:
         return std::make_unique<RiveQtPainterPath>(rawPath, fillRule);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     case RiveQtRenderType::RHIRenderer:
         return std::make_unique<RiveQtRhiGLPath>(rawPath, fillRule, segmentCount());
+#else
+    case RiveQtRenderType::QOpenGLRenderer:
+        return std::make_unique<RiveQtOpenGLPath>(rawPath, fillRule);
 #endif
     case RiveQtRenderType::None:
     default:
@@ -100,13 +101,14 @@ std::unique_ptr<rive::RenderPath> RiveQtFactory::makeRenderPath(rive::RawPath &r
 std::unique_ptr<rive::RenderPath> RiveQtFactory::makeEmptyRenderPath()
 {
     switch (renderType()) {
-    case RiveQtRenderType::QOpenGLRenderer:
-        return std::make_unique<RiveQtOpenGLPath>();
     case RiveQtRenderType::QPainterRenderer:
         return std::make_unique<RiveQtPainterPath>();
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     case RiveQtRenderType::RHIRenderer:
         return std::make_unique<RiveQtRhiGLPath>(segmentCount());
+#else
+    case RiveQtRenderType::QOpenGLRenderer:
+        return std::make_unique<RiveQtOpenGLPath>();
 #endif
     case RiveQtRenderType::None:
     default:
