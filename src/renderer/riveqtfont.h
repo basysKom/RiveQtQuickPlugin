@@ -20,8 +20,6 @@
 #include <rive/text_engine.hpp>
 #include <rive/core.hpp>
 
-#include "riveqtopenglrenderer.h"
-
 class RiveQtFont : public rive::Font, public std::enable_shared_from_this<RiveQtFont>
 {
 

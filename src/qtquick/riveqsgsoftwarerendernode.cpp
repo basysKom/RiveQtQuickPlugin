@@ -55,12 +55,23 @@ void RiveQSGSoftwareRenderNode::renderSoftware(const RenderState *state)
         auto offsetX = (m_item->width() - newWidth) / 2.0;
         auto offsetY = (m_item->height() - newHeight) / 2.0;
 
-        void *vPainter = m_window->rendererInterface()->getResource(m_window, QSGRendererInterface::Resource::PainterResource);
+        auto *renderInterface = m_window->rendererInterface();
 
-        if (!m_artboardInstance || !vPainter) {
+        if (!m_artboardInstance) {
             return;
         }
-        auto *painter = static_cast<QPainter *>(vPainter);
+
+        QPainter *painter = nullptr;
+        if (renderInterface->graphicsApi() == QSGRendererInterface::GraphicsApi::Software) {
+            void *vPainter = renderInterface->getResource(m_window, QSGRendererInterface::Resource::PainterResource);
+            if (vPainter) {
+                painter = static_cast<QPainter *>(vPainter);
+            } else {
+                return;
+            }
+        } else {
+            return;
+        }
 
         if (m_item) {
             painter->save();

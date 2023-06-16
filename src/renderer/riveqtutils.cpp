@@ -8,6 +8,7 @@
 #include <QMatrix4x4>
 #include <QDebug>
 
+#include "rive/shapes/paint/color.hpp"
 #include <rive/renderer.hpp>
 #include <rive/command_path.hpp>
 
@@ -185,9 +186,6 @@ RiveQtLinearGradient::RiveQtLinearGradient(float x1, float y1, float x2, float y
     for (size_t i = 0; i < count; ++i) {
         QColor color = RiveQtUtils::riveColorToQt(colors[i]);
         m_opacity = qMax(m_opacity, rive::colorOpacity(colors[i]));
-        if (m_opacity < 0.6 && m_opacity > 0.4) {
-            qDebug() << " LAKSJDALKSJD";
-        }
         qreal stop = stops[i];
         m_gradient.setColorAt(stop, color);
     }
