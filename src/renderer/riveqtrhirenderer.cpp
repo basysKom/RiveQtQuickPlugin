@@ -690,19 +690,19 @@ void RiveQtRhiRenderer::setProjectionMatrix(const QMatrix4x4 *projectionMatrix, 
     m_combinedMatrix = *projectionMatrix;
 
     switch (m_fillMode) {
-    case RenderSettings::Stretch: {
+    case RiveRenderSettings::Stretch: {
         m_combinedMatrix.scale((m_item->window()->width() / m_item->width()) * aspectX,
                                (m_item->window()->height() / m_item->height()) * aspectY);
         break;
     }
-    case RenderSettings::PreserveAspectCrop: {
+    case RiveRenderSettings::PreserveAspectCrop: {
         auto scaleFactor = qMax(aspectX, aspectY);
         m_combinedMatrix.scale((m_item->window()->width() / m_item->width()) * scaleFactor,
                                (m_item->window()->height() / m_item->height()) * scaleFactor);
         break;
     }
     default:
-    case RenderSettings::PreserveAspectFit: {
+    case RiveRenderSettings::PreserveAspectFit: {
         auto scaleFactor = qMin(aspectX, aspectY);
         m_combinedMatrix.scale((m_item->window()->width() / m_item->width()) * scaleFactor,
                                (m_item->window()->height() / m_item->height()) * scaleFactor);

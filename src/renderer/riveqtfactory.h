@@ -29,14 +29,14 @@ public:
         QOpenGLRenderer,
         RHIRenderer
     };
-
-    explicit RiveQtFactory(const RenderSettings &renderSettings = RenderSettings())
+    
+    explicit RiveQtFactory(const RiveRenderSettings &renderSettings = RiveRenderSettings())
         : rive::Factory()
         , m_renderSettings(renderSettings)
     {
     }
-
-    void setRenderSettings(const RenderSettings &renderSettings) { m_renderSettings = renderSettings; }
+    
+    void setRenderSettings(const RiveRenderSettings &renderSettings) { m_renderSettings = renderSettings; }
 
     RiveQSGRenderNode *renderNode(QQuickWindow *window, rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
 
@@ -55,6 +55,6 @@ private:
     unsigned segmentCount();
 
     RiveQtRenderType renderType();
-
-    RenderSettings m_renderSettings;
+    
+    RiveRenderSettings m_renderSettings;
 };

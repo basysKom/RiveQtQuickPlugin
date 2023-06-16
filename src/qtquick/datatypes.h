@@ -50,7 +50,7 @@ public:
     QString name;
 };
 
-struct RenderSettings
+struct RiveRenderSettings
 {
     Q_GADGET
 

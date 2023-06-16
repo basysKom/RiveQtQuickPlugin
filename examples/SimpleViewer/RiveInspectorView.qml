@@ -71,8 +71,8 @@ Item {
             currentArtboardIndex: 0
             currentStateMachineIndex: 0
 
-            renderQuality: RenderSettings.Low
-            fillMode: RenderSettings.PreserveAspectFit
+            renderQuality: RiveRenderSettings.Low
+            fillMode: RiveRenderSettings.PreserveAspectFit
 
             onStateMachineInterfaceChanged: {
                 if (stateMachineInterface) {

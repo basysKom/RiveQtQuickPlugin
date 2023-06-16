@@ -147,11 +147,11 @@ rive::rcp<rive::Font> RiveQtFactory::decodeFont(rive::Span<const uint8_t> span)
 unsigned int RiveQtFactory::segmentCount()
 {
     switch (m_renderSettings.renderQuality) {
-    case RenderSettings::Low:
+    case RiveRenderSettings::Low:
         return 5;
-    case RenderSettings::Medium:
+    case RiveRenderSettings::Medium:
         return 10;
-    case RenderSettings::High:
+    case RiveRenderSettings::High:
         return 15;
     }
 }

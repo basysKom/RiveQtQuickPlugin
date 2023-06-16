@@ -109,7 +109,7 @@ void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
     markDirty(QSGNode::DirtyGeometry);
 }
 
-void RiveQSGRHIRenderNode::setFillMode(const RenderSettings::FillMode fillMode)
+void RiveQSGRHIRenderNode::setFillMode(const RiveRenderSettings::FillMode fillMode)
 {
     m_renderer->setFillMode(fillMode);
 }

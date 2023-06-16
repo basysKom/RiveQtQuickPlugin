@@ -42,8 +42,8 @@ class RiveQtQuickItem : public QQuickItem
 
     Q_PROPERTY(RiveQtStateMachineInputMap *stateMachineInterface READ stateMachineInterface NOTIFY stateMachineInterfaceChanged)
 
-    Q_PROPERTY(RenderSettings::RenderQuality renderQuality READ renderQuality WRITE setRenderQuality NOTIFY renderQualityChanged)
-    Q_PROPERTY(RenderSettings::FillMode fillMode READ fillMode WRITE setFillMode NOTIFY fillModeChanged)
+    Q_PROPERTY(RiveRenderSettings::RenderQuality renderQuality READ renderQuality WRITE setRenderQuality NOTIFY renderQualityChanged)
+    Q_PROPERTY(RiveRenderSettings::FillMode fillMode READ fillMode WRITE setFillMode NOTIFY fillModeChanged)
 
     QML_ELEMENT
 
@@ -87,15 +87,15 @@ public:
     bool interactive() const;
     void setInteractive(bool newInteractive);
 
-    RenderSettings::RenderQuality renderQuality() { return m_renderSettings.renderQuality; }
-    void setRenderQuality(const RenderSettings::RenderQuality quality)
+    RiveRenderSettings::RenderQuality renderQuality() { return m_renderSettings.renderQuality; }
+    void setRenderQuality(const RiveRenderSettings::RenderQuality quality)
     {
         m_renderSettings.renderQuality = quality;
         emit renderQualityChanged();
     }
 
-    RenderSettings::FillMode fillMode() { return m_renderSettings.fillMode; }
-    void setFillMode(const RenderSettings::FillMode fillMode)
+    RiveRenderSettings::FillMode fillMode() { return m_renderSettings.fillMode; }
+    void setFillMode(const RiveRenderSettings::FillMode fillMode)
     {
         m_renderSettings.fillMode = fillMode;
         emit fillModeChanged();
@@ -175,7 +175,7 @@ private:
 
     RiveQtStateMachineInputMap *m_stateMachineInputMap { nullptr };
 
-    RenderSettings m_renderSettings;
+    RiveRenderSettings m_renderSettings;
 
     RiveQtFactory m_riveQtFactory { m_renderSettings };
 
