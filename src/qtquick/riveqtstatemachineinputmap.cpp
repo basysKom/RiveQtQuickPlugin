@@ -6,15 +6,15 @@
 
 #include "riveqtstatemachineinputmap.h"
 
-#include "rive/animation/state_machine_input_instance.hpp"
-#include <rive/animation/state_machine_input.hpp>
 #include "rive/animation/state_machine_bool.hpp"
+#include "rive/animation/state_machine_input_instance.hpp"
 #include "rive/animation/state_machine_number.hpp"
 #include "rive/animation/state_machine_trigger.hpp"
+#include <rive/animation/state_machine_input.hpp>
 
 #include <QJSValue>
-#include <QVariant>
 #include <QQmlEngine>
+#include <QVariant>
 
 RiveQtStateMachineInputMap::RiveQtStateMachineInputMap(rive::StateMachineInstance *stateMachineInstance, QObject *parent)
     : QQmlPropertyMap(this, parent)

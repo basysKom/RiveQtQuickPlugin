@@ -8,9 +8,9 @@
 #include <algorithm>
 #include <math.h>
 
-#include <QVector4D>
-#include <QSGRenderNode>
 #include <QQuickWindow>
+#include <QSGRenderNode>
+#include <QVector4D>
 
 #include <private/qtriangulator_p.h>
 
@@ -342,8 +342,8 @@ QVector<QVector<QVector2D>> RiveQtRhiGLPath::toVerticesLine(const QPen &pen)
     return m_pathOutlineData;
 }
 
-QPointF RiveQtRhiGLPath::cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2,
-                                     const QPointF &endPoint, qreal t)
+QPointF RiveQtRhiGLPath::cubicBezier(
+    const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2, const QPointF &endPoint, qreal t)
 {
     qreal oneMinusT = 1 - t;
     qreal oneMinusTSquared = oneMinusT * oneMinusT;
@@ -352,7 +352,7 @@ QPointF RiveQtRhiGLPath::cubicBezier(const QPointF &startPoint, const QPointF &c
     qreal tCubed = tSquared * t;
 
     QPointF point = oneMinusTCubed * startPoint + 3 * oneMinusTSquared * t * controlPoint1 + 3 * oneMinusT * tSquared * controlPoint2
-        + tCubed * endPoint;
+                    + tCubed * endPoint;
     return point;
 }
 
@@ -606,7 +606,9 @@ void RiveQtRhiRenderer::drawImage(const rive::RenderImage *image, rive::BlendMod
     node->setBlendMode(blendMode);
 
     node->setTexture(static_cast<const RiveQtImage *>(image)->image(), //
-                     nullptr, nullptr, nullptr,
+                     nullptr,
+                     nullptr,
+                     nullptr,
                      transformMatrix()); //
 
 #if 0 // this allows to draw the clipping area which it usefull for debugging :)
@@ -620,9 +622,12 @@ void RiveQtRhiRenderer::drawImage(const rive::RenderImage *image, rive::BlendMod
     m_rhiRenderStack.back().stackNodes.append(node);
 }
 
-void RiveQtRhiRenderer::drawImageMesh(const rive::RenderImage *image, rive::rcp<rive::RenderBuffer> vertices_f32,
-                                      rive::rcp<rive::RenderBuffer> uvCoords_f32, rive::rcp<rive::RenderBuffer> indices_u16,
-                                      rive::BlendMode blendMode, float opacity)
+void RiveQtRhiRenderer::drawImageMesh(const rive::RenderImage *image,
+                                      rive::rcp<rive::RenderBuffer> vertices_f32,
+                                      rive::rcp<rive::RenderBuffer> uvCoords_f32,
+                                      rive::rcp<rive::RenderBuffer> indices_u16,
+                                      rive::BlendMode blendMode,
+                                      float opacity)
 {
     TextureTargetNode *node = getRiveDrawTargetNode();
 
@@ -631,7 +636,7 @@ void RiveQtRhiRenderer::drawImageMesh(const rive::RenderImage *image, rive::rcp<
     node->setOpacity(currentOpacity()); // inherit the opacity from the parent
     node->setBlendMode(blendMode);
 
-    node->setTexture(static_cast<const RiveQtImage *>(image)->image(), //
+    node->setTexture(static_cast<const RiveQtImage *>(image)->image(),   //
                      static_cast<RiveQtBufferF32 *>(vertices_f32.get()), //
                      static_cast<RiveQtBufferF32 *>(uvCoords_f32.get()), //
                      static_cast<RiveQtBufferU16 *>(indices_u16.get()),
@@ -747,8 +752,7 @@ float RiveQtRhiRenderer::currentOpacity()
 RhiSubPath::RhiSubPath(RiveQtRhiGLPath *path, const QMatrix4x4 &transform)
     : m_Path(path)
     , m_Transform(transform)
-{
-}
+{}
 
 RiveQtRhiGLPath *RhiSubPath::path() const
 {

@@ -4,12 +4,12 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include <QVector4D>
-#include <QMatrix4x4>
 #include <QDebug>
+#include <QMatrix4x4>
+#include <QVector4D>
 
-#include <rive/renderer.hpp>
 #include <rive/command_path.hpp>
+#include <rive/renderer.hpp>
 
 #include "riveqtutils.h"
 
@@ -46,8 +46,7 @@ Qt::PenCapStyle RiveQtUtils::riveStrokeCapToQt(rive::StrokeCap cap)
 
 QMatrix4x4 RiveQtUtils::riveMat2DToQt(const rive::Mat2D &riveMatrix)
 {
-    return QMatrix4x4(riveMatrix[0], riveMatrix[1], 0, riveMatrix[4], riveMatrix[2], riveMatrix[3], 0, riveMatrix[5], 0, 0, 1, 0, 0, 0, 0,
-                      1);
+    return QMatrix4x4(riveMatrix[0], riveMatrix[1], 0, riveMatrix[4], riveMatrix[2], riveMatrix[3], 0, riveMatrix[5], 0, 0, 1, 0, 0, 0, 0, 1);
 }
 
 Qt::FillRule RiveQtUtils::riveFillRuleToQt(rive::FillRule fillRule)
@@ -91,8 +90,12 @@ QPainterPath RiveQtUtils::transformPathWithMatrix4x4(const QPainterPath &path, c
             QVector4D transformedCtrlPt2 = matrix * ctrlPt2;
             QVector4D transformedEndPt = matrix * endPt;
 
-            transformedPath.cubicTo(transformedCtrlPt1.x(), transformedCtrlPt1.y(), transformedCtrlPt2.x(), transformedCtrlPt2.y(),
-                                    transformedEndPt.x(), transformedEndPt.y());
+            transformedPath.cubicTo(transformedCtrlPt1.x(),
+                                    transformedCtrlPt1.y(),
+                                    transformedCtrlPt2.x(),
+                                    transformedCtrlPt2.y(),
+                                    transformedEndPt.x(),
+                                    transformedEndPt.y());
         } break;
         default:
             break;
@@ -102,7 +105,7 @@ QPainterPath RiveQtUtils::transformPathWithMatrix4x4(const QPainterPath &path, c
     return transformedPath;
 }
 
-RiveQtPaint::RiveQtPaint() { }
+RiveQtPaint::RiveQtPaint() {}
 
 void RiveQtPaint::color(rive::ColorInt value)
 {
@@ -176,8 +179,8 @@ void RiveQtPaint::shader(rive::rcp<rive::RenderShader> shader)
     }
 }
 
-RiveQtLinearGradient::RiveQtLinearGradient(float x1, float y1, float x2, float y2, const rive::ColorInt *colors, const float *stops,
-                                           size_t count)
+RiveQtLinearGradient::RiveQtLinearGradient(
+    float x1, float y1, float x2, float y2, const rive::ColorInt *colors, const float *stops, size_t count)
     : m_gradient(x1, y1, x2, y2)
 {
     m_opacity = 0;
@@ -193,8 +196,8 @@ RiveQtLinearGradient::RiveQtLinearGradient(float x1, float y1, float x2, float y
     }
 }
 
-RiveQtRadialGradient::RiveQtRadialGradient(float centerX, float centerY, float radius, const rive::ColorInt colors[],
-                                           const float positions[], size_t count)
+RiveQtRadialGradient::RiveQtRadialGradient(
+    float centerX, float centerY, float radius, const rive::ColorInt colors[], const float positions[], size_t count)
 {
     m_gradient = QRadialGradient(centerX, centerY, radius);
 

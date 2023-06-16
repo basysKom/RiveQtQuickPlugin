@@ -36,7 +36,7 @@ private:
     void renderSoftware(const RenderState *state);
 
     RiveQtPainterRenderer m_renderer;
-    QQuickWindow *m_window { nullptr };
+    QQuickWindow *m_window{nullptr};
 
     QPainter m_fallbackPainter;
     QPixmap m_fallbackPixmap;

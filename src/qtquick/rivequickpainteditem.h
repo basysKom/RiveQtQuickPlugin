@@ -5,12 +5,12 @@
 
 #pragma once
 
-#include <QQuickItem>
-#include <QQuickPaintedItem>
-#include <QTimer>
 #include "rive/artboard.hpp"
 #include "riveqtfactory.h"
 #include "riveqtrenderer.h"
+#include <QQuickItem>
+#include <QQuickPaintedItem>
+#include <QTimer>
 
 struct AnimationInfo
 {
@@ -35,24 +35,24 @@ class RiveQuickItem : public QQuickPaintedItem
     Q_PROPERTY(QList<AnimationInfo> animations READ animations NOTIFY animationsChanged)
 
 public:
-    RiveQuickItem(QQuickItem* parent = nullptr);
+    RiveQuickItem(QQuickItem *parent = nullptr);
 
-    void paint(QPainter* painter) override;
+    void paint(QPainter *painter) override;
 
     QList<AnimationInfo> animations() const;
 
     Q_INVOKABLE void triggerAnimation(int id);
 
-    rive::Artboard* artboard() { return m_artboard; };
-    std::unique_ptr<rive::ArtboardInstance>& artboardInstance() { return m_artboardInstance; };
+    rive::Artboard *artboard() { return m_artboard; };
+    std::unique_ptr<rive::ArtboardInstance> &artboardInstance() { return m_artboardInstance; };
 
 signals:
     void animationsChanged();
 
 private:
-    rive::Artboard* m_artboard;
+    rive::Artboard *m_artboard;
     std::unique_ptr<rive::ArtboardInstance> m_artboardInstance;
-    rive::LinearAnimationInstance* m_animationInstance;
+    rive::LinearAnimationInstance *m_animationInstance;
 
     RiveQtRenderer m_renderer;
     RiveQtFactory customFactory;
@@ -60,7 +60,6 @@ private:
 
     QTimer m_animator;
 
-    const rive::LinearAnimation* m_linearAnimation;
+    const rive::LinearAnimation *m_linearAnimation;
     float m_elapsedTime;
 };
-

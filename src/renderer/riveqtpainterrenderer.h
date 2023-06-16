@@ -6,14 +6,14 @@
 
 #pragma once
 
+#include <QBrush>
+#include <QLinearGradient>
 #include <QPainter>
 #include <QPainterPath>
-#include <QBrush>
 #include <QPen>
-#include <QLinearGradient>
 
-#include <rive/renderer.hpp>
 #include <rive/math/raw_path.hpp>
+#include <rive/renderer.hpp>
 
 #include "riveqtutils.h"
 
@@ -79,8 +79,11 @@ public:
     void drawPath(rive::RenderPath *path, rive::RenderPaint *paint) override;
     void clipPath(rive::RenderPath *path) override;
     void drawImage(const rive::RenderImage *image, rive::BlendMode blendMode, float opacity) override;
-    void drawImageMesh(const rive::RenderImage *image, rive::rcp<rive::RenderBuffer> vertices_f32,
-                       rive::rcp<rive::RenderBuffer> uvCoords_f32, rive::rcp<rive::RenderBuffer> indices_u16, rive::BlendMode blendMode,
+    void drawImageMesh(const rive::RenderImage *image,
+                       rive::rcp<rive::RenderBuffer> vertices_f32,
+                       rive::rcp<rive::RenderBuffer> uvCoords_f32,
+                       rive::rcp<rive::RenderBuffer> indices_u16,
+                       rive::BlendMode blendMode,
                        float opacity) override;
 
 private:

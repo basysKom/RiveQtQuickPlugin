@@ -6,17 +6,15 @@
 #include "riveqtfont.h"
 
 RiveQtFont::RiveQtFont(const QFont &font, const QFontMetricsF &fontMetrics)
-    : rive::Font({ static_cast<float>(fontMetrics.ascent()), static_cast<float>(fontMetrics.descent()) })
+    : rive::Font({static_cast<float>(fontMetrics.ascent()), static_cast<float>(fontMetrics.descent())})
     , m_font(font)
-{
-}
+{}
 
 RiveQtFont::RiveQtFont(const QFont &font, const std::vector<Coord> &coords)
     : rive::Font(calculateLineMetrics(font))
     , m_font(font)
     , m_coords(coords)
-{
-}
+{}
 
 uint32_t RiveQtFont::tagFromName(const char *name) const
 {
@@ -35,7 +33,7 @@ rive::Font::Axis RiveQtFont::getAxis(uint16_t index) const
 
     // TODO: IMPLEMENT?
 
-    return { 0, 0, 0, 0 };
+    return {0, 0, 0, 0};
 }
 
 uint16_t RiveQtFont::getAxisCount() const
@@ -140,7 +138,7 @@ rive::SimpleArray<rive::Paragraph> RiveQtFont::onShapeText(rive::Span<const rive
             }
         }
 
-        tempParagraphs.push_back(rive::Paragraph { glyphRuns });
+        tempParagraphs.push_back(rive::Paragraph{glyphRuns});
         line = layout.createLine();
     }
     layout.endLayout();

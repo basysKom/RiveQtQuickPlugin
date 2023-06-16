@@ -14,8 +14,8 @@ class RiveQtPaint
 public:
     RiveQtPaint();
 
-    const QBrush& brush() const { return m_Brush; }
-    const QPen& pen() const { return m_Pen; }
+    const QBrush &brush() const { return m_Brush; }
+    const QPen &pen() const { return m_Pen; }
 
 private:
     QBrush m_Brush;

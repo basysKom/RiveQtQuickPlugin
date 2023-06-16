@@ -12,8 +12,7 @@
 RiveQSGSoftwareRenderNode::RiveQSGSoftwareRenderNode(QQuickWindow *window, rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
     : RiveQSGRenderNode(artboardInstance, item)
     , m_window(window)
-{
-}
+{}
 
 QRectF RiveQSGSoftwareRenderNode::rect() const
 {
@@ -30,7 +29,14 @@ void RiveQSGSoftwareRenderNode::render(const RenderState *state)
 
 QTransform matrix4x4ToTransform(const QMatrix4x4 &matrix)
 {
-    return QTransform(matrix(0, 0), matrix(0, 1), matrix(0, 3), matrix(1, 0), matrix(1, 1), matrix(1, 3), matrix(3, 0), matrix(3, 1),
+    return QTransform(matrix(0, 0),
+                      matrix(0, 1),
+                      matrix(0, 3),
+                      matrix(1, 0),
+                      matrix(1, 1),
+                      matrix(1, 3),
+                      matrix(3, 0),
+                      matrix(3, 1),
                       matrix(3, 3));
 }
 

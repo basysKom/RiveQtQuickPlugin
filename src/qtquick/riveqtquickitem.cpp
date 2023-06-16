@@ -4,25 +4,25 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include <QSGRendererInterface>
-#include <QSGRenderNode>
+#include <QFile>
 #include <QQmlEngine>
 #include <QQuickWindow>
-#include <QFile>
+#include <QSGRenderNode>
+#include <QSGRendererInterface>
 
+#include <rive/animation/linear_animation_instance.hpp>
+#include <rive/animation/state_machine_listener.hpp>
+#include <rive/assets/image_asset.hpp>
+#include <rive/file.hpp>
+#include <rive/generated/shapes/shape_base.hpp>
 #include <rive/node.hpp>
 #include <rive/shapes/clipping_shape.hpp>
-#include <rive/shapes/rectangle.hpp>
 #include <rive/shapes/image.hpp>
+#include <rive/shapes/rectangle.hpp>
 #include <rive/shapes/shape.hpp>
-#include <rive/assets/image_asset.hpp>
-#include <rive/animation/linear_animation_instance.hpp>
-#include <rive/generated/shapes/shape_base.hpp>
-#include <rive/animation/state_machine_listener.hpp>
-#include <rive/file.hpp>
 
-#include "riveqtquickitem.h"
 #include "riveqtfactory.h"
+#include "riveqtquickitem.h"
 
 RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     : QQuickItem(parent)
@@ -56,7 +56,10 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     connect(this, &RiveQtQuickItem::internalStateMachineChanged, this, &RiveQtQuickItem::updateStateMachineInputMap, Qt::QueuedConnection);
 
     // do update the index only once we are set up and happy
-    connect(this, &RiveQtQuickItem::stateMachineInterfaceChanged, this, &RiveQtQuickItem::currentStateMachineIndexChanged,
+    connect(this,
+            &RiveQtQuickItem::stateMachineInterfaceChanged,
+            this,
+            &RiveQtQuickItem::currentStateMachineIndexChanged,
             Qt::QueuedConnection);
 
     m_elapsedTimer.start();
@@ -65,7 +68,7 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     update();
 }
 
-RiveQtQuickItem::~RiveQtQuickItem() { }
+RiveQtQuickItem::~RiveQtQuickItem() {}
 
 void RiveQtQuickItem::triggerAnimation(int id)
 {
@@ -381,7 +384,7 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
         return false;
     }
 
-    qDebug() << "Position:" << pos << "Type:" << (int)type;
+    qDebug() << "Position:" << pos << "Type:" << (int) type;
 
     // Scale mouse position based on current item size and artboard size
     const float scaleX = width() / m_currentArtboardInstance->width();
@@ -419,7 +422,7 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
         }
 
         if (listener->listenerType() != type) {
-            qDebug() << "Skipping listener of type" << (int)listener->listenerType() << "expected:" << (int)type;
+            qDebug() << "Skipping listener of type" << (int) listener->listenerType() << "expected:" << (int) type;
             continue;
         }
 
@@ -432,8 +435,10 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
             }
 
             rive::Shape *shape = dynamic_cast<rive::Shape *>(coreElement);
-            const rive::IAABB area = { static_cast<int32_t>(m_lastMouseX), static_cast<int32_t>(m_lastMouseY),
-                                       static_cast<int32_t>(m_lastMouseX + 1), static_cast<int32_t>(m_lastMouseY + 1) };
+            const rive::IAABB area = {static_cast<int32_t>(m_lastMouseX),
+                                      static_cast<int32_t>(m_lastMouseY),
+                                      static_cast<int32_t>(m_lastMouseX + 1),
+                                      static_cast<int32_t>(m_lastMouseY + 1)};
             const bool hit = shape->hitTest(area);
 
             if (hit) {

@@ -6,20 +6,20 @@
 #pragma once
 
 #include <QElapsedTimer>
+#include <QImage>
+#include <QPainter>
 #include <QQuickItem>
 #include <QQuickPaintedItem>
 #include <QSGRenderNode>
 #include <QSGTextureProvider>
-#include <QImage>
-#include <QPainter>
 #include <QTimer>
 
 #include <rive/artboard.hpp>
 #include <rive/listener_type.hpp>
 
+#include "datatypes.h"
 #include "riveqtfactory.h"
 #include "riveqtstatemachineinputmap.h"
-#include "datatypes.h"
 
 class RiveQSGRenderNode;
 class RiveQSGRHIRenderNode;
@@ -48,13 +48,7 @@ class RiveQtQuickItem : public QQuickItem
     QML_ELEMENT
 
 public:
-    enum LoadingStatus
-    {
-        Idle,
-        Loading,
-        Loaded,
-        Error
-    };
+    enum LoadingStatus { Idle, Loading, Loaded, Error };
     Q_ENUM(LoadingStatus)
 
     RiveQtQuickItem(QQuickItem *parent = nullptr);
@@ -159,34 +153,34 @@ private:
     mutable QScopedPointer<QSGTextureProvider> m_textureProvider;
 
     QString m_fileSource;
-    LoadingStatus m_loadingStatus { Idle };
+    LoadingStatus m_loadingStatus{Idle};
 
-    std::unique_ptr<rive::ArtboardInstance> m_currentArtboardInstance { nullptr };
-    std::unique_ptr<rive::LinearAnimationInstance> m_animationInstance { nullptr };
-    std::unique_ptr<rive::StateMachineInstance> m_currentStateMachineInstance { nullptr };
+    std::unique_ptr<rive::ArtboardInstance> m_currentArtboardInstance{nullptr};
+    std::unique_ptr<rive::LinearAnimationInstance> m_animationInstance{nullptr};
+    std::unique_ptr<rive::StateMachineInstance> m_currentStateMachineInstance{nullptr};
 
-    bool m_scheduleArtboardChange { false };
-    bool m_scheduleStateMachineChange { false };
+    bool m_scheduleArtboardChange{false};
+    bool m_scheduleStateMachineChange{false};
 
-    int m_currentArtboardIndex { -1 };
-    int m_initialArtboardIndex { -1 };
-    int m_currentStateMachineIndex { -1 };
-    int m_initialStateMachineIndex { -1 };
+    int m_currentArtboardIndex{-1};
+    int m_initialArtboardIndex{-1};
+    int m_currentStateMachineIndex{-1};
+    int m_initialStateMachineIndex{-1};
 
-    RiveQtStateMachineInputMap *m_stateMachineInputMap { nullptr };
+    RiveQtStateMachineInputMap *m_stateMachineInputMap{nullptr};
 
     RiveRenderSettings m_renderSettings;
 
-    RiveQtFactory m_riveQtFactory { m_renderSettings };
+    RiveQtFactory m_riveQtFactory{m_renderSettings};
 
     QElapsedTimer m_elapsedTimer;
     qint64 m_lastUpdateTime;
-    bool m_geometryChanged { true };
+    bool m_geometryChanged{true};
 
-    bool m_hasValidRenderNode { false };
-    float m_lastMouseX { 0.f };
-    float m_lastMouseY { 0.f };
-    rive::ListenerType m_listenerType { rive::ListenerType::enter };
+    bool m_hasValidRenderNode{false};
+    float m_lastMouseX{0.f};
+    float m_lastMouseY{0.f};
+    rive::ListenerType m_listenerType{rive::ListenerType::enter};
 
-    RiveQSGRenderNode *m_renderNode { nullptr };
+    RiveQSGRenderNode *m_renderNode{nullptr};
 };

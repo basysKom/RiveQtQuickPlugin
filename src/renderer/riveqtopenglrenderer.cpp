@@ -7,10 +7,10 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include <private/qtriangulator_p.h>
+#include <QOpenGLFramebufferObject>
 #include <QOpenGLFunctions>
 #include <QOpenGLTexture>
-#include <QOpenGLFramebufferObject>
-#include <private/qtriangulator_p.h>
 
 #include "riveqtopenglrenderer.h"
 #include "riveqtutils.h"
@@ -268,8 +268,8 @@ QVector<QVector<QVector2D>> RiveQtOpenGLPath::toVerticesLine(const QPen &pen) co
     return lineData;
 }
 
-QPointF RiveQtOpenGLPath::cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2,
-                                      const QPointF &endPoint, qreal t)
+QPointF RiveQtOpenGLPath::cubicBezier(
+    const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2, const QPointF &endPoint, qreal t)
 {
     qreal oneMinusT = 1 - t;
     qreal oneMinusTSquared = oneMinusT * oneMinusT;
@@ -278,7 +278,7 @@ QPointF RiveQtOpenGLPath::cubicBezier(const QPointF &startPoint, const QPointF &
     qreal tCubed = tSquared * t;
 
     QPointF point = oneMinusTCubed * startPoint + 3 * oneMinusTSquared * t * controlPoint1 + 3 * oneMinusT * tSquared * controlPoint2
-        + tCubed * endPoint;
+                    + tCubed * endPoint;
     return point;
 }
 
@@ -392,12 +392,23 @@ void RiveQtOpenGLRenderer::initGL()
 {
     // static fullscreen TRIANGLE_FAN
 
-    m_normalizedQuadVertices = { // Positions  // Texture Coords
-                                 -1.0f, -1.0f, 0.0f, 0.0f, //
-                                 -1.0f, 1.0f,  0.0f, 1.0f, //
-                                 1.0f,  1.0f,  1.0f, 1.0f, //
-                                 1.0f,  -1.0f, 1.0f, 0.0f
-    };
+    m_normalizedQuadVertices = {// Positions  // Texture Coords
+                                -1.0f,
+                                -1.0f,
+                                0.0f,
+                                0.0f, //
+                                -1.0f,
+                                1.0f,
+                                0.0f,
+                                1.0f, //
+                                1.0f,
+                                1.0f,
+                                1.0f,
+                                1.0f, //
+                                1.0f,
+                                -1.0f,
+                                1.0f,
+                                0.0f};
 
     // ---- Initialize Path Draw Shader Programm
     //
@@ -776,7 +787,6 @@ void RiveQtOpenGLRenderer::drawPath(rive::RenderPath *path, rive::RenderPaint *p
 
             // Gradient code starts here
             if (!color.isValid()) {
-
                 const auto *gradient = qtPaint->brush().gradient();
                 if (gradient) {
                     configureGradientShader(gradient);
@@ -907,10 +917,22 @@ void RiveQtOpenGLRenderer::drawImage(const rive::RenderImage *image, rive::Blend
     // todo -> move to RiveQtImage to do this not every frame...
     GLfloat imageData[] = {
         // Positions      // Texture coordinates
-        -halfWidth, -halfHeight, 0.0f, 1.0f, // Bottom-left
-        halfWidth,  -halfHeight, 1.0f, 1.0f, // Bottom-right
-        halfWidth,  halfHeight,  1.0f, 0.0f, // Top-right
-        -halfWidth, halfHeight,  0.0f, 0.0f // Top-left
+        -halfWidth,
+        -halfHeight,
+        0.0f,
+        1.0f, // Bottom-left
+        halfWidth,
+        -halfHeight,
+        1.0f,
+        1.0f, // Bottom-right
+        halfWidth,
+        halfHeight,
+        1.0f,
+        0.0f, // Top-right
+        -halfWidth,
+        halfHeight,
+        0.0f,
+        0.0f // Top-left
     };
 
     m_imageQuadVBO.bind();
@@ -933,9 +955,12 @@ void RiveQtOpenGLRenderer::drawImage(const rive::RenderImage *image, rive::Blend
     glDisable(GL_BLEND);
 }
 
-void RiveQtOpenGLRenderer::drawImageMesh(const rive::RenderImage *image, rive::rcp<rive::RenderBuffer> vertices_f32,
-                                         rive::rcp<rive::RenderBuffer> uvCoords_f32, rive::rcp<rive::RenderBuffer> indices_u16,
-                                         rive::BlendMode blendMode, float opacity)
+void RiveQtOpenGLRenderer::drawImageMesh(const rive::RenderImage *image,
+                                         rive::rcp<rive::RenderBuffer> vertices_f32,
+                                         rive::rcp<rive::RenderBuffer> uvCoords_f32,
+                                         rive::rcp<rive::RenderBuffer> indices_u16,
+                                         rive::BlendMode blendMode,
+                                         float opacity)
 {
     const QImage &qImage = static_cast<const RiveQtImage *>(image)->image();
     QOpenGLTexture texture(qImage);
@@ -1051,8 +1076,7 @@ const QMatrix4x4 &RiveQtOpenGLRenderer::transform()
 SubPath::SubPath(RiveQtOpenGLPath *path, const QMatrix4x4 &transform)
     : m_Path(path)
     , m_Transform(transform)
-{
-}
+{}
 
 RiveQtOpenGLPath *SubPath::path() const
 {

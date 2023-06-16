@@ -3,47 +3,45 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "rivequickitem.h"
 #include "rive/file.hpp"
 #include "riveqtfactory.h"
 #include "riveqtrenderer.h"
+#include "rivequickitem.h"
 
+#include <rive/animation/linear_animation_instance.hpp>
+#include <rive/assets/image_asset.hpp>
 #include <rive/node.hpp>
 #include <rive/shapes/clipping_shape.hpp>
-#include <rive/shapes/rectangle.hpp>
 #include <rive/shapes/image.hpp>
-#include <rive/assets/image_asset.hpp>
-#include <rive/animation/linear_animation_instance.hpp>
+#include <rive/shapes/rectangle.hpp>
 
-RiveQuickItem::RiveQuickItem(QQuickItem* parent)
-    : QQuickPaintedItem(parent), m_artboard(nullptr)
-    , m_animationInstance(nullptr), m_elapsedTime(0.0f)
+RiveQuickItem::RiveQuickItem(QQuickItem *parent)
+    : QQuickPaintedItem(parent)
+    , m_artboard(nullptr)
+    , m_animationInstance(nullptr)
+    , m_elapsedTime(0.0f)
 {
     m_animator.setInterval(16);
-    connect(&m_animator,
-            &QTimer::timeout,
-            this, [this](){
-                if(m_artboard) {
-                    float deltaTime = m_animator.interval() / 1000.0f;
-                    m_elapsedTime += deltaTime;
+    connect(&m_animator, &QTimer::timeout, this, [this]() {
+        if (m_artboard) {
+            float deltaTime = m_animator.interval() / 1000.0f;
+            m_elapsedTime += deltaTime;
 
-                    if (m_animationInstance)
-                    {
-                        bool shouldContinue = m_animationInstance->advance(deltaTime);
-                        if (shouldContinue) {
-                            m_animationInstance->apply();
-                            m_artboardInstance->updateComponents();
-                        } else {
-                            m_animator.stop();
-                        }
-
-                        m_artboardInstance->advance(deltaTime);
-                        m_artboardInstance->update(rive::ComponentDirt::Filthy);
-                        this->update();
-                    }
+            if (m_animationInstance) {
+                bool shouldContinue = m_animationInstance->advance(deltaTime);
+                if (shouldContinue) {
+                    m_animationInstance->apply();
+                    m_artboardInstance->updateComponents();
+                } else {
+                    m_animator.stop();
                 }
 
-            });
+                m_artboardInstance->advance(deltaTime);
+                m_artboardInstance->update(rive::ComponentDirt::Filthy);
+                this->update();
+            }
+        }
+    });
 
     QFile file(":/rive-cpp/test/assets/dependency_test.riv");
 
@@ -54,17 +52,13 @@ RiveQuickItem::RiveQuickItem(QQuickItem* parent)
 
     QByteArray fileData = file.readAll();
 
-    rive::Span<const uint8_t> dataSpan(reinterpret_cast<const uint8_t*>(fileData.constData()), fileData.size());
-
+    rive::Span<const uint8_t> dataSpan(reinterpret_cast<const uint8_t *>(fileData.constData()), fileData.size());
 
     rive::ImportResult importResult;
     riveFile = rive::File::import(dataSpan, &customFactory, &importResult);
-    if (importResult == rive::ImportResult::success)
-    {
+    if (importResult == rive::ImportResult::success) {
         qDebug("Successfully imported Rive file.");
-    }
-    else
-    {
+    } else {
         qDebug("Failed to import Rive file.");
     }
 
@@ -79,10 +73,9 @@ RiveQuickItem::RiveQuickItem(QQuickItem* parent)
     m_artboardInstance = m_artboard->instance();
 }
 
-void RiveQuickItem::paint(QPainter* painter)
+void RiveQuickItem::paint(QPainter *painter)
 {
-    if (!m_artboardInstance || !painter)
-    {
+    if (!m_artboardInstance || !painter) {
         return;
     }
 
@@ -93,13 +86,10 @@ void RiveQuickItem::paint(QPainter* painter)
 QList<AnimationInfo> RiveQuickItem::animations() const
 {
     QList<AnimationInfo> animationList;
-    if (m_artboard)
-    {
-        for (size_t i = 0; i < m_artboard->animationCount(); i++)
-        {
+    if (m_artboard) {
+        for (size_t i = 0; i < m_artboard->animationCount(); i++) {
             const auto animation = m_artboard->animation(i);
-            if (animation)
-            {
+            if (animation) {
                 qDebug() << "Animation" << i << "found.";
 
                 qDebug() << "  Duration:" << animation->duration();
@@ -123,14 +113,12 @@ void RiveQuickItem::triggerAnimation(int id)
 {
     if (m_artboard) {
         if (id >= 0 && id < m_artboard->animationCount()) {
-
             if (m_animationInstance) {
                 delete m_animationInstance;
             }
             m_linearAnimation = m_artboard->animation(id);
 
-            if (m_linearAnimation)
-            {
+            if (m_linearAnimation) {
                 m_animationInstance = new rive::LinearAnimationInstance(m_linearAnimation, m_artboardInstance.get());
             }
 

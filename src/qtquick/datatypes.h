@@ -59,23 +59,13 @@ struct RiveRenderSettings
     Q_PROPERTY(FillMode fillMode MEMBER fillMode)
 
 public:
-    enum RenderQuality
-    {
-        Low,
-        Medium,
-        High
-    };
+    enum RenderQuality { Low, Medium, High };
     Q_ENUM(RenderQuality)
 
-    enum FillMode
-    {
-        Stretch,
-        PreserveAspectFit,
-        PreserveAspectCrop
-    };
+    enum FillMode { Stretch, PreserveAspectFit, PreserveAspectCrop };
     Q_ENUM(FillMode)
 
-    RenderQuality renderQuality { Medium };
-    QSGRendererInterface::GraphicsApi graphicsApi { QSGRendererInterface::GraphicsApi::Software };
-    FillMode fillMode { PreserveAspectFit };
+    RenderQuality renderQuality{Medium};
+    QSGRendererInterface::GraphicsApi graphicsApi{QSGRendererInterface::GraphicsApi::Software};
+    FillMode fillMode{PreserveAspectFit};
 };
