@@ -1,9 +1,3 @@
-<!--
-SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
-SPDX-FileCopyrightText: 2023 basysKom GmbH
-
-SPDX-License-Identifier: LGPL-3.0-or-later
--->
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
@@ -11,7 +5,7 @@ SPDX-License-Identifier: LGPL-3.0-or-later
         <file>RiveInspectorView.qml</file>
     </qresource>
     <qresource prefix="/rive">
-        <file alias="1298-2487-animated-icon-set-1-color.riv">rive/1298-2487-animated-icon-set-1-color.riv</file>
+        <file alias="icon_set.riv">rive/1298-2487-animated-icon-set-1-color.riv</file>
         <file>rive/3507-7424-naridon-oni-fan-art.riv</file>
         <file>rive/artboardclipping.riv</file>
         <file>rive/blend_test.riv</file>
@@ -26,7 +20,7 @@ SPDX-License-Identifier: LGPL-3.0-or-later
         <file>rive/entry.riv</file>
         <file>rive/fix_rectangle.riv</file>
         <file>rive/hello_world.riv</file>
-        <file alias="jellyfish_test.riv">rive/jellyfish_test.riv</file>
+        <file alias="jellyfish.riv">rive/jellyfish_test.riv</file>
         <file alias="juice.riv">rive/juice.riv</file>
         <file>rive/light_switch.riv</file>
         <file>rive/long_name.riv</file>

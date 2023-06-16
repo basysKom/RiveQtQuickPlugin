@@ -6,7 +6,6 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
-import Qt.labs.folderlistmodel 2.15
 
 import RiveQtQuickPlugin 1.0
 
@@ -53,19 +52,6 @@ ApplicationWindow {
                     color: "lightgray"
                 }
 
-                FolderListModel {
-                    id: folderModel
-                    folder: "qrc:/rive"
-                    showDirs: false
-
-                    Component.onCompleted: {
-                        console.log("item count", count)
-                    }
-                    onStatusChanged: if (folderModel.status == FolderListModel.Ready) {
-                                         console.log('Loaded', count)
-                                     }
-                }
-
                 Column {
                     id: buttonColumn
 
@@ -76,12 +62,12 @@ ApplicationWindow {
 
                     Repeater {
                         id: buttonRepeater
-                        model: folderModel
+                        model: ["bullet_man.riv", "jellyfish.riv", "icon_set.riv", "juice.riv", "water-bar-demo.riv"]
                         delegate: Button {
-                            text: model.fileName
+                            text: modelData
                             onClicked: {
-                                console.log("clicked", model.fileName)
-                                dropView.fileSource = ":/rive/" + model.fileName
+                                console.log("clicked", modelData)
+                                dropView.fileSource = ":/rive/" + modelData
                             }
                         }
                     }
