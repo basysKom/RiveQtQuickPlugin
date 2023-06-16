@@ -14,14 +14,12 @@ QRectF RiveQSGRenderNode::rect() const
 
 RiveQSGRenderNode::RiveQSGRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
     : RiveQSGBaseNode(artboardInstance, item)
-{
-}
+{}
 
 RiveQSGBaseNode::RiveQSGBaseNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
     : m_artboardInstance(artboardInstance)
     , m_item(item)
-{
-}
+{}
 
 void RiveQSGBaseNode::setRect(const QRectF &bounds)
 {

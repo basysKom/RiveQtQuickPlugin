@@ -3,8 +3,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include <QQuickWindow>
 #include <QFile>
+#include <QQuickWindow>
 
 #include <private/qrhi_p.h>
 #include <private/qsgrendernode_p.h>
@@ -126,7 +126,7 @@ void RiveQSGRHIRenderNode::renderOffscreen()
     rhi->beginOffscreenFrame(&cb);
     {
         // clean our main texture
-        cb->beginPass(m_cleanUpTextureTarget, QColor(0, 0, 0, 0), { 1.0f, 0 });
+        cb->beginPass(m_cleanUpTextureTarget, QColor(0, 0, 0, 0), {1.0f, 0});
         cb->endPass();
         // draw elements to our shared texture
         m_renderer->render(cb);
@@ -141,8 +141,8 @@ void RiveQSGRHIRenderNode::render(const RenderState *state)
     }
 
     QSGRendererInterface *renderInterface = m_window->rendererInterface();
-    QRhiSwapChain *swapChain =
-        static_cast<QRhiSwapChain *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiSwapchainResource));
+    QRhiSwapChain *swapChain = static_cast<QRhiSwapChain *>(
+        renderInterface->getResource(m_window, QSGRendererInterface::RhiSwapchainResource));
     Q_ASSERT(swapChain);
 
     QRhiCommandBuffer *commandBuffer = swapChain->currentFrameCommandBuffer();
@@ -152,7 +152,7 @@ void RiveQSGRHIRenderNode::render(const RenderState *state)
     QSize renderTargetSize = QSGRenderNodePrivate::get(this)->m_rt.rt->pixelSize();
     commandBuffer->setViewport(QRhiViewport(0, 0, renderTargetSize.width(), renderTargetSize.height()));
     commandBuffer->setShaderResources(m_resourceBindings);
-    QRhiCommandBuffer::VertexInput vertexBindings[] = { { m_vertexBuffer, 0 }, { m_texCoordBuffer, 0 } };
+    QRhiCommandBuffer::VertexInput vertexBindings[] = {{m_vertexBuffer, 0}, {m_texCoordBuffer, 0}};
     commandBuffer->setVertexInput(0, 2, vertexBindings);
 
     commandBuffer->draw(m_vertices.count());
@@ -179,26 +179,28 @@ void RiveQSGRHIRenderNode::releaseResources()
 QSGRenderNode::RenderingFlags RiveQSGRHIRenderNode::flags() const
 {
     // We are rendering 2D content directly into the scene graph
-    return { QSGRenderNode::NoExternalRendering };
+    return {QSGRenderNode::NoExternalRendering};
 }
 
 QSGRenderNode::StateFlags RiveQSGRHIRenderNode::changedStates() const
 {
-    return { QSGRenderNode::StateFlag::ViewportState | QSGRenderNode::StateFlag::CullState | QSGRenderNode::RenderTargetState
-             | QSGRenderNode::ScissorState };
+    return {QSGRenderNode::StateFlag::ViewportState | QSGRenderNode::StateFlag::CullState | QSGRenderNode::RenderTargetState
+            | QSGRenderNode::ScissorState};
 }
 
 void RiveQSGRHIRenderNode::prepare()
 {
     QSGRendererInterface *renderInterface = m_window->rendererInterface();
-    QRhiSwapChain *swapChain =
-        static_cast<QRhiSwapChain *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiSwapchainResource));
+    QRhiSwapChain *swapChain = static_cast<QRhiSwapChain *>(
+        renderInterface->getResource(m_window, QSGRendererInterface::RhiSwapchainResource));
     QRhi *rhi = static_cast<QRhi *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiResource));
     Q_ASSERT(swapChain);
     Q_ASSERT(rhi);
 
     if (!m_displayBuffer) {
-        m_displayBuffer = rhi->newTexture(QRhiTexture::RGBA8, QSize(m_rect.width(), m_rect.height()), 1,
+        m_displayBuffer = rhi->newTexture(QRhiTexture::RGBA8,
+                                          QSize(m_rect.width(), m_rect.height()),
+                                          1,
                                           QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource);
         m_displayBuffer->create();
         m_cleanupList.append(m_displayBuffer);
@@ -264,7 +266,10 @@ void RiveQSGRHIRenderNode::prepare()
     }
 
     if (!m_sampler) {
-        m_sampler = rhi->newSampler(QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None, QRhiSampler::ClampToEdge,
+        m_sampler = rhi->newSampler(QRhiSampler::Nearest,
+                                    QRhiSampler::Nearest,
+                                    QRhiSampler::None,
+                                    QRhiSampler::ClampToEdge,
                                     QRhiSampler::ClampToEdge);
         m_sampler->create();
         m_cleanupList.append(m_sampler);
@@ -279,7 +284,8 @@ void RiveQSGRHIRenderNode::prepare()
     if (!m_resourceBindings) {
         m_resourceBindings = rhi->newShaderResourceBindings();
         m_resourceBindings->setBindings({
-            QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
+            QRhiShaderResourceBinding::uniformBuffer(0,
+                                                     QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
                                                      m_uniformBuffer),
             QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_displayBuffer, m_sampler),
         });
@@ -309,19 +315,19 @@ void RiveQSGRHIRenderNode::prepare()
         blend.dstColor = QRhiGraphicsPipeline::OneMinusSrcAlpha;
         blend.srcAlpha = QRhiGraphicsPipeline::One;
         blend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
-        m_pipeLine->setTargetBlends({ blend });
+        m_pipeLine->setTargetBlends({blend});
 
         m_pipeLine->setShaderResourceBindings(m_resourceBindings);
         m_pipeLine->setShaderStages(m_shaders.cbegin(), m_shaders.cend());
 
         QRhiVertexInputLayout inputLayout;
         inputLayout.setBindings({
-            { sizeof(QVector2D) }, // Stride for position buffer
-            { sizeof(QVector2D) } // Stride for texture coordinate buffer
+            {sizeof(QVector2D)}, // Stride for position buffer
+            {sizeof(QVector2D)}  // Stride for texture coordinate buffer
         });
         inputLayout.setAttributes({
-            { 0, 0, QRhiVertexInputAttribute::Float2, 0 }, // Position
-            { 1, 1, QRhiVertexInputAttribute::Float2, 0 } // Texture coordinate
+            {0, 0, QRhiVertexInputAttribute::Float2, 0}, // Position
+            {1, 1, QRhiVertexInputAttribute::Float2, 0}  // Texture coordinate
         });
         m_pipeLine->setVertexInputLayout(inputLayout);
         m_pipeLine->setRenderPassDescriptor(QSGRenderNodePrivate::get(this)->m_rt.rpDesc);

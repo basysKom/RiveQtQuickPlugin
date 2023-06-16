@@ -10,21 +10,20 @@
 #include <QFontDatabase>
 #include <QFontInfo>
 #include <QFontMetrics>
-#include <QRawFont>
 #include <QGlyphRun>
+#include <QRawFont>
 #include <QTextLayout>
 #include <QTextOption>
 
 #include "private/qfontengine_p.h"
 
-#include <rive/text_engine.hpp>
 #include <rive/core.hpp>
+#include <rive/text_engine.hpp>
 
 #include "riveqtopenglrenderer.h"
 
 class RiveQtFont : public rive::Font, public std::enable_shared_from_this<RiveQtFont>
 {
-
 public:
     RiveQtFont(const QFont &font, const QFontMetricsF &fontMetrics);
 

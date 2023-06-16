@@ -7,8 +7,9 @@
 #pragma once
 
 #include <QQmlPropertyMap>
-#include <rive/core.hpp>
+
 #include <rive/animation/state_machine_instance.hpp>
+#include <rive/core.hpp>
 
 class QQmlEngine;
 class RiveQtStateMachineInputMap : public QQmlPropertyMap
@@ -30,5 +31,5 @@ private slots:
 
 private:
     rive::StateMachineInstance *m_stateMachineInstance;
-    bool m_dirty { false };
+    bool m_dirty{false};
 };

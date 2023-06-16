@@ -6,18 +6,18 @@
 
 #pragma once
 
-#include <QMatrix4x4>
 #include <QColor>
-#include <QPainterPath>
+#include <QMatrix4x4>
 #include <QPainter>
+#include <QPainterPath>
 
-#include <rive/renderer.hpp>
 #include <rive/command_path.hpp>
+#include <rive/math/mat2d.hpp>
+#include <rive/renderer.hpp>
 #include <rive/shapes/paint/blend_mode.hpp>
 #include <rive/shapes/paint/color.hpp>
 #include <rive/shapes/paint/stroke_cap.hpp>
 #include <rive/shapes/paint/stroke_join.hpp>
-#include <rive/math/mat2d.hpp>
 
 namespace RiveQtUtils {
 QColor riveColorToQt(rive::ColorInt value);
@@ -26,7 +26,7 @@ Qt::PenCapStyle riveStrokeCapToQt(rive::StrokeCap cap);
 QMatrix4x4 riveMat2DToQt(const rive::Mat2D &riveMatrix);
 Qt::FillRule riveFillRuleToQt(rive::FillRule fillRule);
 QPainterPath transformPathWithMatrix4x4(const QPainterPath &path, const QMatrix4x4 &matrix);
-}
+} // namespace RiveQtUtils
 
 class RiveQtBufferU16 : public rive::RenderBuffer
 {
@@ -34,8 +34,7 @@ public:
     RiveQtBufferU16(size_t count)
         : rive::RenderBuffer(count)
         , m_data(count)
-    {
-    }
+    {}
     void setData(const std::vector<uint16_t> &data) { m_data = data; }
     const uint16_t *data() const { return m_data.data(); }
     const size_t size() const { return m_data.size() * sizeof(uint16_t); }
@@ -51,8 +50,7 @@ public:
     RiveQtBufferU32(size_t count)
         : rive::RenderBuffer(count)
         , m_data(count)
-    {
-    }
+    {}
     void setData(const std::vector<uint32_t> &data) { m_data = data; }
     const uint32_t *data() const { return m_data.data(); }
     const size_t size() const { return m_data.size() * sizeof(uint32_t); }
@@ -68,8 +66,7 @@ public:
     RiveQtBufferF32(size_t count)
         : rive::RenderBuffer(count)
         , m_data(count)
-    {
-    }
+    {}
     void setData(const std::vector<float> &data) { m_data = data; }
     const float *data() const { return m_data.data(); }
     const int size() const { return m_data.size() * sizeof(float); }
@@ -102,7 +99,7 @@ public:
 
     virtual QSharedPointer<QGradient> gradient() const = 0;
 
-    float m_opacity { 1.0 };
+    float m_opacity{1.0};
 };
 
 class RiveQtRadialGradient : public RiveQtShader
@@ -151,7 +148,7 @@ public:
     const float &opacity() const { return m_opacity; }
 
     virtual void shader(rive::rcp<rive::RenderShader> shader) override;
-    virtual void invalidateStroke() override {}; // maybe we need to reset something here
+    virtual void invalidateStroke() override{}; // maybe we need to reset something here
 
 private:
     rive::RenderPaintStyle m_paintStyle;
@@ -160,7 +157,7 @@ private:
     QColor m_color;
     QBrush m_Brush;
     QPen m_Pen;
-    float m_opacity { 1.0 };
+    float m_opacity{1.0};
 
     rive::rcp<rive::RenderShader> m_shader;
     QSharedPointer<QGradient> m_qtGradient;

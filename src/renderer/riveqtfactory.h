@@ -22,20 +22,13 @@ class RiveQtQuickItem;
 class RiveQtFactory : public rive::Factory
 {
 public:
-    enum class RiveQtRenderType : quint8
-    {
-        None,
-        QPainterRenderer,
-        QOpenGLRenderer,
-        RHIRenderer
-    };
-    
+    enum class RiveQtRenderType : quint8 { None, QPainterRenderer, QOpenGLRenderer, RHIRenderer };
+
     explicit RiveQtFactory(const RiveRenderSettings &renderSettings = RiveRenderSettings())
         : rive::Factory()
         , m_renderSettings(renderSettings)
-    {
-    }
-    
+    {}
+
     void setRenderSettings(const RiveRenderSettings &renderSettings) { m_renderSettings = renderSettings; }
 
     RiveQSGRenderNode *renderNode(QQuickWindow *window, rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
@@ -55,6 +48,6 @@ private:
     unsigned segmentCount();
 
     RiveQtRenderType renderType();
-    
+
     RiveRenderSettings m_renderSettings;
 };

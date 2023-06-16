@@ -11,9 +11,9 @@
 #include "src/qtquick/riveqsgsoftwarerendernode.h"
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-#    include "riveqtrhirenderer.h"
+#include "riveqtrhirenderer.h"
 #else
-#    include "riveqtopenglrenderer.h"
+#include "riveqtopenglrenderer.h"
 #endif
 
 RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
@@ -64,15 +64,15 @@ rive::rcp<rive::RenderBuffer> RiveQtFactory::makeBufferF32(rive::Span<const floa
     return rive::rcp<rive::RenderBuffer>(buffer);
 }
 
-rive::rcp<rive::RenderShader> RiveQtFactory::makeLinearGradient(float x1, float y1, float x2, float y2, const rive::ColorInt *colors,
-                                                                const float *stops, size_t count)
+rive::rcp<rive::RenderShader> RiveQtFactory::makeLinearGradient(
+    float x1, float y1, float x2, float y2, const rive::ColorInt *colors, const float *stops, size_t count)
 {
     auto shader = new RiveQtLinearGradient(x1, y1, x2, y2, colors, stops, count);
     return rive::rcp<rive::RenderShader>(shader);
 }
 
-rive::rcp<rive::RenderShader> RiveQtFactory::makeRadialGradient(float centerX, float centerY, float radius, const rive::ColorInt colors[],
-                                                                const float positions[], size_t count)
+rive::rcp<rive::RenderShader> RiveQtFactory::makeRadialGradient(
+    float centerX, float centerY, float radius, const rive::ColorInt colors[], const float positions[], size_t count)
 {
     auto shader = new RiveQtRadialGradient(centerX, centerY, radius, colors, positions, count);
     return rive::rcp<rive::RenderShader>(shader);

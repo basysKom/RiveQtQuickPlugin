@@ -6,19 +6,19 @@
 
 #pragma once
 
-#include <QPainterPath>
 #include <QBrush>
-#include <QPen>
 #include <QLinearGradient>
-#include <QOpenGLPaintDevice>
-#include <QOpenGLFunctions>
-#include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
+#include <QOpenGLFunctions>
+#include <QOpenGLPaintDevice>
+#include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 #include <QOpenGLVertexArrayObject>
+#include <QPainterPath>
+#include <QPen>
 
-#include <rive/renderer.hpp>
 #include <rive/math/raw_path.hpp>
+#include <rive/renderer.hpp>
 
 #include "qopenglframebufferobject.h"
 
@@ -47,8 +47,8 @@ public:
 private:
     QVector<QVector2D> qpainterPathToVector2D(const QPainterPath &path);
     QVector<QVector2D> qpainterPathToOutlineVector2D(const QPainterPath &path);
-    QPointF cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2, const QPointF &endPoint,
-                        qreal t);
+    QPointF cubicBezier(
+        const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2, const QPointF &endPoint, qreal t);
     void generateVerticies();
 
     QPainterPath m_path;
@@ -56,7 +56,7 @@ private:
     QVector<QVector<QVector2D>> m_pathSegmentsData;
     QVector<QVector<QVector2D>> m_pathSegmentsOutlineData;
 
-    bool m_isClosed { false };
+    bool m_isClosed{false};
 };
 
 class SubPath
@@ -91,8 +91,11 @@ public:
     void drawPath(rive::RenderPath *path, rive::RenderPaint *paint) override;
     void clipPath(rive::RenderPath *path) override;
     void drawImage(const rive::RenderImage *image, rive::BlendMode blendMode, float opacity) override;
-    void drawImageMesh(const rive::RenderImage *image, rive::rcp<rive::RenderBuffer> vertices_f32,
-                       rive::rcp<rive::RenderBuffer> uvCoords_f32, rive::rcp<rive::RenderBuffer> indices_u16, rive::BlendMode blendMode,
+    void drawImageMesh(const rive::RenderImage *image,
+                       rive::rcp<rive::RenderBuffer> vertices_f32,
+                       rive::rcp<rive::RenderBuffer> uvCoords_f32,
+                       rive::rcp<rive::RenderBuffer> indices_u16,
+                       rive::BlendMode blendMode,
                        float opacity) override;
 
     void updateViewportSize();
@@ -104,14 +107,14 @@ private:
     const QMatrix4x4 &modelMatrix();
     const QMatrix4x4 &transform();
 
-    QOpenGLFramebufferObject *m_displayFramebuffer { nullptr };
-    QOpenGLFramebufferObject *m_alphaMaskFramebuffer { nullptr };
-    QOpenGLFramebufferObject *m_blendFramebuffer { nullptr };
+    QOpenGLFramebufferObject *m_displayFramebuffer{nullptr};
+    QOpenGLFramebufferObject *m_alphaMaskFramebuffer{nullptr};
+    QOpenGLFramebufferObject *m_blendFramebuffer{nullptr};
 
-    QOpenGLShaderProgram *m_imageShaderProgram { nullptr };
-    QOpenGLShaderProgram *m_pathShaderProgram { nullptr };
-    QOpenGLShaderProgram *m_blendShaderProgram { nullptr };
-    QOpenGLShaderProgram *m_imageMeshShaderProgram { nullptr };
+    QOpenGLShaderProgram *m_imageShaderProgram{nullptr};
+    QOpenGLShaderProgram *m_pathShaderProgram{nullptr};
+    QOpenGLShaderProgram *m_blendShaderProgram{nullptr};
+    QOpenGLShaderProgram *m_imageMeshShaderProgram{nullptr};
 
     QOpenGLVertexArrayObject m_fullscreenQuadVAO;
     QOpenGLVertexArrayObject m_imageQuadVAO;
@@ -126,10 +129,10 @@ private:
     QMatrix4x4 m_projMatrix;
     // QMatrix4x4 m_modelMatrix the modelMatrix is stored as base of our renderState!
 
-    qreal m_width { 0 };
-    qreal m_height { 0 };
-    qreal m_viewportWidth { 0 };
-    qreal m_viewportHeight { 0 };
+    qreal m_width{0};
+    qreal m_height{0};
+    qreal m_viewportWidth{0};
+    qreal m_viewportHeight{0};
 
     QVector<GLfloat> m_normalizedQuadVertices;
     QVector<GLfloat> m_viewPortQuadVertices;

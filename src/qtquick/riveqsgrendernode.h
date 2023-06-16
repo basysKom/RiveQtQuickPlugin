@@ -20,14 +20,14 @@ class RiveQSGBaseNode
 public:
     RiveQSGBaseNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
 
-    virtual void renderOffscreen() { }
+    virtual void renderOffscreen() {}
     virtual void setRect(const QRectF &bounds);
 
     virtual void updateArtboardInstance(rive::ArtboardInstance *artboardInstance) { m_artboardInstance = artboardInstance; }
 
 protected:
-    rive::ArtboardInstance *m_artboardInstance { nullptr };
-    RiveQtQuickItem *m_item { nullptr };
+    rive::ArtboardInstance *m_artboardInstance{nullptr};
+    RiveQtQuickItem *m_item{nullptr};
     QRectF m_rect;
 };
 

@@ -6,16 +6,16 @@
 
 #pragma once
 
-#include <QPainterPath>
-#include <QQuickItem>
 #include <QBrush>
-#include <QPen>
 #include <QLinearGradient>
+#include <QPainterPath>
+#include <QPen>
+#include <QQuickItem>
 
 #include "private/qrhi_p.h"
 
-#include <rive/renderer.hpp>
 #include <rive/math/raw_path.hpp>
+#include <rive/renderer.hpp>
 
 #include "src/qtquick/datatypes.h"
 
@@ -53,8 +53,8 @@ private:
 
     QVector<QVector2D> qpainterPathToVector2D(const QPainterPath &path);
     QVector<QVector2D> qpainterPathToOutlineVector2D(const QPainterPath &path);
-    QPointF cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2, const QPointF &endPoint,
-                        qreal t);
+    QPointF cubicBezier(
+        const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2, const QPointF &endPoint, qreal t);
 
     QPainterPath m_path;
     std::vector<RhiSubPath> m_subPaths;
@@ -62,11 +62,11 @@ private:
     QVector<QVector<QVector2D>> m_pathSegmentsOutlineData;
     QVector<QVector<QVector2D>> m_pathOutlineData;
 
-    bool m_isClosed { false };
-    bool m_pathSegmentDataDirty { true };
-    bool m_pathSegmentOutlineDataDirty { true };
+    bool m_isClosed{false};
+    bool m_pathSegmentDataDirty{true};
+    bool m_pathSegmentOutlineDataDirty{true};
 
-    unsigned m_segmentCount { 10 };
+    unsigned m_segmentCount{10};
 };
 
 class RhiSubPath
@@ -85,8 +85,8 @@ private:
 struct RhiRenderState
 {
     QMatrix4x4 transform;
-    float opacity { 1.0 };
-    RiveQtRhiGLPath clipPath { 10u };
+    float opacity{1.0};
+    RiveQtRhiGLPath clipPath{10u};
     QVector<QVector<QVector2D>> clippingGeometry;
     QVector<TextureTargetNode *> stackNodes;
 };
@@ -96,7 +96,7 @@ class RiveQtRhiRenderer : public rive::Renderer
 public:
     RiveQtRhiRenderer(QQuickItem *item);
     virtual ~RiveQtRhiRenderer();
-    
+
     void setFillMode(const RiveRenderSettings::FillMode fillMode) { m_fillMode = fillMode; };
 
     void save() override;
@@ -105,8 +105,11 @@ public:
     void drawPath(rive::RenderPath *path, rive::RenderPaint *paint) override;
     void clipPath(rive::RenderPath *path) override;
     void drawImage(const rive::RenderImage *image, rive::BlendMode blendMode, float opacity) override;
-    void drawImageMesh(const rive::RenderImage *image, rive::rcp<rive::RenderBuffer> vertices_f32,
-                       rive::rcp<rive::RenderBuffer> uvCoords_f32, rive::rcp<rive::RenderBuffer> indices_u16, rive::BlendMode blendMode,
+    void drawImageMesh(const rive::RenderImage *image,
+                       rive::rcp<rive::RenderBuffer> vertices_f32,
+                       rive::rcp<rive::RenderBuffer> uvCoords_f32,
+                       rive::rcp<rive::RenderBuffer> indices_u16,
+                       rive::BlendMode blendMode,
                        float opacity) override;
 
     void setProjectionMatrix(const QMatrix4x4 *projectionMatrix, const QMatrix4x4 *modelMatrix);
@@ -135,6 +138,6 @@ private:
 
     QSize m_artboardSize;
     QRectF m_viewportRect;
-    
+
     RiveRenderSettings::FillMode m_fillMode;
 };

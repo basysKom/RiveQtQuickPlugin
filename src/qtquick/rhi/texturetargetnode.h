@@ -6,8 +6,8 @@
 #pragma once
 
 #include <rive/artboard.hpp>
-#include <rive/renderer.hpp>
 #include <rive/math/raw_path.hpp>
+#include <rive/renderer.hpp>
 
 #include <QPainterPath>
 #include <QSGRenderNode>
@@ -34,7 +34,10 @@ class QQuickItem;
 class TextureTargetNode
 {
 public:
-    TextureTargetNode(QQuickItem *item, QRhiTexture *displayBuffer, const QRectF &viewPortRect, const QMatrix4x4 *combinedMatrix,
+    TextureTargetNode(QQuickItem *item,
+                      QRhiTexture *displayBuffer,
+                      const QRectF &viewPortRect,
+                      const QMatrix4x4 *combinedMatrix,
                       const QMatrix4x4 *projectMatrix);
     virtual ~TextureTargetNode();
 
@@ -53,10 +56,10 @@ public:
 
     void setColor(const QColor &color);
     void setGradient(const QGradient *gradient);
-    void setTexture(const QImage &image, RiveQtBufferF32 *verticies, RiveQtBufferF32 *uv, RiveQtBufferU16 *indices,
-                    const QMatrix4x4 &transform);
+    void setTexture(
+        const QImage &image, RiveQtBufferF32 *verticies, RiveQtBufferF32 *uv, RiveQtBufferU16 *indices, const QMatrix4x4 &transform);
 
-    int blendMode() const { return (int)m_blendMode; }
+    int blendMode() const { return (int) m_blendMode; }
     void setBlendMode(rive::BlendMode blendMode);
 
     void updateGeometry(const QVector<QVector<QVector2D>> &geometry, const QMatrix4x4 &transform);
@@ -65,77 +68,77 @@ public:
 private:
     void prepareRender(QRhiCommandBuffer *cb);
 
-    bool m_recycled { true };
-    bool m_clip { false };
+    bool m_recycled{true};
+    bool m_clip{false};
 
     bool m_blendVerticesDirty = true;
     bool m_shaderBlending = false;
 
-    int m_maximumVerticies { INITIAL_VERTICES };
-    int m_maximumClippingVerticies { INITIAL_VERTICES };
+    int m_maximumVerticies{INITIAL_VERTICES};
+    int m_maximumClippingVerticies{INITIAL_VERTICES};
     int m_oldBufferSize = 0;
 
     QSize m_textureSize;
 
     QVector<QRhiResource *> m_cleanupList;
 
-    QRhiBuffer *m_vertexBuffer { nullptr };
-    QRhiBuffer *m_uniformBuffer { nullptr };
-    QRhiBuffer *m_texCoordBuffer { nullptr };
-    QRhiBuffer *m_indicesBuffer { nullptr };
+    QRhiBuffer *m_vertexBuffer{nullptr};
+    QRhiBuffer *m_uniformBuffer{nullptr};
+    QRhiBuffer *m_texCoordBuffer{nullptr};
+    QRhiBuffer *m_indicesBuffer{nullptr};
 
-    QRhiBuffer *m_blendVertexBuffer { nullptr };
-    QRhiBuffer *m_blendTexCoordBuffer { nullptr };
-    QRhiBuffer *m_blendUniformBuffer { nullptr };
+    QRhiBuffer *m_blendVertexBuffer{nullptr};
+    QRhiBuffer *m_blendTexCoordBuffer{nullptr};
+    QRhiBuffer *m_blendUniformBuffer{nullptr};
 
-    QRhiBuffer *m_clippingVertexBuffer { nullptr };
-    QRhiBuffer *m_clippingUniformBuffer { nullptr };
+    QRhiBuffer *m_clippingVertexBuffer{nullptr};
+    QRhiBuffer *m_clippingUniformBuffer{nullptr};
 
-    QRhiShaderResourceBindings *m_resourceBindings { nullptr };
-    QRhiShaderResourceBindings *m_clippingResourceBindings { nullptr };
-    QRhiShaderResourceBindings *m_blendResourceBindings { nullptr };
+    QRhiShaderResourceBindings *m_resourceBindings{nullptr};
+    QRhiShaderResourceBindings *m_clippingResourceBindings{nullptr};
+    QRhiShaderResourceBindings *m_blendResourceBindings{nullptr};
 
-    QRhiGraphicsPipeline *m_drawPipeLine { nullptr };
-    QRhiGraphicsPipeline *m_blendPipeLine { nullptr };
-    QRhiGraphicsPipeline *m_clipPipeLine { nullptr };
+    QRhiGraphicsPipeline *m_drawPipeLine{nullptr};
+    QRhiGraphicsPipeline *m_blendPipeLine{nullptr};
+    QRhiGraphicsPipeline *m_clipPipeLine{nullptr};
 
-    QRhiTextureRenderTarget *m_displayBufferTarget { nullptr };
-    QRhiTextureRenderTarget *m_blendTextureRenderTarget { nullptr };
+    QRhiTextureRenderTarget *m_displayBufferTarget{nullptr};
+    QRhiTextureRenderTarget *m_blendTextureRenderTarget{nullptr};
 
-    QRhiRenderPassDescriptor *m_displayBufferTargetDescriptor { nullptr };
-    QRhiRenderPassDescriptor *m_blendRenderDescriptor { nullptr };
+    QRhiRenderPassDescriptor *m_displayBufferTargetDescriptor{nullptr};
+    QRhiRenderPassDescriptor *m_blendRenderDescriptor{nullptr};
 
-    QRhiRenderBuffer *m_stencilClippingBuffer { nullptr };
+    QRhiRenderBuffer *m_stencilClippingBuffer{nullptr};
 
-    QRhiSampler *m_sampler { nullptr };
-    QRhiSampler *m_blendSampler { nullptr };
+    QRhiSampler *m_sampler{nullptr};
+    QRhiSampler *m_blendSampler{nullptr};
 
     QList<QRhiShaderStage> m_pathShader;
     QList<QRhiShaderStage> m_textureShader;
     QList<QRhiShaderStage> m_blendShaders;
 
-    QRhiTexture *m_displayBuffer { nullptr };
-    QRhiTexture *m_internalDisplayBufferTexture { nullptr };
-    QRhiTexture *m_qImageTexture { nullptr };
-    QRhiTexture *m_blendSrc { nullptr };
-    QRhiTexture *m_blendDest { nullptr };
+    QRhiTexture *m_displayBuffer{nullptr};
+    QRhiTexture *m_internalDisplayBufferTexture{nullptr};
+    QRhiTexture *m_qImageTexture{nullptr};
+    QRhiTexture *m_blendSrc{nullptr};
+    QRhiTexture *m_blendDest{nullptr};
 
-    QRhiResourceUpdateBatch *m_resourceUpdates { nullptr };
-    QRhiResourceUpdateBatch *m_blendResourceUpdates { nullptr };
+    QRhiResourceUpdateBatch *m_resourceUpdates{nullptr};
+    QRhiResourceUpdateBatch *m_blendResourceUpdates{nullptr};
 
-    QQuickWindow *m_window { nullptr };
-    QQuickItem *m_item { nullptr };
+    QQuickWindow *m_window{nullptr};
+    QQuickItem *m_item{nullptr};
 
     // Material Related // Shader Related data
     QColor m_color;
-    const QGradient *m_gradient { nullptr };
+    const QGradient *m_gradient{nullptr};
     QImage m_texture;
 
-    float m_opacity { 1.0 };
+    float m_opacity{1.0};
 
     rive::BlendMode m_blendMode = rive::BlendMode::srcOver;
 
-    int useGradient; // 0 -> false , 1 -> true
+    int useGradient;  // 0 -> false , 1 -> true
     int gradientType; // 0 -> Linear, 1 -> Radial
     QPointF gradientFocalPoint;
     QPointF gradientCenter;
@@ -155,19 +158,19 @@ private:
 
     struct GradientData
     {
-        float gradientRadius; // 68
+        float gradientRadius;      // 68
         float gradientFocalPointX; // 80
         float gradientFocalPointY; // 84
-        float gradientCenterX; // 88
-        float gradientCenterY; // 92
-        float startPointX; // 96
-        float startPointY; // 100
-        float endPointX; // 104
-        float endPointY; // 108
-        int numberOfStops; // 112
-        int gradientType; // 116
+        float gradientCenterX;     // 88
+        float gradientCenterY;     // 92
+        float startPointX;         // 96
+        float startPointY;         // 100
+        float endPointX;           // 104
+        float endPointY;           // 108
+        int numberOfStops;         // 112
+        int gradientType;          // 116
 
-        QVector<QColor> gradientColors; // 144
+        QVector<QColor> gradientColors;       // 144
         QVector<QVector2D> gradientPositions; // 464
     };
 
