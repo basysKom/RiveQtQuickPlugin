@@ -9,7 +9,8 @@ import QtQuick.Controls 2.15
 Rectangle {
     id: root
 
-    property int lastClicked: -1
+    signal clicked (var modelData)
+
     property alias model: buttonRepeater.model
     property alias title: title.text
 
@@ -47,10 +48,24 @@ Rectangle {
                         id: buttonDelegate
                         flat: true
                         padding: 2
-                        text: "ID: " + modelData.id + ", Name: " + modelData.name
-                              + (", Duration: " + modelData.duration + ", FPS: " + modelData.fps)
+                        text: {
+                            let result = ""
+
+                            if (modelData.id) {
+                                result = "ID: " + modelData.id + " "
+                            }
+
+                            if (modelData.name) {
+                                result += "Name: " + modelData.name
+                            } else {
+                                result = modelData
+                            }
+
+                            return result
+                        }
+
                         onClicked: {
-                            root.lastClicked = modelData.id !== undefined ? modelData.id : 0
+                            root.clicked(modelData)
                         }
                     }
                 }
