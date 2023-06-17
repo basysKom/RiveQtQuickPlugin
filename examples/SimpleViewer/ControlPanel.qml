@@ -9,7 +9,7 @@ import QtQuick.Controls 2.15
 Rectangle {
     id: root
 
-    signal clicked (var modelData)
+    signal clicked(var modelData)
 
     property alias model: buttonRepeater.model
     property alias title: title.text
@@ -51,7 +51,7 @@ Rectangle {
                         text: {
                             let result = ""
 
-                            if (modelData.id) {
+                            if (modelData.id !== undefined) {
                                 result = "ID: " + modelData.id + " "
                             }
 

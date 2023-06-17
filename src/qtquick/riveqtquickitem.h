@@ -73,28 +73,28 @@ public:
     LoadingStatus loadingStatus() const { return m_loadingStatus; }
 
     int currentArtboardIndex() const;
-    void setCurrentArtboardIndex(int newCurrentArtboardIndex);
+    void setCurrentArtboardIndex(const int newCurrentArtboardIndex);
 
     const QVector<ArtBoardInfo> &artboards() const;
     const QVector<StateMachineInfo> &stateMachines() const { return m_stateMachineList; }
     const QVector<AnimationInfo> &animations() const;
 
     int currentStateMachineIndex() const;
-    void setCurrentStateMachineIndex(int newCurrentStateMachineIndex);
+    void setCurrentStateMachineIndex(const int newCurrentStateMachineIndex);
 
     RiveQtStateMachineInputMap *stateMachineInterface() const;
 
     bool interactive() const;
     void setInteractive(bool newInteractive);
 
-    RiveRenderSettings::RenderQuality renderQuality() { return m_renderSettings.renderQuality; }
+    RiveRenderSettings::RenderQuality renderQuality() const { return m_renderSettings.renderQuality; }
     void setRenderQuality(const RiveRenderSettings::RenderQuality quality)
     {
         m_renderSettings.renderQuality = quality;
         emit renderQualityChanged();
     }
 
-    RiveRenderSettings::FillMode fillMode() { return m_renderSettings.fillMode; }
+    RiveRenderSettings::FillMode fillMode() const { return m_renderSettings.fillMode; }
     void setFillMode(const RiveRenderSettings::FillMode fillMode)
     {
         m_renderSettings.fillMode = fillMode;
@@ -142,6 +142,8 @@ private:
     void updateInternalArtboard();
     void updateAnimations();
     void updateStateMachines();
+    void updateCurrentArtboardIndex();
+    void updateCurrentStateMachineIndex();
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     friend RiveQSGRHIRenderNode;

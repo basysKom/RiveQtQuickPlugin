@@ -53,6 +53,7 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     connect(this, &RiveQtQuickItem::internalArtboardChanged, this, &RiveQtQuickItem::currentArtboardIndexChanged, Qt::QueuedConnection);
     connect(this, &RiveQtQuickItem::internalArtboardChanged, this, &RiveQtQuickItem::updateAnimations, Qt::QueuedConnection);
     connect(this, &RiveQtQuickItem::internalArtboardChanged, this, &RiveQtQuickItem::updateStateMachines, Qt::QueuedConnection);
+
     connect(this, &RiveQtQuickItem::internalStateMachineChanged, this, &RiveQtQuickItem::updateStateMachineInputMap, Qt::QueuedConnection);
 
     // do update the index only once we are set up and happy
@@ -116,13 +117,6 @@ void RiveQtQuickItem::updateInternalArtboard()
 
     m_currentStateMachineInstance = nullptr;
 
-    if (m_currentStateMachineIndex == -1) {
-        qDebug() << "Setting default state machine index:" << m_currentArtboardInstance->defaultStateMachineIndex();
-        setCurrentStateMachineIndex(m_currentArtboardInstance->defaultStateMachineIndex());
-    }
-
-    m_scheduleStateMachineChange = true;
-
     // we need the animation instance, that's why this looks weird.
     m_animationInstance = m_currentArtboardInstance->animationNamed(m_currentArtboardInstance->firstAnimation()->name());
 
@@ -141,6 +135,8 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
             m_renderNode->updateArtboardInstance(m_currentArtboardInstance.get());
         }
         m_scheduleArtboardChange = false;
+        updateCurrentStateMachineIndex();
+        m_scheduleStateMachineChange = true;
     }
 
     if (m_scheduleStateMachineChange && m_currentArtboardInstance) {
@@ -252,8 +248,6 @@ void RiveQtQuickItem::setFileSource(const QString &source)
 
     m_fileSource = source;
     emit fileSourceChanged();
-    m_loadingStatus = Loading;
-    emit loadingStatusChanged();
 
     // Load the Rive file when the fileSource is set
     loadRiveFile(source);
@@ -261,15 +255,24 @@ void RiveQtQuickItem::setFileSource(const QString &source)
 
 void RiveQtQuickItem::loadRiveFile(const QString &source)
 {
+    m_loadingStatus = Loading;
+    emit loadingStatusChanged();
+
     if (source.isEmpty()) {
+        m_loadingStatus = Idle;
+        emit loadingStatusChanged();
         return;
     }
 
     QQuickWindow *currentWindow = window();
 
     if (!currentWindow) {
+        qWarning() << "No window found";
+        m_loadingStatus = Error;
+        emit loadingStatusChanged();
         return;
     }
+
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     connect(currentWindow, &QQuickWindow::beforeFrameBegin, this, &RiveQtQuickItem::renderOffscreen, Qt::ConnectionType::DirectConnection);
 #endif
@@ -283,11 +286,8 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
         return;
     }
 
-    m_renderSettings.graphicsApi = currentWindow->rendererInterface()->graphicsApi();
-
-    m_riveQtFactory.setRenderSettings(m_renderSettings);
-
     QByteArray fileData = file.readAll();
+    file.close();
 
     rive::Span<const uint8_t> dataSpan(reinterpret_cast<const uint8_t *>(fileData.constData()), fileData.size());
 
@@ -301,10 +301,12 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
         return;
     }
 
-    m_artboardInfoList.clear();
+    m_renderSettings.graphicsApi = currentWindow->rendererInterface()->graphicsApi();
+    m_riveQtFactory.setRenderSettings(m_renderSettings);
 
-    // Get info about the artboards
-    for (size_t i = 0; i < m_riveFile->artboardCount(); i++) {
+    // Update artboard info
+    m_artboardInfoList.clear();
+    for (size_t i = 0; i < m_riveFile->artboardCount(); ++i) {
         const auto artBoard = m_riveFile->artboard(i);
 
         if (artBoard) {
@@ -316,13 +318,7 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
     }
     emit artboardsChanged();
 
-    // TODO allow to preselect the artboard and statemachine and animation at load
-    if (m_initialArtboardIndex != -1) {
-        setCurrentArtboardIndex(m_initialArtboardIndex);
-    }
-    if (m_initialStateMachineIndex != -1) {
-        setCurrentStateMachineIndex(m_initialStateMachineIndex);
-    }
+    updateCurrentArtboardIndex();
 
     m_scheduleArtboardChange = true;
     m_scheduleStateMachineChange = true;
@@ -481,27 +477,100 @@ int RiveQtQuickItem::currentArtboardIndex() const
     return m_currentArtboardIndex;
 }
 
-void RiveQtQuickItem::setCurrentArtboardIndex(int newCurrentArtboardIndex)
+void RiveQtQuickItem::updateCurrentStateMachineIndex()
 {
-    if (m_currentArtboardIndex == newCurrentArtboardIndex) {
+    qDebug() << Q_FUNC_INFO;
+    if (!m_currentArtboardInstance) {
+        qDebug() << "Cannot update state machine index";
         return;
     }
+
+    if (m_initialStateMachineIndex == -1) {
+        qDebug() << "Setting default state machine:" << m_currentArtboardInstance->defaultStateMachineIndex();
+        setCurrentStateMachineIndex(m_currentArtboardInstance->defaultStateMachineIndex());
+    } else {
+        qDebug() << "Setting initial state machine:" << m_currentArtboardInstance->defaultStateMachineIndex();
+        setCurrentStateMachineIndex(m_initialStateMachineIndex);
+    }
+}
+
+void RiveQtQuickItem::updateCurrentArtboardIndex()
+{
+    qDebug() << Q_FUNC_INFO;
 
     if (!m_riveFile) {
-        m_initialArtboardIndex = newCurrentArtboardIndex;
         return;
     }
 
-    if (newCurrentArtboardIndex < 0 || newCurrentArtboardIndex >= m_riveFile->artboardCount()) {
+    if (m_initialArtboardIndex != -1) {
+        qDebug() << "Current artboard index will be set to initial index:" << m_initialArtboardIndex;
+        setCurrentArtboardIndex(m_initialArtboardIndex);
         return;
     }
 
-    m_currentArtboardIndex = newCurrentArtboardIndex;
+    qDebug() << "Trying to set default artboard index";
+    const auto defaultArtboard = m_riveFile->artboardDefault();
+    if (!defaultArtboard) {
+        return;
+    }
+
+    const auto info = std::find_if(m_artboardInfoList.constBegin(), m_artboardInfoList.constEnd(),
+                                   [&defaultArtboard](const auto &info) { return info.name.toStdString() == defaultArtboard->name(); });
+
+    if (info == m_artboardInfoList.constEnd()) {
+        qDebug() << "Default artboard not set. Using 0 as index";
+        setCurrentArtboardIndex(0);
+        return;
+    }
+    qDebug() << "Default artboard:" << info->id;
+
+    setCurrentArtboardIndex(info->id);
+}
+
+void RiveQtQuickItem::setCurrentArtboardIndex(const int newIndex)
+{
+    if (!m_riveFile) {
+        qDebug() << "Setting initial artboard index to" << newIndex;
+        m_initialArtboardIndex = newIndex;
+        return;
+    }
+
+    if (newIndex < 0 || newIndex >= m_riveFile->artboardCount()) {
+        qWarning() << "Cannot select artboard. Index" << newIndex << "out of bounds [0, " << m_riveFile->artboardCount() << "[";
+        qDebug() << "Trying to set default artboard index";
+        const auto defaultArtboard = m_riveFile->artboardDefault();
+        if (!defaultArtboard) {
+            return;
+        }
+
+        const auto info = std::find_if(m_artboardInfoList.constBegin(), m_artboardInfoList.constEnd(),
+                                       [&defaultArtboard](const auto &info) { return info.name.toStdString() == defaultArtboard->name(); });
+
+        if (info == m_artboardInfoList.constEnd()) {
+            qDebug() << "Default artboard not set. Using 0 as index";
+            m_currentArtboardIndex = 0;
+            return;
+        } else {
+            qDebug() << "Default artboard index:" << info->id;
+            m_currentArtboardIndex = info->id;
+        }
+        emit currentArtboardIndexChanged();
+
+        m_scheduleArtboardChange = true; // we have to do this in the render thread.
+        m_renderNode = nullptr;
+        return;
+    }
+
+    if (m_currentArtboardIndex == newIndex) {
+        return;
+    }
+
+    qDebug() << "Setting current artboard index to" << newIndex;
+    m_currentArtboardIndex = newIndex;
+    emit currentArtboardIndexChanged();
 
     m_scheduleArtboardChange = true; // we have to do this in the render thread.
     m_renderNode = nullptr;
-    setCurrentStateMachineIndex(-1);
-
     update();
 }
 
@@ -510,8 +579,9 @@ int RiveQtQuickItem::currentStateMachineIndex() const
     return m_currentStateMachineIndex;
 }
 
-void RiveQtQuickItem::setCurrentStateMachineIndex(int newCurrentStateMachineIndex)
+void RiveQtQuickItem::setCurrentStateMachineIndex(const int newCurrentStateMachineIndex)
 {
+    qDebug() << Q_FUNC_INFO;
     if (m_currentStateMachineIndex == newCurrentStateMachineIndex) {
         return;
     }
@@ -533,6 +603,7 @@ void RiveQtQuickItem::setCurrentStateMachineIndex(int newCurrentStateMachineInde
 
     // -1 is a valid value!
     m_currentStateMachineIndex = newCurrentStateMachineIndex;
+    emit currentStateMachineIndexChanged();
 
     m_scheduleStateMachineChange = true; // we have to do this in the render thread.
     m_stateMachineInputMap->deleteLater();
