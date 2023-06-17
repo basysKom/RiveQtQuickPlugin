@@ -36,7 +36,7 @@ public:
     void setFillMode(RiveRenderSettings::FillMode fillMode);
 
     void renderOffscreen() override;
-    void prepare();
+    void prepare() override;
     void render(const RenderState *state) override;
     void releaseResources() override;
     RenderingFlags flags() const override;

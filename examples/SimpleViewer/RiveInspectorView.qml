@@ -86,9 +86,8 @@ Item {
 
             Layout.minimumWidth: 500
 
-            currentArtboardIndex: 0
-            currentStateMachineIndex: 0
-
+            //            currentArtboardIndex: 0
+            //            currentStateMachineIndex: 0
             renderQuality: RiveRenderSettings.Low
             fillMode: RiveRenderSettings.PreserveAspectFit
 
