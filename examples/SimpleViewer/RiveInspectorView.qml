@@ -71,13 +71,6 @@ Item {
             Layout.minimumHeight: 200
         }
 
-        Item {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-
-            Layout.minimumWidth: 50
-        }
-
         RiveQtQuickItem {
             id: riveItem
 
@@ -87,7 +80,8 @@ Item {
             Layout.minimumWidth: 500
 
             //            currentArtboardIndex: 0
-            //            currentStateMachineIndex: 0
+            currentStateMachineIndex: 0
+
             renderQuality: RiveRenderSettings.Low
             fillMode: RiveRenderSettings.PreserveAspectFit
 
