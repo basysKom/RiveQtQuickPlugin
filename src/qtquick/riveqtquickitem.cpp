@@ -21,8 +21,8 @@
 #include <rive/animation/state_machine_listener.hpp>
 #include <rive/file.hpp>
 
-#include "riveqtquickitem.h"
-#include "riveqtfactory.h"
+#include "src/qtquick/riveqtquickitem.h"
+#include "src/renderer/riveqtfactory.h"
 
 RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     : QQuickItem(parent)
@@ -32,13 +32,8 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     setFlag(QQuickItem::ItemHasContents, true);
     setAcceptedMouseButtons(Qt::AllButtons);
 
-    // we require a window to know the render backend and setup the correct
-    // factory
-    connect(this, &RiveQtQuickItem::windowChanged, this, [this]() {
-        if (m_loadingStatus == LoadingStatus::Loading) {
-            loadRiveFile(m_fileSource);
-        }
-    });
+    // we require a window to know the render backend and setup the correct.
+    connect(this, &RiveQtQuickItem::windowChanged, this, [this]() { loadRiveFile(m_fileSource); });
 
     // TODO: 1) shall we make this Interval match the FPS of the current selected animation
     // TODO: 2) we may want to move this into the render thread to allow the render thread control over the timer,
@@ -99,6 +94,15 @@ void RiveQtQuickItem::updateInternalArtboard()
 {
     m_hasValidRenderNode = false;
 
+    if (m_currentArtboardIndex == -1 && m_initialArtboardIndex != -1) {
+        setCurrentArtboardIndex(m_initialArtboardIndex);
+    }
+
+    if (m_loadingStatus == Error) {
+        qWarning() << "Cannot update internal artboard if loading state is Error.";
+        return;
+    }
+
     if (m_currentArtboardIndex == -1) {
         m_currentArtboardInstance = m_riveFile->artboardDefault();
     } else {
@@ -115,7 +119,7 @@ void RiveQtQuickItem::updateInternalArtboard()
 
     m_currentArtboardInstance->updateComponents();
 
-    m_currentStateMachineInstance = nullptr;
+    m_scheduleStateMachineChange = true;
 
     // we need the animation instance, that's why this looks weird.
     m_animationInstance = m_currentArtboardInstance->animationNamed(m_currentArtboardInstance->firstAnimation()->name());
@@ -532,6 +536,7 @@ void RiveQtQuickItem::setCurrentArtboardIndex(const int newIndex)
     if (!m_riveFile) {
         qDebug() << "Setting initial artboard index to" << newIndex;
         m_initialArtboardIndex = newIndex;
+        m_scheduleArtboardChange = true;
         return;
     }
 
