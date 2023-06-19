@@ -19,7 +19,7 @@ ApplicationWindow {
         id: bar
         width: parent.width
         TabButton {
-            text: qsTr("Home")
+            text: qsTr("Inspector")
         }
         TabButton {
             text: qsTr("Discover")
@@ -82,6 +82,7 @@ ApplicationWindow {
                     }
                 }
             }
+
             RiveInspectorView {
                 id: dropView
 
@@ -112,7 +113,6 @@ ApplicationWindow {
                 }
             }
         }
-
         Item {
             id: discoverTab
 
@@ -127,10 +127,10 @@ ApplicationWindow {
                     Layout.minimumHeight: 500
                     fileSource: ":/rive/water-bar-demo.riv"
 
+                    interactive: false
+
                     currentArtboardIndex: 0
                     currentStateMachineIndex: 0
-
-                    interactive: false
 
                     Binding {
                         target: riveItem.stateMachineInterface
