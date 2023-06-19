@@ -3,14 +3,13 @@
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
+#include <QQuickWindow>
 
-#include "riveqtfactory.h"
-#include "riveqtfont.h"
-#include "riveqtpainterrenderer.h"
+#include "src/renderer/riveqtfactory.h"
+#include "src/renderer/riveqtfont.h"
+#include "src/renderer/riveqtpainterrenderer.h"
 #include "src/qtquick/riveqsgrhirendernode.h"
 #include "src/qtquick/riveqsgsoftwarerendernode.h"
-
-#include <QQuickWindow>
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #    include "riveqtrhirenderer.h"

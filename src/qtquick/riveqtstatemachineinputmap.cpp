@@ -3,18 +3,17 @@
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
-
-#include "riveqtstatemachineinputmap.h"
-
-#include "rive/animation/state_machine_input_instance.hpp"
-#include <rive/animation/state_machine_input.hpp>
-#include "rive/animation/state_machine_bool.hpp"
-#include "rive/animation/state_machine_number.hpp"
-#include "rive/animation/state_machine_trigger.hpp"
-
 #include <QJSValue>
 #include <QVariant>
 #include <QQmlEngine>
+
+#include <rive/animation/state_machine_input_instance.hpp>
+#include <rive/animation/state_machine_input.hpp>
+#include <rive/animation/state_machine_bool.hpp>
+#include <rive/animation/state_machine_number.hpp>
+#include <rive/animation/state_machine_trigger.hpp>
+
+#include "src/qtquick/riveqtstatemachineinputmap.h"
 
 RiveQtStateMachineInputMap::RiveQtStateMachineInputMap(rive::StateMachineInstance *stateMachineInstance, QObject *parent)
     : QQmlPropertyMap(this, parent)

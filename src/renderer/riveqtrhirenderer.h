@@ -12,7 +12,7 @@
 #include <QPen>
 #include <QLinearGradient>
 
-#include "private/qrhi_p.h"
+#include <private/qrhi_p.h>
 
 #include <rive/renderer.hpp>
 #include <rive/math/raw_path.hpp>
@@ -96,7 +96,7 @@ class RiveQtRhiRenderer : public rive::Renderer
 public:
     RiveQtRhiRenderer(QQuickItem *item);
     virtual ~RiveQtRhiRenderer();
-    
+
     void setFillMode(const RiveRenderSettings::FillMode fillMode) { m_fillMode = fillMode; };
 
     void save() override;
@@ -135,6 +135,6 @@ private:
 
     QSize m_artboardSize;
     QRectF m_viewportRect;
-    
+
     RiveRenderSettings::FillMode m_fillMode;
 };

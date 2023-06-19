@@ -14,8 +14,8 @@
 
 #include <rive/artboard.hpp>
 
-#include "riveqsgrendernode.h"
-#include "riveqtpainterrenderer.h"
+#include "src/qtquick/riveqsgrendernode.h"
+#include "src/renderer/riveqtpainterrenderer.h"
 
 class RiveQtQuickItem;
 class QQuickWindow;
