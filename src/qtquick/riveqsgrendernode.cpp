@@ -4,7 +4,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "riveqsgrendernode.h"
+#include "src/qtquick/riveqsgrendernode.h"
 #include "src/qtquick/riveqtquickitem.h"
 
 QRectF RiveQSGRenderNode::rect() const

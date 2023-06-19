@@ -9,7 +9,7 @@
 #include <private/qrhi_p.h>
 #include <private/qsgrendernode_p.h>
 
-#include "riveqsgrhirendernode.h"
+#include "src/qtquick/riveqsgrhirendernode.h"
 #include "src/qtquick/riveqtquickitem.h"
 #include "src/renderer/riveqtrhirenderer.h"
 

@@ -10,10 +10,11 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLTexture>
 #include <QOpenGLFramebufferObject>
+
 #include <private/qtriangulator_p.h>
 
-#include "riveqtopenglrenderer.h"
-#include "riveqtutils.h"
+#include "src/renderer/riveqtopenglrenderer.h"
+#include "src/renderer/riveqtutils.h"
 
 RiveQtOpenGLPath::RiveQtOpenGLPath(const RiveQtOpenGLPath &rqp)
 {

@@ -1,12 +1,11 @@
-
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
-
 #pragma once
 
 #include <QQmlPropertyMap>
+
 #include <rive/core.hpp>
 #include <rive/animation/state_machine_instance.hpp>
 

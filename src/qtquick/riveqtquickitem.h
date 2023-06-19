@@ -17,9 +17,9 @@
 #include <rive/artboard.hpp>
 #include <rive/listener_type.hpp>
 
-#include "riveqtfactory.h"
-#include "riveqtstatemachineinputmap.h"
-#include "datatypes.h"
+#include "src/qtquick/riveqtstatemachineinputmap.h"
+#include "src/qtquick/datatypes.h"
+#include "src/renderer/riveqtfactory.h"
 
 class RiveQSGRenderNode;
 class RiveQSGRHIRenderNode;

@@ -8,11 +8,11 @@
 #include <QMatrix4x4>
 #include <QDebug>
 
-#include "rive/shapes/paint/color.hpp"
+#include <rive/shapes/paint/color.hpp>
 #include <rive/renderer.hpp>
 #include <rive/command_path.hpp>
 
-#include "riveqtutils.h"
+#include "src/renderer/riveqtutils.h"
 
 QColor RiveQtUtils::riveColorToQt(rive::ColorInt value)
 {

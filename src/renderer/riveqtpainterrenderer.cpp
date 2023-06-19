@@ -9,7 +9,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#include "riveqtpainterrenderer.h"
+#include "src/renderer/riveqtpainterrenderer.h"
 
 RiveQtPainterRenderer::RiveQtPainterRenderer()
     : rive::Renderer()

@@ -3,8 +3,9 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "riveqtfont.h"
 #include <QPainterPath>
+
+#include "src/renderer/riveqtfont.h"
 
 RiveQtFont::RiveQtFont(const QFont &font, const QFontMetricsF &fontMetrics)
     : rive::Font({ static_cast<float>(fontMetrics.ascent()), static_cast<float>(fontMetrics.descent()) })

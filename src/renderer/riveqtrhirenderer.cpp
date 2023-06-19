@@ -14,7 +14,7 @@
 
 #include <private/qtriangulator_p.h>
 
-#include "riveqtrhirenderer.h"
+#include "src/renderer/riveqtrhirenderer.h"
 #include "src/qtquick/rhi/texturetargetnode.h"
 
 RiveQtRhiGLPath::RiveQtRhiGLPath(const unsigned segmentCount)

@@ -15,8 +15,6 @@
 #include <QTextLayout>
 #include <QTextOption>
 
-#include "private/qfontengine_p.h"
-
 #include <rive/text_engine.hpp>
 #include <rive/core.hpp>
 
