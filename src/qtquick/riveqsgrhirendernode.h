@@ -36,7 +36,11 @@ public:
     void setFillMode(RiveRenderSettings::FillMode fillMode);
 
     void renderOffscreen() override;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     void prepare() override;
+#else
+    void prepare();
+#endif
     void render(const RenderState *state) override;
     void releaseResources() override;
     RenderingFlags flags() const override;
