@@ -14,6 +14,7 @@
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #    include "renderer/riveqtrhirenderer.h"
 #else
+#    include "renderer/riveqtopenglrenderer.h"
 #    include "riveqsgopenglrendernode.h"
 #endif
 
