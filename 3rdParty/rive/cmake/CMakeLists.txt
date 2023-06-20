@@ -16,8 +16,9 @@ function(extract_zip zip_file output_dir target_name)
     set(PS_REMOVE_DIR_SCRIPT "if (Test-Path '${output_dir}') { Remove-Item '${output_dir}' -Recurse -Force }")
     execute_process(COMMAND powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "${PS_REMOVE_DIR_SCRIPT}")
 
+		message("Add-Type -A System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('${zip_file}', '${output_dir}')")
     # Extract the zip file
-    set(PS_SCRIPT "Add-Type -A System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('${zip_file}', '${output_dir}')")
+		set(PS_SCRIPT "Add-Type -A System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('${zip_file}', '${output_dir}')")
     execute_process(COMMAND powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "${PS_SCRIPT}")
   else()
     # Remove the output directory if it already exists
@@ -68,7 +69,7 @@ list(GET RIVE_CPP_SOURCE_DIR_SUBDIRS 0 RIVE_CPP_SOURCE_DIR)
 
 set(HARFBUZZ_DOWNLOAD_URL "https://codeload.github.com/harfbuzz/harfbuzz/zip/858570b1d9912a1b746ab39fbe62a646c4f7a5b1")
 set(HARFBUZZ_DOWNLOAD_DIR "${CMAKE_BINARY_DIR}/harfbuzz-src-download")
-set(HARFBUZZ_SOURCE_DIR "${RIVE_CPP_SOURCE_DIR}/harfbuzz")
+set(HARFBUZZ_SOURCE_DIR "${RIVE_CPP_SOURCE_DIR}/harfbuzz/")
 set(HARFBUZZ_CPP_TARGET_DIR "zip")
 
 file(DOWNLOAD ${HARFBUZZ_DOWNLOAD_URL} "${HARFBUZZ_DOWNLOAD_DIR}/harfbuzz.zip" SHOW_PROGRESS)
