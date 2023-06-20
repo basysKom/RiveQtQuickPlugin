@@ -13,8 +13,8 @@
 
 #include <rive/artboard.hpp>
 
-#include "src/qtquick/riveqsgrendernode.h"
-#include "src/renderer/riveqtopenglrenderer.h"
+#include "riveqsgrendernode.h"
+#include "renderer/riveqtopenglrenderer.h"
 
 class RiveQtQuickItem;
 

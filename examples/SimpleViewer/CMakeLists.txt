@@ -35,13 +35,12 @@ set(SOURCES
 add_executable(${PROJECT_NAME} ${SOURCES})
 add_dependencies(${PROJECT_NAME} RiveQtQuickPlugin)
 
-target_compile_definitions(${PROJECT_NAME}
-  PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
+target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-  Qt${QT_VERSION_MAJOR}::Core
-  Qt${QT_VERSION_MAJOR}::Quick
-  Qt${QT_VERSION_MAJOR}::Gui
+    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Quick
+    Qt${QT_VERSION_MAJOR}::Gui
 )
 
 if (WIN32)

@@ -6,8 +6,8 @@
 
 #include <QQuickWindow>
 
-#include "src/qtquick/riveqtquickitem.h"
-#include "src/qtquick/riveqsgsoftwarerendernode.h"
+#include "riveqtquickitem.h"
+#include "riveqsgsoftwarerendernode.h"
 
 RiveQSGSoftwareRenderNode::RiveQSGSoftwareRenderNode(QQuickWindow *window, rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
     : RiveQSGRenderNode(artboardInstance, item)

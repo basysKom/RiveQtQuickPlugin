@@ -79,3 +79,4 @@ public:
     QSGRendererInterface::GraphicsApi graphicsApi { QSGRendererInterface::GraphicsApi::Software };
     FillMode fillMode { PreserveAspectFit };
 };
+Q_DECLARE_METATYPE(RiveRenderSettings)

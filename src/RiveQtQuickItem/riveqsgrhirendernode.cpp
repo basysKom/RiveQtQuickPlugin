@@ -9,9 +9,9 @@
 #include <private/qrhi_p.h>
 #include <private/qsgrendernode_p.h>
 
-#include "src/qtquick/riveqsgrhirendernode.h"
-#include "src/qtquick/riveqtquickitem.h"
-#include "src/renderer/riveqtrhirenderer.h"
+#include "riveqsgrhirendernode.h"
+#include "riveqtquickitem.h"
+#include "renderer/riveqtrhirenderer.h"
 
 void RiveQSGRHIRenderNode::updateArtboardInstance(rive::ArtboardInstance *artboardInstance)
 {
@@ -67,6 +67,14 @@ RiveQSGRHIRenderNode::~RiveQSGRHIRenderNode()
 
 void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
 {
+    const auto scene = m_artboardInstance->defaultScene();
+    const auto sceneW = scene->width();
+    const auto sceneH = scene->height();
+    const auto aspectRatio = m_artboardInstance->defaultScene()->width() / m_artboardInstance->defaultScene()->height();
+    const auto width = aspectRatio * bounds.height();
+    //    const auto height = m_artboardInstance->defaultScene()->height();
+
+    //    qDebug() << "Dim" << item->width() << item->height() << width << height;
     m_rect = bounds;
 
     m_vertices.clear();

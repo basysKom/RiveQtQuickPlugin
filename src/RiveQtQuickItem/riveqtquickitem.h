@@ -13,13 +13,20 @@
 #include <QImage>
 #include <QPainter>
 #include <QTimer>
+#include <QtCore/QtGlobal>
 
 #include <rive/artboard.hpp>
 #include <rive/listener_type.hpp>
 
-#include "src/qtquick/riveqtstatemachineinputmap.h"
-#include "src/qtquick/datatypes.h"
-#include "src/renderer/riveqtfactory.h"
+#include "riveqtstatemachineinputmap.h"
+#include "datatypes.h"
+#include "renderer/riveqtfactory.h"
+
+#if defined(RIVEQTQUICKITEM_LIBRARY)
+#    define RIVEQTQUICKITEM_EXPORT Q_DECL_EXPORT
+#else
+#    define RIVEQTQUICKITEM_EXPORT Q_DECL_IMPORT
+#endif
 
 class RiveQSGRenderNode;
 class RiveQSGRHIRenderNode;

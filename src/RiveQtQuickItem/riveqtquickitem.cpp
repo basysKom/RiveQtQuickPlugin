@@ -21,8 +21,8 @@
 #include <rive/animation/state_machine_listener.hpp>
 #include <rive/file.hpp>
 
-#include "src/qtquick/riveqtquickitem.h"
-#include "src/renderer/riveqtfactory.h"
+#include "riveqtquickitem.h"
+#include "renderer/riveqtfactory.h"
 
 RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     : QQuickItem(parent)

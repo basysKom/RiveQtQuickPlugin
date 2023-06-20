@@ -49,6 +49,18 @@ The plugin has been tested on:
 - Install missing dependencies (`libxkbcommon-dev` might be missing on Ubuntu 22.04)
 - Building using cmake and make should work just fine
 
+```
+cd /path/to/repo/
+
+export CC=clang
+export CXX=clang++
+
+mkdir build
+cd build
+cmake -DCMAKE_PREFIX_PATH=~/.Qt/6.5.1/gcc_64 -S .. -B .
+make
+```
+
 ## Usage
 
 Here's a short example of how to use the RiveQtQuickItem in your QML code:

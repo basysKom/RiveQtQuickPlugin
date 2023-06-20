@@ -13,7 +13,7 @@
 #include <rive/animation/state_machine_number.hpp>
 #include <rive/animation/state_machine_trigger.hpp>
 
-#include "src/qtquick/riveqtstatemachineinputmap.h"
+#include "riveqtstatemachineinputmap.h"
 
 RiveQtStateMachineInputMap::RiveQtStateMachineInputMap(rive::StateMachineInstance *stateMachineInstance, QObject *parent)
     : QQmlPropertyMap(this, parent)
