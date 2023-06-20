@@ -71,39 +71,31 @@ Item {
             Layout.minimumHeight: 200
         }
 
-        Item {
+        RiveQtQuickItem {
+            id: riveItem
+
             Layout.fillWidth: true
             Layout.fillHeight: true
 
             Layout.minimumWidth: 500
 
-            RiveQtQuickItem {
-                id: riveItem
+            currentArtboardIndex: 1
+            currentStateMachineIndex: 0
+            renderQuality: RiveQtQuickItem.Medium
+            fillMode: RiveQtQuickItem.PreserveAspectFit
 
-                anchors {
-                    centerIn: parent
-                }
-                width: parent.width
-                height: 300
+            fileSource: ":/rive/bullet_man.riv"
 
-                currentArtboardIndex: 1
-                currentStateMachineIndex: 0
-                renderQuality: RiveQtQuickItem.Medium
-                fillMode: RiveQtQuickItem.PreserveAspectFit
-
-                fileSource: ":/rive/bullet_man.riv"
-
-                onStateMachineInterfaceChanged: {
-                    if (stateMachineInterface) {
-                        console.log(Object.keys(stateMachineInterface))
-                    }
-                }
-                Rectangle {
-                    color: "transparent"
-                    border.color: "red"
-                    anchors.fill: parent
+            onStateMachineInterfaceChanged: {
+                if (stateMachineInterface) {
+                    console.log(Object.keys(stateMachineInterface))
                 }
             }
+            //                Rectangle {
+            //                    color: "transparent"
+            //                    border.color: "red"
+            //                    anchors.fill: parent
+            //                }
         }
     }
 }
