@@ -49,7 +49,7 @@ The plugin has been tested on:
 - Install missing dependencies (`libxkbcommon-dev` might be missing on Ubuntu 22.04)
 - Building using cmake and make should work just fine
 
-```
+```example
 cd /path/to/repo/
 
 export CC=clang

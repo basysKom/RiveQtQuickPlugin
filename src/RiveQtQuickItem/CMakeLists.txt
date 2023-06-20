@@ -7,9 +7,9 @@ SPDX-License-Identifier: LGPL-3.0-or-later
 ]]
 cmake_minimum_required(VERSION 3.16)
 
+
+
 set(PROJECT_SOURCES
-#    src/riveqtquickplugin.h
-#    src/riveqtquickplugin.cpp
    renderer/riveqtopenglrenderer.h
    renderer/riveqtopenglrenderer.cpp
    renderer/riveqtutils.h
@@ -34,6 +34,15 @@ set(PROJECT_SOURCES
    qmldir
    shader.qrc
 )
+
+if (${QT_VERSION_MAJOR} EQUAL 5)
+    set(QT5_PROJECT_SOURCES
+        #qt5
+        riveqtquickplugin.h
+        riveqtquickplugin.cpp
+    )
+endif()
+
 if (${QT_VERSION_MAJOR} EQUAL 6)
     set(QT6_PROJECT_SOURCES
         #qt6
@@ -64,7 +73,7 @@ if (${QT_VERSION_MAJOR} EQUAL 6)
             ${QT6_PROJECT_SOURCES}
     )
 else()
-    add_library(${PROJECT_NAME} SHARED ${PROJECT_SOURCES})
+    add_library(${PROJECT_NAME} SHARED ${QT5_PROJECT_SOURCES} ${PROJECT_SOURCES})
 endif()
 
 # Set compile definitions for debug configurations

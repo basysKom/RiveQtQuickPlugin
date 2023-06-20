@@ -30,9 +30,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Qml Quick OpenGL )
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Qml Gui Quick OpenGL)
 
-# TODO use new policy
-# https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html
-qt_policy(SET QTP0001 OLD)
+if (${QT_VERSION_MAJOR} EQUAL 6)
+    # TODO use new policy
+    # https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html
+    qt_policy(SET QTP0001 OLD)
+endif()
 
 # Add rive-cpp dependency if required
 if(${RQQRP_DOWNLOAD_BUILD_DEPENDENCIES})
