@@ -1,8 +1,9 @@
 #[[
-  SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
-  SPDX-FileCopyrightText: 2023 basysKom GmbH
+SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
+SPDX-FileCopyrightText: 2023 Jonas Kalinka <jonas.kalinka@basyskom.com>
+SPDX-FileCopyrightText: 2023 basysKom GmbH
 
-  SPDX-License-Identifier: LGPL-3.0-or-later
+SPDX-License-Identifier: LGPL-3.0-or-later
 ]]
 
 cmake_minimum_required(VERSION 3.16)
