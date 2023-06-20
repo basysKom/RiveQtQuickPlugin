@@ -155,12 +155,14 @@ unsigned int RiveQtFactory::segmentCount()
     switch (m_renderSettings.renderQuality) {
     case RiveRenderSettings::Low:
         return 5;
+
+    default:
     case RiveRenderSettings::Medium:
         return 10;
+
     case RiveRenderSettings::High:
         return 15;
     }
-    return 10;
 }
 
 RiveQtFactory::RiveQtRenderType RiveQtFactory::renderType()
