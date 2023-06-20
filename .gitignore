@@ -44,3 +44,5 @@ builds/
 .directory
 build/
 build5/
+
+*.autosave
