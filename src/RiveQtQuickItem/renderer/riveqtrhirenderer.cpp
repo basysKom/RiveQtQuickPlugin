@@ -684,9 +684,6 @@ void RiveQtRhiRenderer::setProjectionMatrix(const QMatrix4x4 *projectionMatrix, 
     const auto window2itemScaleX = m_item->window()->width() / m_item->width();
     const auto window2itemScaleY = m_item->window()->height() / m_item->height();
 
-    const auto viewport2artboardScaleX = m_viewportRect.width() / m_artboardSize.width();
-    const auto viewport2artboardScaleY = m_viewportRect.height() / m_artboardSize.height();
-
     m_projectionMatrix = *projectionMatrix;
 
     m_projectionMatrix.scale(window2itemScaleX, window2itemScaleY);
