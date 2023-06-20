@@ -71,23 +71,37 @@ Item {
             Layout.minimumHeight: 200
         }
 
-        RiveQtQuickItem {
-            id: riveItem
-
+        Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
             Layout.minimumWidth: 500
 
-            //            currentArtboardIndex: 0
-            currentStateMachineIndex: 0
+            RiveQtQuickItem {
+                id: riveItem
 
-            renderQuality: RiveRenderSettings.Low
-            fillMode: RiveRenderSettings.PreserveAspectFit
+                anchors {
+                    centerIn: parent
+                }
+                width: parent.width
+                height: 300
 
-            onStateMachineInterfaceChanged: {
-                if (stateMachineInterface) {
-                    console.log(Object.keys(stateMachineInterface))
+                currentArtboardIndex: 1
+                currentStateMachineIndex: 0
+                renderQuality: RiveQtQuickItem.Medium
+                fillMode: RiveQtQuickItem.PreserveAspectFit
+
+                fileSource: ":/rive/bullet_man.riv"
+
+                onStateMachineInterfaceChanged: {
+                    if (stateMachineInterface) {
+                        console.log(Object.keys(stateMachineInterface))
+                    }
+                }
+                Rectangle {
+                    color: "transparent"
+                    border.color: "red"
+                    anchors.fill: parent
                 }
             }
         }

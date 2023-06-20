@@ -11,8 +11,8 @@ import RiveQtQuickPlugin 1.0
 
 ApplicationWindow {
     visible: true
-    width: 1800
-    height: 1024
+    width: 800
+    height: 600
     color: "#222222"
 
     TabBar {
@@ -139,7 +139,6 @@ ApplicationWindow {
                         when: riveItem.currentStateMachineIndex !== null
                     }
                 }
-
                 Slider {
                     id: slider
 

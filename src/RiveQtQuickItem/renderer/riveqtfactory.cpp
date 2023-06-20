@@ -5,14 +5,14 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 #include <QQuickWindow>
 
-#include "src/renderer/riveqtfactory.h"
-#include "src/renderer/riveqtfont.h"
-#include "src/renderer/riveqtpainterrenderer.h"
-#include "src/qtquick/riveqsgrhirendernode.h"
-#include "src/qtquick/riveqsgsoftwarerendernode.h"
+#include "renderer/riveqtfactory.h"
+#include "renderer/riveqtfont.h"
+#include "renderer/riveqtpainterrenderer.h"
+#include "riveqsgrhirendernode.h"
+#include "riveqsgsoftwarerendernode.h"
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-#    include "riveqtrhirenderer.h"
+#    include "renderer/riveqtrhirenderer.h"
 #else
 #    include "src/qtquick/riveqsgopenglrendernode.h"
 #endif

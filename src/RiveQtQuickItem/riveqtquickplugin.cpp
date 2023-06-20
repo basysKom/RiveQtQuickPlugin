@@ -6,9 +6,9 @@
 
 #include <QtQml>
 
-#include "qtquick/riveqtquickitem.h"
-#include "qtquick/riveqtstatemachineinputmap.h"
-#include "qtquick/datatypes.h"
+#include "riveqtquickitem.h"
+#include "riveqtstatemachineinputmap.h"
+#include "datatypes.h"
 #include "riveqtquickplugin.h"
 
 void RiveQtQuickPlugin::registerTypes(const char *uri)
@@ -16,7 +16,7 @@ void RiveQtQuickPlugin::registerTypes(const char *uri)
     qmlRegisterType<RiveQtQuickItem>("RiveQtQuickPlugin", 1, 0, "RiveQtQuickItem");
 
     qRegisterMetaType<RiveRenderSettings>("RiveRenderSettings");
-    qmlRegisterType<RiveQtQuickItem>("RiveQtQuickPlugin", 1, 0, "RiveRenderSettings");
+    qmlRegisterType<RiveRenderSettings>("RiveQtQuickPlugin", 1, 0, "RiveRenderSettings");
 
     qRegisterMetaType<AnimationInfo>("AnimationInfo");
     qRegisterMetaType<QVector<AnimationInfo>>("QVector<AnimationInfo>");

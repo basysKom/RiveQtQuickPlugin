@@ -14,8 +14,8 @@
 
 #include <private/qtriangulator_p.h>
 
-#include "src/renderer/riveqtrhirenderer.h"
-#include "src/qtquick/rhi/texturetargetnode.h"
+#include "renderer/riveqtrhirenderer.h"
+#include "rhi/texturetargetnode.h"
 
 RiveQtRhiGLPath::RiveQtRhiGLPath(const unsigned segmentCount)
 {
@@ -657,7 +657,6 @@ void RiveQtRhiRenderer::render(QRhiCommandBuffer *cb)
 
 TextureTargetNode *RiveQtRhiRenderer::getRiveDrawTargetNode()
 {
-    int layer = 0;
     TextureTargetNode *pathNode = nullptr;
 
     for (TextureTargetNode *textureTargetNode : m_renderNodes) {
@@ -666,8 +665,6 @@ TextureTargetNode *RiveQtRhiRenderer::getRiveDrawTargetNode()
             pathNode->take();
             break;
         }
-
-        layer++;
     }
 
     if (!pathNode) {
@@ -681,31 +678,35 @@ TextureTargetNode *RiveQtRhiRenderer::getRiveDrawTargetNode()
 
 void RiveQtRhiRenderer::setProjectionMatrix(const QMatrix4x4 *projectionMatrix, const QMatrix4x4 *modelMatrix)
 {
-    auto aspectX = m_item->width() / (m_artboardSize.width());
-    auto aspectY = m_item->height() / (m_artboardSize.height());
+    const auto item2artboardScaleX = m_item->width() / m_artboardSize.width();
+    const auto item2artboardScaleY = m_item->height() / m_artboardSize.height();
+
+    const auto window2itemScaleX = m_item->window()->width() / m_item->width();
+    const auto window2itemScaleY = m_item->window()->height() / m_item->height();
+
+    const auto viewport2artboardScaleX = m_viewportRect.width() / m_artboardSize.width();
+    const auto viewport2artboardScaleY = m_viewportRect.height() / m_artboardSize.height();
 
     m_projectionMatrix = *projectionMatrix;
-    m_projectionMatrix.scale((m_item->window()->width() / m_item->width()), (m_item->window()->height() / m_item->height()));
+
+    m_projectionMatrix.scale(window2itemScaleX, window2itemScaleY);
 
     m_combinedMatrix = *projectionMatrix;
 
     switch (m_fillMode) {
     case RiveRenderSettings::Stretch: {
-        m_combinedMatrix.scale((m_item->window()->width() / m_item->width()) * aspectX,
-                               (m_item->window()->height() / m_item->height()) * aspectY);
+        m_combinedMatrix.scale(window2itemScaleX * item2artboardScaleX, window2itemScaleY * item2artboardScaleY);
         break;
     }
     case RiveRenderSettings::PreserveAspectCrop: {
-        auto scaleFactor = qMax(aspectX, aspectY);
-        m_combinedMatrix.scale((m_item->window()->width() / m_item->width()) * scaleFactor,
-                               (m_item->window()->height() / m_item->height()) * scaleFactor);
+        const auto scaleFactor = qMax(item2artboardScaleX, item2artboardScaleY);
+        m_combinedMatrix.scale(window2itemScaleX * scaleFactor, window2itemScaleY * scaleFactor);
         break;
     }
     default:
     case RiveRenderSettings::PreserveAspectFit: {
-        auto scaleFactor = qMin(aspectX, aspectY);
-        m_combinedMatrix.scale((m_item->window()->width() / m_item->width()) * scaleFactor,
-                               (m_item->window()->height() / m_item->height()) * scaleFactor);
+        const auto scaleFactor = qMin(item2artboardScaleX, item2artboardScaleY);
+        m_combinedMatrix.scale(window2itemScaleX * scaleFactor, window2itemScaleY * scaleFactor);
         break;
     }
     }

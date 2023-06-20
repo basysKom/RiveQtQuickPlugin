@@ -17,8 +17,8 @@
 
 #include <rive/artboard.hpp>
 
-#include "src/qtquick/riveqsgrendernode.h"
-#include "src/qtquick/datatypes.h"
+#include "riveqsgrendernode.h"
+#include "datatypes.h"
 
 //-----------------
 class RiveQtQuickItem;

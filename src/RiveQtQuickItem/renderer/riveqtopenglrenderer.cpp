@@ -13,8 +13,8 @@
 
 #include <private/qtriangulator_p.h>
 
-#include "src/renderer/riveqtopenglrenderer.h"
-#include "src/renderer/riveqtutils.h"
+#include "renderer/riveqtopenglrenderer.h"
+#include "renderer/riveqtutils.h"
 
 RiveQtOpenGLPath::RiveQtOpenGLPath(const RiveQtOpenGLPath &rqp)
 {

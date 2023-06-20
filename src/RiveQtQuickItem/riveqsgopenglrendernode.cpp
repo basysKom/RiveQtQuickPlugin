@@ -6,8 +6,8 @@
 
 #include <QQuickWindow>
 
-#include "src/qtquick/riveqsgopenglrendernode.h"
-#include "src/qtquick/riveqtquickitem.h"
+#include "riveqsgopenglrendernode.h"
+#include "riveqtquickitem.h"
 
 void RiveQSGOpenGLRenderNode::updateArtboardInstance(rive::ArtboardInstance *artboardInstance)
 {

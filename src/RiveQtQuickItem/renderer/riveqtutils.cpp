@@ -12,7 +12,7 @@
 #include <rive/renderer.hpp>
 #include <rive/command_path.hpp>
 
-#include "src/renderer/riveqtutils.h"
+#include "renderer/riveqtutils.h"
 
 QColor RiveQtUtils::riveColorToQt(rive::ColorInt value)
 {

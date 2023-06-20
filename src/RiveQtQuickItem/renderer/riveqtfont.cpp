@@ -5,7 +5,7 @@
 
 #include <QPainterPath>
 
-#include "src/renderer/riveqtfont.h"
+#include "renderer/riveqtfont.h"
 
 RiveQtFont::RiveQtFont(const QFont &font, const QFontMetricsF &fontMetrics)
     : rive::Font({ static_cast<float>(fontMetrics.ascent()), static_cast<float>(fontMetrics.descent()) })
