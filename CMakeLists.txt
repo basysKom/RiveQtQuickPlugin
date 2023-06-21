@@ -41,28 +41,15 @@ if(${RQQRP_DOWNLOAD_BUILD_DEPENDENCIES})
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/rive/cmake)
 endif()
 
-add_subdirectory(src/RiveQtQuickItem)
+set(PLUGIN_SOURCE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/RiveQtQuickItem)
+
+add_subdirectory(${PLUGIN_SOURCE_DIR})
 
 # Build examples if enabled
 if(RQQRP_BUILD_EXAMPLES)
     set(EXAMPLES_BINARY_DIR "${CMAKE_BINARY_DIR}/binary/examples" CACHE PATH "Binary directory for examples")
+    set(PLUGIN_TARGET_PATH "${CMAKE_BINARY_DIR}$<TARGET_FILE:${PROJECT_NAME}>")
 
     add_subdirectory(examples)
-
-    if (WIN32)
-        find_program(WINDEPLOYQT_EXECUTABLE NAMES windeployqt HINTS ${QTDIR} ENV QTDIR PATH_SUFFIXES bin)
-        if (NOT WINDEPLOYQT_EXECUTABLE)
-            message(FATAL_ERROR "Failed to find windeployqt executable. Please make sure it is in your PATH or set the QTDIR environment variable.")
-        endif()
-
-        # Copy the plugin and qmldir to the examples binary directory
-        add_custom_command(
-            TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLES_BINARY_DIR}/RiveQtQuickPlugin
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> ${EXAMPLES_BINARY_DIR}/RiveQtQuickPlugin
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/qmldir ${EXAMPLES_BINARY_DIR}/RiveQtQuickPlugin
-            COMMENT "Deploying ${PROJECT_NAME} to ${EXAMPLES_BINARY_DIR}"
-        )
-    endif()
 endif()
 
