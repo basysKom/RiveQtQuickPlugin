@@ -48,7 +48,7 @@ add_subdirectory(${PLUGIN_SOURCE_DIR})
 # Build examples if enabled
 if(RQQRP_BUILD_EXAMPLES)
     set(EXAMPLES_BINARY_DIR "${CMAKE_BINARY_DIR}/binary/examples" CACHE PATH "Binary directory for examples")
-    set(PLUGIN_TARGET_PATH "${CMAKE_BINARY_DIR}$<TARGET_FILE:${PROJECT_NAME}>")
+    set(PLUGIN_TARGET_PATH ${CMAKE_BINARY_DIR}/binary/RiveQtQuickPlugin/)
 
     add_subdirectory(examples)
 endif()
