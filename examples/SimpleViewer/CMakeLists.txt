@@ -43,19 +43,19 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt${QT_VERSION_MAJOR}::Gui
 )
 
-#if (WIN32)
-#    find_program(WINDEPLOYQT_EXECUTABLE NAMES windeployqt HINTS ${QTDIR} ENV QTDIR PATH_SUFFIXES bin)
-#    if (NOT WINDEPLOYQT_EXECUTABLE)
-#        message(FATAL_ERROR "Failed to find windeployqt executable. Please make sure it is in your PATH or set the QTDIR environment variable.")
-#    endif()
+if (WIN32)
+    find_program(WINDEPLOYQT_EXECUTABLE NAMES windeployqt HINTS ${QTDIR} ENV QTDIR PATH_SUFFIXES bin)
+    if (NOT WINDEPLOYQT_EXECUTABLE)
+        message(FATAL_ERROR "Failed to find windeployqt executable. Please make sure it is in your PATH or set the QTDIR environment variable.")
+    endif()
 
-#    # Copy the plugin and qmldir to the examples binary directory
-#    add_custom_command(
-#        TARGET ${PROJECT_NAME} POST_BUILD
-#        COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLES_BINARY_DIR}/RiveQtQuickPlugin
-#        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> ${EXAMPLES_BINARY_DIR}/RiveQtQuickPlugin
-#        COMMAND ${CMAKE_COMMAND} -E copy ${PLUGIN_TARGET_PATH} ${EXAMPLES_BINARY_DIR}/RiveQtQuickPlugin
-#        COMMAND ${CMAKE_COMMAND} -E copy ${PLUGIN_SOURCE_DIR}/qmldir ${EXAMPLES_BINARY_DIR}/RiveQtQuickPlugin
-#        COMMENT "Deploying ${PROJECT_NAME} to ${EXAMPLES_BINARY_DIR}"
-#    )
-#endif()
+    # Copy the plugin and qmldir to the examples binary directory
+    add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLES_BINARY_DIR}/RiveQtQuickPlugin
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> ${EXAMPLES_BINARY_DIR}/RiveQtQuickPlugin
+        COMMAND ${CMAKE_COMMAND} -E copy ${PLUGIN_TARGET_PATH}/RiveQtQuickPlugin.dll ${EXAMPLES_BINARY_DIR}/RiveQtQuickPlugin
+        COMMAND ${CMAKE_COMMAND} -E copy ${PLUGIN_TARGET_PATH}/qmldir ${EXAMPLES_BINARY_DIR}/RiveQtQuickPlugin
+        COMMENT "Deploying ${PROJECT_NAME} to ${EXAMPLES_BINARY_DIR}"
+    )
+endif()
