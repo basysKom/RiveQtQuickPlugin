@@ -138,15 +138,29 @@ add_custom_command(
     COMMENT "Copying plugin and qmldir to binary directory"
 )
 
-# Generating the qmltypes file for Qt5
-if (${QT_VERSION_MAJOR} EQUAL 5)
-    add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND
-            qmlplugindump -output RiveQtQuickPlugin/RiveQtQuickPlugin.qmltypes RiveQtQuickPlugin 1.0 .
-        WORKING_DIRECTORY
-            ${QML_BINARY_DIR}
-    )
+# Generating the qmltypes file for Qt5.
+# qmplugindump only works with release builds.
+if (${QT_VERSION_MAJOR} EQUAL 5 AND CMAKE_BUILD_TYPE EQUAL "RELEASE")
+    if (WIN32)
+        cmake_path(SET qmlplugindump "${CMAKE_PREFIX_PATH}/bin/qmlplugindump.exe")
+        add_custom_command(
+            TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND
+                ${qmlplugindump} -output RiveQtQuickPlugin/RiveQtQuickPlugin.qmltypes RiveQtQuickPlugin 1.0 .
+            WORKING_DIRECTORY
+                ${QML_BINARY_DIR}
+        )
+    else()
+        add_custom_command(
+            TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND
+                qmlplugindump -output RiveQtQuickPlugin/RiveQtQuickPlugin.qmltypes RiveQtQuickPlugin 1.0 .
+            WORKING_DIRECTORY
+                ${QML_BINARY_DIR}
+        )
+    endif()
+#   Qt6 produces a more comprehensive output than qmlplugindump. We could just check in the qmltypes file from there and copy it
+#   this would also work for a debug build
 #    add_custom_command(
 #        TARGET ${PROJECT_NAME} POST_BUILD
 #        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/RiveQtQuickPlugin.qmltypes ${QML_BINARY_DIR}/RiveQtQuickPlugin
