@@ -7,8 +7,6 @@ SPDX-License-Identifier: LGPL-3.0-or-later
 ]]
 cmake_minimum_required(VERSION 3.16)
 
-
-
 set(PROJECT_SOURCES
    renderer/riveqtopenglrenderer.h
    renderer/riveqtopenglrenderer.cpp
@@ -41,9 +39,7 @@ if (${QT_VERSION_MAJOR} EQUAL 5)
         riveqtquickplugin.h
         riveqtquickplugin.cpp
     )
-endif()
-
-if (${QT_VERSION_MAJOR} EQUAL 6)
+elseif (${QT_VERSION_MAJOR} EQUAL 6)
     set(QT6_PROJECT_SOURCES
         #qt6
         rhi/texturetargetnode.h
@@ -55,8 +51,9 @@ if (${QT_VERSION_MAJOR} EQUAL 6)
     )
 endif()
 
-if (${QT_VERSION_MAJOR} EQUAL 6)
-#    add_library(${PROJECT_NAME} SHARED ${PROJECT_SOURCES} ${QT6_PROJECT_SOURCES})
+if (${QT_VERSION_MAJOR} EQUAL 5)
+    add_library(${PROJECT_NAME} SHARED ${QT5_PROJECT_SOURCES} ${PROJECT_SOURCES})
+elseif (${QT_VERSION_MAJOR} EQUAL 6)
     qt_add_qml_module(
         ${PROJECT_NAME}
         URI
@@ -72,8 +69,6 @@ if (${QT_VERSION_MAJOR} EQUAL 6)
             ${PROJECT_SOURCES}
             ${QT6_PROJECT_SOURCES}
     )
-else()
-    add_library(${PROJECT_NAME} SHARED ${QT5_PROJECT_SOURCES} ${PROJECT_SOURCES})
 endif()
 
 # Set compile definitions for debug configurations
@@ -96,7 +91,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 # Include necessary directories
 if (${QT_VERSION_MAJOR} EQUAL 5)
     include_directories(${Qt5Gui_PRIVATE_INCLUDE_DIRS} ${Qt5Core_PRIVATE_INCLUDE_DIRS} "renderer")
-else()
+elseif(${QT_VERSION_MAJOR} EQUAL 6)
     include_directories(${Qt6Gui_PRIVATE_INCLUDE_DIRS} ${Qt6Core_PRIVATE_INCLUDE_DIRS} "renderer")
 endif()
 
@@ -142,3 +137,18 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/qmldir ${QML_BINARY_DIR}/RiveQtQuickPlugin
     COMMENT "Copying plugin and qmldir to binary directory"
 )
+
+# Generating the qmltypes file for Qt5
+if (${QT_VERSION_MAJOR} EQUAL 5)
+    add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND
+            qmlplugindump -output RiveQtQuickPlugin/RiveQtQuickPlugin.qmltypes RiveQtQuickPlugin 1.0 .
+        WORKING_DIRECTORY
+            ${QML_BINARY_DIR}
+    )
+#    add_custom_command(
+#        TARGET ${PROJECT_NAME} POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/RiveQtQuickPlugin.qmltypes ${QML_BINARY_DIR}/RiveQtQuickPlugin
+#    )
+endif()
