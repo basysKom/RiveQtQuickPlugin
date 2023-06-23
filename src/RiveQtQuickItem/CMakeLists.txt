@@ -6,7 +6,7 @@ SPDX-FileCopyrightText: 2023 basysKom GmbH
 SPDX-License-Identifier: LGPL-3.0-or-later
 ]]
 cmake_minimum_required(VERSION 3.16)
-
+message("Build Type: ${CMAKE_BUILD_TYPE}")
 set(PROJECT_SOURCES
    renderer/riveqtopenglrenderer.h
    renderer/riveqtopenglrenderer.cpp
@@ -140,13 +140,13 @@ add_custom_command(
 
 # Generating the qmltypes file for Qt5.
 # qmplugindump only works with release builds.
-if (${QT_VERSION_MAJOR} EQUAL 5 AND CMAKE_BUILD_TYPE EQUAL "RELEASE")
+if (${QT_VERSION_MAJOR} EQUAL 5 AND CMAKE_BUILD_TYPE STREQUAL "Release")
     if (WIN32)
         cmake_path(SET qmlplugindump "${CMAKE_PREFIX_PATH}/bin/qmlplugindump.exe")
         add_custom_command(
             TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND
-                ${qmlplugindump} -output RiveQtQuickPlugin/RiveQtQuickPlugin.qmltypes RiveQtQuickPlugin 1.0 .
+                ${qmlplugindump} -output ${PROJECT_NAME}/RiveQtQuickPlugin.qmltypes RiveQtQuickPlugin 1.0 .
             WORKING_DIRECTORY
                 ${QML_BINARY_DIR}
         )
@@ -154,7 +154,7 @@ if (${QT_VERSION_MAJOR} EQUAL 5 AND CMAKE_BUILD_TYPE EQUAL "RELEASE")
         add_custom_command(
             TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND
-                qmlplugindump -output RiveQtQuickPlugin/RiveQtQuickPlugin.qmltypes RiveQtQuickPlugin 1.0 .
+                qmlplugindump -output ${PROJECT_NAME}/RiveQtQuickPlugin.qmltypes RiveQtQuickPlugin 1.0 .
             WORKING_DIRECTORY
                 ${QML_BINARY_DIR}
         )
