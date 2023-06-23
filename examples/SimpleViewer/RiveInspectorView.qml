@@ -91,6 +91,7 @@ Item {
                     console.log(Object.keys(stateMachineInterface))
                 }
             }
+
             //                Rectangle {
             //                    color: "transparent"
             //                    border.color: "red"
