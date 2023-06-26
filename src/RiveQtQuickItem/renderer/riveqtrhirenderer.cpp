@@ -678,8 +678,6 @@ TextureTargetNode *RiveQtRhiRenderer::getRiveDrawTargetNode()
 
 void RiveQtRhiRenderer::setProjectionMatrix(const QMatrix4x4 *projectionMatrix, const QMatrix4x4 *modelMatrix)
 {
-    // berechnung der scalierung aus der Node nutzen und nicht neu machen
-
     const auto item2artboardScaleX = m_item->width() / m_artboardSize.width();
     const auto item2artboardScaleY = m_item->height() / m_artboardSize.height();
 
@@ -691,6 +689,8 @@ void RiveQtRhiRenderer::setProjectionMatrix(const QMatrix4x4 *projectionMatrix, 
     m_projectionMatrix.scale(window2itemScaleX, window2itemScaleY);
 
     m_combinedMatrix = *projectionMatrix;
+
+    // shift to the center
     m_combinedMatrix.translate(m_riveRect.topLeft().x(), m_riveRect.topLeft().y());
 
     switch (m_fillMode) {
