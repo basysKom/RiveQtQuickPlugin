@@ -1,3 +1,8 @@
+// SPDX-FileCopyrightText: 2023 Jonas Kalinka <jonas.kalinka@basyskom.com>
+// SPDX-FileCopyrightText: 2023 basysKom GmbH
+//
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #pragma once
 
 #include <QLoggingCategory>

@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "rqqplogging.h"
+
 Q_LOGGING_CATEGORY(rqqpItem, "rqqp.item")
 Q_LOGGING_CATEGORY(rqqpInspection, "rqqp.inspection")
 Q_LOGGING_CATEGORY(rqqpInteraction, "rqqp.interaction")

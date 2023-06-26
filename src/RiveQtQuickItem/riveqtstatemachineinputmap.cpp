@@ -19,6 +19,11 @@ RiveQtStateMachineInputMap::RiveQtStateMachineInputMap(rive::StateMachineInstanc
     : QQmlPropertyMap(this, parent)
     , m_stateMachineInstance(stateMachineInstance)
 {
+    //    connect(this, &QQmlPropertyMap::valueChanged, this, [this](const QString &key, const QVariant &value) {
+    //        qDebug() << "Value change" << key << value;
+    //        ;
+    //    });
+
     connect(this, &QQmlPropertyMap::valueChanged, this, &RiveQtStateMachineInputMap::onInputValueChanged);
 
     if (!stateMachineInstance)
@@ -64,6 +69,7 @@ void RiveQtStateMachineInputMap::updateValues()
 
     for (int i = 0; i < m_stateMachineInstance->inputCount(); i++) {
         auto input = m_stateMachineInstance->input(i);
+        qDebug() << "Property name" << input->name();
         QString propertyName = QString::fromStdString(input->name());
 
         if (input->inputCoreType() == rive::StateMachineNumber::typeKey) {
