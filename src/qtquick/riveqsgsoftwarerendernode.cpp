@@ -20,7 +20,7 @@ QRectF RiveQSGSoftwareRenderNode::rect() const
     if (!m_item) {
         return QRectF(0, 0, 0, 0);
     }
-    return QRectF(m_item->x(), m_item->y(), m_item->width(), m_item->height());
+    return QRectF(0, 0, m_item->width(), m_item->height());
 }
 
 void RiveQSGSoftwareRenderNode::render(const RenderState *state)
@@ -54,6 +54,10 @@ void RiveQSGSoftwareRenderNode::renderSoftware(const RenderState *state)
         // Calculate the offsets needed to center the item within its bounding rectangle
         auto offsetX = (m_item->width() - newWidth) / 2.0;
         auto offsetY = (m_item->height() - newHeight) / 2.0;
+
+        m_scaleFactor = scaleFactor;
+        m_topLeftRivePosition.setX(offsetX);
+        m_topLeftRivePosition.setY(offsetY);
 
         auto *renderInterface = m_window->rendererInterface();
 

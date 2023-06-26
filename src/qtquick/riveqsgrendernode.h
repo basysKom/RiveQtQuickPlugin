@@ -22,13 +22,16 @@ public:
 
     virtual void renderOffscreen() { }
     virtual void setRect(const QRectF &bounds);
-
+    virtual QPointF topLeft() const;
+    virtual float scaleFactor() const;
     virtual void updateArtboardInstance(rive::ArtboardInstance *artboardInstance) { m_artboardInstance = artboardInstance; }
 
 protected:
     rive::ArtboardInstance *m_artboardInstance { nullptr };
     RiveQtQuickItem *m_item { nullptr };
     QRectF m_rect;
+    QPointF m_topLeftRivePosition;
+    float m_scaleFactor { 1.0f };
 };
 
 class RiveQSGRenderNode : public QSGRenderNode, public RiveQSGBaseNode

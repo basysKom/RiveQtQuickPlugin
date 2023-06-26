@@ -65,6 +65,10 @@ void RiveQSGOpenGLRenderNode::renderOpenGL(const RenderState *state)
         modelMatrix.translate(offsetX, offsetY);
         modelMatrix.scale(scaleFactor * devicePixelRatio, scaleFactor * devicePixelRatio);
 
+        m_scaleFactor = scaleFactor * devicePixelRatio;
+        m_topLeftRivePosition.setX(offsetX);
+        m_topLeftRivePosition.setY(offsetY);
+
         m_renderer.updateViewportSize();
         m_renderer.updateModelMatrix(modelMatrix);
         m_renderer.updateProjectionMatrix(projectionMatrix);

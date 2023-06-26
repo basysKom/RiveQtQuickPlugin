@@ -133,6 +133,10 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
     m_renderNode = static_cast<RiveQSGRenderNode *>(oldNode);
 
+    if (!isVisible()) {
+        return m_renderNode;
+    }
+
     if (m_scheduleArtboardChange) {
         updateInternalArtboard();
         if (m_renderNode) {
@@ -180,6 +184,7 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     if (m_renderNode) {
         m_renderNode->markDirty(QSGNode::DirtyForceUpdate);
     }
+
     if (m_renderNode && m_geometryChanged) {
         m_renderNode->setRect(QRectF(x(), y(), width(), height()));
         m_geometryChanged = false;
@@ -198,6 +203,14 @@ void RiveQtQuickItem::geometryChange(const QRectF &newGeometry, const QRectF &ol
 
     update();
     QQuickItem::geometryChange(newGeometry, oldGeometry);
+}
+#else
+void RiveQtQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    m_geometryChanged = true;
+
+    update();
+    QQuickItem::geometryChanged(newGeometry, oldGeometry);
 }
 #endif
 
@@ -400,28 +413,12 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
         return false;
     }
 
-    qDebug() << "Position:" << pos << "Type:" << (int)type;
+    if (!isVisible()) {
+        return false;
+    }
 
-    // Scale mouse position based on current item size and artboard size
-    const float scaleX = width() / m_currentArtboardInstance->width();
-    const float scaleY = height() / m_currentArtboardInstance->height();
-
-    // Calculate the uniform scale factor to preserve the aspect ratio
-    const auto scaleFactor = qMin(scaleX, scaleY);
-
-    // Calculate the new width and height of the item while preserving the aspect ratio
-    const auto newWidth = m_currentArtboardInstance->width() * scaleX;
-    const auto newHeight = m_currentArtboardInstance->height() * scaleY;
-
-    // Calculate the offsets needed to center the item within its bounding rectangle
-    const auto offsetX = (width() - newWidth) / 2.0;
-    const auto offsetY = (height() - newHeight) / 2.0;
-
-    rive::HitInfo hitInfo;
-    rive::Mat2D transform;
-
-    m_lastMouseX = (pos.x() - offsetX) / scaleFactor;
-    m_lastMouseY = (pos.y() - offsetY) / scaleFactor;
+    m_lastMouseX = (pos.x() - m_renderNode->topLeft().rx()) / m_renderNode->scaleFactor();
+    m_lastMouseY = (pos.y() - m_renderNode->topLeft().ry()) / m_renderNode->scaleFactor();
     m_listenerType = type;
 
     for (int i = 0; i < m_currentStateMachineInstance->stateMachine()->listenerCount(); ++i) {
