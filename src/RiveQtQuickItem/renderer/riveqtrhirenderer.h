@@ -97,7 +97,9 @@ public:
     RiveQtRhiRenderer(QQuickItem *item);
     virtual ~RiveQtRhiRenderer();
 
-    void setFillMode(const RiveRenderSettings::FillMode fillMode) { m_fillMode = fillMode; };
+    void setFillMode(const RiveRenderSettings::FillMode fillMode) { m_fillMode = fillMode; }
+
+    void setRiveRect(const QRectF &bounds) { m_riveRect = bounds; }
 
     void save() override;
     void restore() override;
@@ -135,6 +137,7 @@ private:
 
     QSize m_artboardSize;
     QRectF m_viewportRect;
+    QRectF m_riveRect;
 
     RiveRenderSettings::FillMode m_fillMode;
 };

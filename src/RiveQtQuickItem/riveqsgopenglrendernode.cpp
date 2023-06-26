@@ -65,7 +65,10 @@ void RiveQSGOpenGLRenderNode::renderOpenGL(const RenderState *state)
         modelMatrix.translate(offsetX, offsetY);
         modelMatrix.scale(scaleFactor * devicePixelRatio, scaleFactor * devicePixelRatio);
 
-        m_scaleFactor = scaleFactor * devicePixelRatio;
+        // TODO: this only works for PreserveAspectFit.
+        m_scaleFactorX = scaleFactor * devicePixelRatio;
+        m_scaleFactorY = scaleFactor * devicePixelRatio;
+
         m_topLeftRivePosition.setX(offsetX);
         m_topLeftRivePosition.setY(offsetY);
 

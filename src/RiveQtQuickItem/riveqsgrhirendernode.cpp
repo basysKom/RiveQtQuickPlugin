@@ -44,6 +44,7 @@ RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(rive::ArtboardInstance *artboardInsta
 
     m_renderer = new RiveQtRhiRenderer(item);
     m_renderer->updateViewPort(m_rect, m_displayBuffer);
+    m_renderer->setRiveRect({ m_topLeftRivePosition, m_riveSize });
 }
 
 RiveQSGRHIRenderNode::~RiveQSGRHIRenderNode()
@@ -213,6 +214,7 @@ void RiveQSGRHIRenderNode::prepare()
 
         if (m_renderer) {
             m_renderer->updateViewPort(m_rect, m_displayBuffer);
+            m_renderer->setRiveRect({ m_topLeftRivePosition, m_riveSize });
         }
     }
 

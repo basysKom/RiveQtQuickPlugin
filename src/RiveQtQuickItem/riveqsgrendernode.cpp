@@ -33,7 +33,21 @@ QPointF RiveQSGBaseNode::topLeft() const
     return m_topLeftRivePosition;
 }
 
-float RiveQSGBaseNode::scaleFactor() const
+float RiveQSGBaseNode::scaleFactorX() const
 {
-    return m_scaleFactor;
+    return m_scaleFactorX;
+}
+
+float RiveQSGBaseNode::scaleFactorY() const
+{
+    return m_scaleFactorY;
+}
+
+void RiveQSGBaseNode::setArtboardRect(const QRectF &bounds)
+{
+    m_topLeftRivePosition = bounds.topLeft();
+    m_riveSize = bounds.size();
+
+    m_scaleFactorX = m_rect.width() / bounds.width();
+    m_scaleFactorY = m_rect.height() / bounds.height();
 }
