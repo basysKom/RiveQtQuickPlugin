@@ -81,22 +81,11 @@ Item {
 
             currentArtboardIndex: 1
             currentStateMachineIndex: 0
+
             renderQuality: RiveQtQuickItem.Medium
             fillMode: RiveQtQuickItem.PreserveAspectFit
 
             fileSource: ":/rive/bullet_man.riv"
-
-            onStateMachineInterfaceChanged: {
-                if (stateMachineInterface) {
-                    console.log(Object.keys(stateMachineInterface))
-                }
-            }
-
-            //                Rectangle {
-            //                    color: "transparent"
-            //                    border.color: "red"
-            //                    anchors.fill: parent
-            //                }
         }
     }
 }
