@@ -187,6 +187,7 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
     if (m_renderNode && m_geometryChanged) {
         m_renderNode->setRect(QRectF(x(), y(), width(), height()));
+        m_renderNode->setArtboardRect(artboardRect());
         m_geometryChanged = false;
     }
 
@@ -216,8 +217,9 @@ void RiveQtQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &o
 
 void RiveQtQuickItem::mousePressEvent(QMouseEvent *event)
 {
+    qDebug() << "hit test pos" << event->pos() << event->position();
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    hitTest(event->position(), rive::ListenerType::down);
+    hitTest(event->pos(), rive::ListenerType::down);
 #else
     hitTest(event->pos(), rive::ListenerType::down);
 #endif
@@ -417,8 +419,8 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
         return false;
     }
 
-    m_lastMouseX = (pos.x() - m_renderNode->topLeft().rx()) / m_renderNode->scaleFactor();
-    m_lastMouseY = (pos.y() - m_renderNode->topLeft().ry()) / m_renderNode->scaleFactor();
+    m_lastMouseX = (pos.x() - m_renderNode->topLeft().rx()) / m_renderNode->scaleFactorX();
+    m_lastMouseY = (pos.y() - m_renderNode->topLeft().ry()) / m_renderNode->scaleFactorY();
     m_listenerType = type;
 
     for (int i = 0; i < m_currentStateMachineInstance->stateMachine()->listenerCount(); ++i) {
@@ -492,6 +494,39 @@ void RiveQtQuickItem::updateCurrentStateMachineIndex()
     } else {
         qDebug() << "Setting initial state machine:" << m_currentArtboardInstance->defaultStateMachineIndex();
         setCurrentStateMachineIndex(m_initialStateMachineIndex);
+    }
+}
+
+QRectF RiveQtQuickItem::artboardRect()
+{
+    if (!m_currentArtboardInstance) {
+        return QRectF();
+    }
+
+    float aspectA = m_currentArtboardInstance->width() / m_currentArtboardInstance->height();
+    float aspectI = width() / height();
+
+    float scaleX = width() / m_currentArtboardInstance->width();
+    float scaleY = height() / m_currentArtboardInstance->height();
+
+    switch (m_renderSettings.fillMode) {
+    default:
+    case RiveRenderSettings::PreserveAspectFit: {
+        float scale = qMin(scaleX, scaleY);
+        float artHeight = m_currentArtboardInstance->height() * scale;
+        float artWidth = m_currentArtboardInstance->width() * scale;
+        float offsetX = aspectA > aspectI ? 0 : (width() - artWidth) / 2;
+        float offsetY = aspectI > aspectA ? 0 : (height() - artHeight) / 2;
+        return QRectF(offsetX, offsetY, artWidth, artHeight);
+    }
+    case RiveRenderSettings::PreserveAspectCrop: {
+        float scale = qMax(scaleX, scaleY);
+        float artHeight = m_currentArtboardInstance->height() * scale;
+        float artWidth = m_currentArtboardInstance->width() * scale;
+        return QRectF(0, 0, artWidth, artHeight);
+    }
+    case RiveRenderSettings::Stretch:
+        return QRectF(0, 0, width(), height());
     }
 }
 
