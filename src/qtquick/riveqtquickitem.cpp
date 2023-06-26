@@ -98,8 +98,8 @@ void RiveQtQuickItem::updateInternalArtboard()
         setCurrentArtboardIndex(m_initialArtboardIndex);
     }
 
-    if (m_loadingStatus == Error) {
-        qWarning() << "Cannot update internal artboard if loading state is Error.";
+    if (m_loadingStatus != Loaded) {
+        qWarning() << "Cannot update internal artboard if no rive file is loaded.";
         return;
     }
 

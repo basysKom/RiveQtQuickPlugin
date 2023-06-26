@@ -79,7 +79,7 @@ Item {
 
             Layout.minimumWidth: 500
 
-            //            currentArtboardIndex: 0
+            currentArtboardIndex: 1
             currentStateMachineIndex: 0
 
             renderQuality: RiveRenderSettings.Low
