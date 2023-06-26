@@ -27,3 +27,13 @@ void RiveQSGBaseNode::setRect(const QRectF &bounds)
 {
     m_rect = bounds;
 }
+
+QPointF RiveQSGBaseNode::topLeft() const
+{
+    return m_topLeftRivePosition;
+}
+
+float RiveQSGBaseNode::scaleFactor() const
+{
+    return m_scaleFactor;
+}

@@ -126,6 +126,8 @@ protected:
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+#else
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 #endif
 
     void mousePressEvent(QMouseEvent *event) override;
