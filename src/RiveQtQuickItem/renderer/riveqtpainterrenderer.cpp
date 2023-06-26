@@ -9,6 +9,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include "rqqplogging.h"
 #include "renderer/riveqtpainterrenderer.h"
 
 RiveQtPainterRenderer::RiveQtPainterRenderer()
