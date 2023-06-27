@@ -48,6 +48,6 @@ void RiveQSGBaseNode::setArtboardRect(const QRectF &bounds)
     m_topLeftRivePosition = bounds.topLeft();
     m_riveSize = bounds.size();
 
-    m_scaleFactorX = m_item->width() / m_artboardInstance->width();
-    m_scaleFactorY = m_item->height() / m_artboardInstance->height();
+    m_scaleFactorX = bounds.width() / m_artboardInstance->width();
+    m_scaleFactorY = bounds.height() / m_artboardInstance->height();
 }
