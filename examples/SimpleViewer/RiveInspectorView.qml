@@ -92,7 +92,7 @@ Item {
                     currentStateMachineIndex: 0
 
                     renderQuality: RiveQtQuickItem.Medium
-                    fillMode: RiveQtQuickItem.PreserveAspectFit
+                    fillMode: RiveQtQuickItem.Stretch
                 }
             }
         }

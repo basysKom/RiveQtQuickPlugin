@@ -511,10 +511,11 @@ QRectF RiveQtQuickItem::artboardRect()
     default:
     case RiveRenderSettings::PreserveAspectFit: {
         float scale = qMin(scaleX, scaleY);
-        float artHeight = m_currentArtboardInstance->height() * scale;
         float artWidth = m_currentArtboardInstance->width() * scale;
+        float artHeight = m_currentArtboardInstance->height() * scale;
         float offsetX = aspectA > aspectI ? 0 : (width() - artWidth) / 2;
         float offsetY = aspectI > aspectA ? 0 : (height() - artHeight) / 2;
+
         return QRectF(offsetX, offsetY, artWidth, artHeight);
     }
     case RiveRenderSettings::PreserveAspectCrop: {
