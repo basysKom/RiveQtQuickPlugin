@@ -2,18 +2,18 @@
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
-
-#include "rivequickitem.h"
-#include "rive/file.hpp"
-#include "riveqtfactory.h"
-#include "riveqtrenderer.h"
-
+#include <rive/file.hpp>
 #include <rive/node.hpp>
 #include <rive/shapes/clipping_shape.hpp>
 #include <rive/shapes/rectangle.hpp>
 #include <rive/shapes/image.hpp>
 #include <rive/assets/image_asset.hpp>
 #include <rive/animation/linear_animation_instance.hpp>
+
+#include "rqqplogging.h"
+#include "rivequickitem.h"
+#include "riveqtfactory.h"
+#include "riveqtrenderer.h"
 
 RiveQuickItem::RiveQuickItem(QQuickItem* parent)
     : QQuickPaintedItem(parent), m_artboard(nullptr)
@@ -48,7 +48,7 @@ RiveQuickItem::RiveQuickItem(QQuickItem* parent)
     QFile file(":/rive-cpp/test/assets/dependency_test.riv");
 
     if (!file.open(QIODevice::ReadOnly)) {
-        qWarning("Failed to open the file.");
+        qCWarning(rqqpItem) << "Failed to open the file.";
         return;
     }
 
@@ -61,11 +61,11 @@ RiveQuickItem::RiveQuickItem(QQuickItem* parent)
     riveFile = rive::File::import(dataSpan, &customFactory, &importResult);
     if (importResult == rive::ImportResult::success)
     {
-        qDebug("Successfully imported Rive file.");
+        qCDebug(rqqpItem) << "Successfully imported Rive file.";
     }
     else
     {
-        qDebug("Failed to import Rive file.");
+        qCDebug(rqqpItem) << "Failed to import Rive file.";
     }
 
     // Get the first Artboard
@@ -74,7 +74,7 @@ RiveQuickItem::RiveQuickItem(QQuickItem* parent)
 
     emit animationsChanged();
 
-    qDebug() << "Artboard instance valid?:" << m_artboard->instance().get();
+    qCDebug(rqqpItem) << "Artboard instance valid?:" << m_artboard->instance().get();
 
     m_artboardInstance = m_artboard->instance();
 }
@@ -100,18 +100,14 @@ QList<AnimationInfo> RiveQuickItem::animations() const
             const auto animation = m_artboard->animation(i);
             if (animation)
             {
-                qDebug() << "Animation" << i << "found.";
-
-                qDebug() << "  Duration:" << animation->duration();
-                qDebug() << "  FPS:" << animation->fps();
 
                 AnimationInfo info;
                 info.id = i;
                 info.name = QString::fromStdString(animation->name());
                 info.duration = animation->duration();
                 info.fps = animation->fps();
-
-                qDebug() << "  Name:" << info.name;
+                qCDebug(rqqpInspection) << "Animation" << i << "found." << "\tName:" << info.name << "\tDuration:" << animation->duration()
+                                        << "\tFPS:" << animation->fps();
                 animationList.append(info);
             }
         }
