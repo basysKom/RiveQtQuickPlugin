@@ -217,12 +217,16 @@ void RiveQSGRHIRenderNode::prepare()
         return;
     }
 
+    if (!m_renderer) {
+        qWarning() << "Renderer is null";
+        return;
+    }
+
     m_renderer->recycleRiveNodes();
 
     m_renderer->updateArtboardSize(QSize(m_artboardInstance->width(), m_artboardInstance->height()));
 
     { // update projection matrix
-
         QMatrix4x4 projMatrix = *projectionMatrix();
         QMatrix4x4 combinedMatrix = *projectionMatrix();
 
