@@ -422,7 +422,6 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
 
     m_lastMouseX = (pos.x() - m_renderNode->topLeft().rx()) / m_renderNode->scaleFactorX();
     m_lastMouseY = (pos.y() - m_renderNode->topLeft().ry()) / m_renderNode->scaleFactorY();
-    //    m_listenerType = type;
 
     for (int i = 0; i < m_currentStateMachineInstance->stateMachine()->listenerCount(); ++i) {
         auto *listener = m_currentStateMachineInstance->stateMachine()->listener(i);

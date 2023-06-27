@@ -28,7 +28,7 @@ public:
 
     virtual void updateArtboardInstance(rive::ArtboardInstance *artboardInstance) { m_artboardInstance = artboardInstance; }
 
-    void setArtboardRect(const QRectF &bounds);
+    virtual void setArtboardRect(const QRectF &bounds);
 
 protected:
     rive::ArtboardInstance *m_artboardInstance { nullptr };
