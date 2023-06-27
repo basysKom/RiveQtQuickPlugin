@@ -228,35 +228,37 @@ void RiveQSGRHIRenderNode::prepare()
 
     { // update projection matrix
         QMatrix4x4 projMatrix = *projectionMatrix();
-        QMatrix4x4 combinedMatrix = *projectionMatrix();
 
         const auto window2itemScaleX = m_item->window()->width() / m_item->width();
         const auto window2itemScaleY = m_item->window()->height() / m_item->height();
 
         projMatrix.scale(window2itemScaleX, window2itemScaleY);
 
-        const auto item2artboardScaleX = m_item->width() / m_artboardInstance->width();
-        const auto item2artboardScaleY = m_item->height() / m_artboardInstance->height();
+        QMatrix4x4 combinedMatrix = projMatrix;
 
         combinedMatrix.translate(m_topLeftRivePosition.x(), m_topLeftRivePosition.y());
 
+        const auto item2artboardScaleX = m_item->width() / m_artboardInstance->width();
+        const auto item2artboardScaleY = m_item->height() / m_artboardInstance->height();
+
         switch (m_fillMode) {
         case RiveRenderSettings::Stretch: {
-            combinedMatrix.scale(window2itemScaleX * item2artboardScaleX, window2itemScaleY * item2artboardScaleY);
+            combinedMatrix.scale(item2artboardScaleX, item2artboardScaleY);
             break;
         }
         case RiveRenderSettings::PreserveAspectCrop: {
             const auto scaleFactor = qMax(item2artboardScaleX, item2artboardScaleY);
-            combinedMatrix.scale(window2itemScaleX * scaleFactor, window2itemScaleY * scaleFactor);
+            combinedMatrix.scale(scaleFactor, scaleFactor);
             break;
         }
         default:
         case RiveRenderSettings::PreserveAspectFit: {
             const auto scaleFactor = qMin(item2artboardScaleX, item2artboardScaleY);
-            combinedMatrix.scale(window2itemScaleX * scaleFactor, window2itemScaleY * scaleFactor);
+            combinedMatrix.scale(scaleFactor, scaleFactor);
             break;
         }
         }
+
         m_renderer->setProjectionMatrix(&projMatrix, &combinedMatrix);
     }
 
