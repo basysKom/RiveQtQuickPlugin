@@ -12,6 +12,7 @@
 #include <rive/renderer.hpp>
 #include <rive/command_path.hpp>
 
+#include "rqqplogging.h"
 #include "renderer/riveqtutils.h"
 
 QColor RiveQtUtils::riveColorToQt(rive::ColorInt value)
@@ -111,7 +112,7 @@ void RiveQtPaint::color(rive::ColorInt value)
     m_opacity = rive::colorOpacity(value);
 
     if (!m_color.isValid()) {
-        qDebug() << "INVALID COLOR";
+        qCDebug(rqqpRendering) << "INVALID COLOR";
     }
 
     m_Brush.setColor(m_color);
@@ -152,7 +153,7 @@ void RiveQtPaint::style(rive::RenderPaintStyle value)
         m_Brush.setStyle(Qt::NoBrush);
         break;
     default:
-        qDebug() << "DEFAULT STYLE!";
+        qCDebug(rqqpRendering) << "DEFAULT STYLE!";
         m_Pen.setStyle(Qt::NoPen);
         m_Brush.setStyle(Qt::NoBrush);
         break;

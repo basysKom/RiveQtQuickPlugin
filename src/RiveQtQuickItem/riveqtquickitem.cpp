@@ -21,6 +21,7 @@
 #include <rive/animation/state_machine_listener.hpp>
 #include <rive/file.hpp>
 
+#include "rqqplogging.h"
 #include "riveqtquickitem.h"
 #include "renderer/riveqtfactory.h"
 
@@ -70,7 +71,7 @@ void RiveQtQuickItem::triggerAnimation(int id)
     }
 
     if (id < 0 || id >= m_currentArtboardInstance->animationCount()) {
-        qDebug() << "Requested animation id:" << id << "out of bounds: 0 -" << m_currentArtboardInstance->animationCount();
+        qCDebug(rqqpItem) << "Requested animation id:" << id << "out of bounds: 0 -" << m_currentArtboardInstance->animationCount();
         m_animationInstance = nullptr;
         return;
     }
@@ -99,7 +100,7 @@ void RiveQtQuickItem::updateInternalArtboard()
     }
 
     if (m_loadingStatus != Loaded) {
-        qWarning() << "Cannot update internal artboard if no rive file is loaded.";
+        qCWarning(rqqpItem) << "Cannot update internal artboard if no rive file is loaded.";
         return;
     }
 
@@ -110,7 +111,7 @@ void RiveQtQuickItem::updateInternalArtboard()
     }
 
     if (!m_currentArtboardInstance) {
-        qDebug() << "Artboard changed, but instance is null";
+        qCDebug(rqqpItem) << "Artboard changed, but instance is null";
         m_currentStateMachineInstance = nullptr;
         m_animationInstance = nullptr;
         emit internalArtboardChanged();
@@ -187,7 +188,6 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
     if (m_renderNode && m_geometryChanged) {
         m_renderNode->setRect(QRectF(x(), y(), width(), height()));
-        m_renderNode->setArtboardRect(artboardRect());
         m_geometryChanged = false;
     }
 
@@ -285,7 +285,7 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
     QQuickWindow *currentWindow = window();
 
     if (!currentWindow) {
-        qWarning() << "No window found";
+        qCWarning(rqqpItem) << "No window found";
         m_loadingStatus = Error;
         emit loadingStatusChanged();
         return;
@@ -298,7 +298,7 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
     QFile file(source);
 
     if (!file.open(QIODevice::ReadOnly)) {
-        qWarning("Failed to open the file.");
+        qCWarning(rqqpItem) << "Failed to open the file " << source;
         m_loadingStatus = Error;
         emit loadingStatusChanged();
         return;
@@ -313,7 +313,7 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
     m_riveFile = rive::File::import(dataSpan, &m_riveQtFactory, &importResult);
 
     if (importResult != rive::ImportResult::success) {
-        qDebug("Failed to import Rive file.");
+        qCDebug(rqqpItem) << "Failed to import Rive file.";
         m_loadingStatus = Error;
         emit loadingStatusChanged();
         return;
@@ -409,8 +409,8 @@ void RiveQtQuickItem::renderOffscreen()
 bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type)
 {
     if (!m_riveFile || !m_currentArtboardInstance || !m_currentStateMachineInstance) {
-        qDebug() << Q_FUNC_INFO << "File, Artboard, StateMachine is null:" << (m_riveFile == nullptr)
-                 << (m_currentArtboardInstance == nullptr) << (m_currentStateMachineInstance == nullptr);
+        qCDebug(rqqpItem) << Q_FUNC_INFO << "File, Artboard, StateMachine is null:" << (m_riveFile == nullptr)
+                          << (m_currentArtboardInstance == nullptr) << (m_currentStateMachineInstance == nullptr);
         return false;
     }
 
@@ -425,17 +425,17 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
         auto *listener = m_currentStateMachineInstance->stateMachine()->listener(i);
 
         if (!listener) {
-            qDebug() << "Listener is nullptr";
+            qCDebug(rqqpInteraction) << "Listener is nullptr";
             continue;
         }
 
         if (listener->listenerType() == rive::ListenerType::enter || listener->listenerType() == rive::ListenerType::exit) {
-            qWarning() << "Enter and Exit Actions are not yet supported";
+            qCWarning(rqqpItem) << "Enter and Exit Actions are not yet supported";
             continue;
         }
 
         if (listener->listenerType() != type) {
-            qDebug() << "Skipping listener of type" << (int)listener->listenerType() << "expected:" << (int)type;
+            qCDebug(rqqpInteraction) << "Skipping listener of type" << (int)listener->listenerType() << "expected:" << (int)type;
             continue;
         }
 
@@ -443,7 +443,7 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
             auto *coreElement = m_currentStateMachineInstance->artboard()->resolve(id);
 
             if (!coreElement->is<rive::Shape>()) {
-                qDebug() << "Skipping non shape";
+                qCDebug(rqqpInteraction) << "Skipping non shape";
                 continue;
             }
 
@@ -453,10 +453,10 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
             const bool hit = shape->hitTest(area);
 
             if (hit) {
-                qDebug() << "ID:" << listener->targetId() << "- Hit";
+                qCDebug(rqqpInteraction) << "ID:" << listener->targetId() << "- Hit";
                 listener->performChanges(m_currentStateMachineInstance.get(), rive::Vec2D(m_lastMouseX, m_lastMouseY));
             } else {
-                qDebug() << "ID:" << listener->targetId() << "- No hit";
+                qCDebug(rqqpInteraction) << "ID:" << listener->targetId() << "- No hit";
             }
         }
     }
@@ -480,17 +480,17 @@ int RiveQtQuickItem::currentArtboardIndex() const
 
 void RiveQtQuickItem::updateCurrentStateMachineIndex()
 {
-    qDebug() << Q_FUNC_INFO;
+    qCDebug(rqqpItem) << Q_FUNC_INFO;
     if (!m_currentArtboardInstance) {
-        qDebug() << "Cannot update state machine index";
+        qCDebug(rqqpItem) << "Cannot update state machine index";
         return;
     }
 
     if (m_initialStateMachineIndex == -1) {
-        qDebug() << "Setting default state machine:" << m_currentArtboardInstance->defaultStateMachineIndex();
+        qCDebug(rqqpItem) << "Setting default state machine:" << m_currentArtboardInstance->defaultStateMachineIndex();
         setCurrentStateMachineIndex(m_currentArtboardInstance->defaultStateMachineIndex());
     } else {
-        qDebug() << "Setting initial state machine:" << m_currentArtboardInstance->defaultStateMachineIndex();
+        qCDebug(rqqpItem) << "Setting initial state machine:" << m_currentArtboardInstance->defaultStateMachineIndex();
         setCurrentStateMachineIndex(m_initialStateMachineIndex);
     }
 }
@@ -531,19 +531,19 @@ QRectF RiveQtQuickItem::artboardRect()
 
 void RiveQtQuickItem::updateCurrentArtboardIndex()
 {
-    qDebug() << Q_FUNC_INFO;
+    qCDebug(rqqpItem) << Q_FUNC_INFO;
 
     if (!m_riveFile) {
         return;
     }
 
     if (m_initialArtboardIndex != -1) {
-        qDebug() << "Current artboard index will be set to initial index:" << m_initialArtboardIndex;
+        qCDebug(rqqpItem) << "Current artboard index will be set to initial index:" << m_initialArtboardIndex;
         setCurrentArtboardIndex(m_initialArtboardIndex);
         return;
     }
 
-    qDebug() << "Trying to set default artboard index";
+    qCDebug(rqqpItem) << "Trying to set default artboard index";
     const auto defaultArtboard = m_riveFile->artboardDefault();
     if (!defaultArtboard) {
         return;
@@ -553,11 +553,11 @@ void RiveQtQuickItem::updateCurrentArtboardIndex()
                                    [&defaultArtboard](const auto &info) { return info.name.toStdString() == defaultArtboard->name(); });
 
     if (info == m_artboardInfoList.constEnd()) {
-        qDebug() << "Default artboard not set. Using 0 as index";
+        qCDebug(rqqpItem) << "Default artboard not set. Using 0 as index";
         setCurrentArtboardIndex(0);
         return;
     }
-    qDebug() << "Default artboard:" << info->id;
+    qCDebug(rqqpInspection()) << "Default artboard:" << info->id;
 
     setCurrentArtboardIndex(info->id);
 }
@@ -565,15 +565,15 @@ void RiveQtQuickItem::updateCurrentArtboardIndex()
 void RiveQtQuickItem::setCurrentArtboardIndex(const int newIndex)
 {
     if (!m_riveFile) {
-        qDebug() << "Setting initial artboard index to" << newIndex;
+        qCDebug(rqqpItem) << "Setting initial artboard index to" << newIndex;
         m_initialArtboardIndex = newIndex;
         m_scheduleArtboardChange = true;
         return;
     }
 
     if (newIndex < 0 || newIndex >= m_riveFile->artboardCount()) {
-        qWarning() << "Cannot select artboard. Index" << newIndex << "out of bounds [0, " << m_riveFile->artboardCount() << "[";
-        qDebug() << "Trying to set default artboard index";
+        qCWarning(rqqpItem) << "Cannot select artboard. Index" << newIndex << "out of bounds [0, " << m_riveFile->artboardCount() << "[";
+        qCDebug(rqqpItem) << "Trying to set default artboard index";
         const auto defaultArtboard = m_riveFile->artboardDefault();
         if (!defaultArtboard) {
             return;
@@ -583,11 +583,11 @@ void RiveQtQuickItem::setCurrentArtboardIndex(const int newIndex)
                                        [&defaultArtboard](const auto &info) { return info.name.toStdString() == defaultArtboard->name(); });
 
         if (info == m_artboardInfoList.constEnd()) {
-            qDebug() << "Default artboard not set. Using 0 as index";
+            qCDebug(rqqpItem) << "Default artboard not set. Using 0 as index";
             m_currentArtboardIndex = 0;
             return;
         } else {
-            qDebug() << "Default artboard index:" << info->id;
+            qCDebug(rqqpItem) << "Default artboard index:" << info->id;
             m_currentArtboardIndex = info->id;
         }
         emit currentArtboardIndexChanged();
@@ -617,7 +617,7 @@ int RiveQtQuickItem::currentStateMachineIndex() const
 
 void RiveQtQuickItem::setCurrentStateMachineIndex(const int newCurrentStateMachineIndex)
 {
-    qDebug() << Q_FUNC_INFO;
+    qCDebug(rqqpItem) << Q_FUNC_INFO;
     if (m_currentStateMachineIndex == newCurrentStateMachineIndex) {
         return;
     }
@@ -632,8 +632,8 @@ void RiveQtQuickItem::setCurrentStateMachineIndex(const int newCurrentStateMachi
     }
 
     if (newCurrentStateMachineIndex >= m_riveFile->artboard(m_currentArtboardIndex)->stateMachineCount()) {
-        qDebug() << "Requested State Machine Index" << newCurrentStateMachineIndex << "out of bounds. Upper bound <"
-                 << m_riveFile->artboard()->stateMachineCount();
+        qCDebug(rqqpItem) << "Requested State Machine Index" << newCurrentStateMachineIndex << "out of bounds. Upper bound <"
+                          << m_riveFile->artboard()->stateMachineCount();
         return;
     }
 

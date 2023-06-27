@@ -119,7 +119,7 @@ void RiveQtPainterRenderer::drawImageMesh(const rive::RenderImage *image, rive::
                                           rive::rcp<rive::RenderBuffer> uvCoords_f32, rive::rcp<rive::RenderBuffer> indices_u16,
                                           rive::BlendMode blendMode, float opacity)
 {
-    qWarning() << "Draw image mesh is not implemented for qpainter approach";
+    qCWarning(rqqpRendering) << "Draw image mesh is not implemented for qpainter approach";
 }
 
 RiveQtPainterPath::RiveQtPainterPath(rive::RawPath &rawPath, rive::FillRule fillRule)

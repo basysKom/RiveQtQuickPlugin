@@ -29,6 +29,8 @@ set(PROJECT_SOURCES
    riveqsgsoftwarerendernode.cpp
    riveqsgrendernode.h
    riveqsgrendernode.cpp
+   rqqplogging.h
+   rqqplogging.cpp
    qmldir
    shader.qrc
 )

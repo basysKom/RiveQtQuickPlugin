@@ -75,7 +75,7 @@ void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
     const auto width = aspectRatio * bounds.height();
     //    const auto height = m_artboardInstance->defaultScene()->height();
 
-    //    qDebug() << "Dim" << item->width() << item->height() << width << height;
+    //    qCDebug(rqqpRendering) << "Dim" << item->width() << item->height() << width << height;
     m_rect = bounds;
 
     m_vertices.clear();
