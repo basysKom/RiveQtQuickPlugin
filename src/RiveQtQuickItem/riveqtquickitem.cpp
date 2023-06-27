@@ -188,6 +188,7 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
     if (m_renderNode && m_geometryChanged) {
         m_renderNode->setRect(QRectF(x(), y(), width(), height()));
+        m_renderNode->setArtboardRect(artboardRect());
         m_geometryChanged = false;
     }
 
