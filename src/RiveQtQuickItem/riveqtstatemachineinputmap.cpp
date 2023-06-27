@@ -1,4 +1,3 @@
-
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
@@ -102,8 +101,13 @@ void RiveQtStateMachineInputMap::onInputValueChanged(const QString &key, const Q
     if (!m_stateMachineInstance)
         return;
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    switch (value.typeId()) {
+    case QMetaType::Type::Bool: {
+#else
     switch (value.type()) {
     case QVariant::Type::Bool: {
+#endif
         auto *targetInput = m_stateMachineInstance->getBool(key.toStdString());
         if (!targetInput)
             return;
@@ -115,9 +119,13 @@ void RiveQtStateMachineInputMap::onInputValueChanged(const QString &key, const Q
         }
         break;
     }
-
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    case QMetaType::Type::Int:
+    case QMetaType::Type::Double: {
+#else
     case QVariant::Type::Int:
     case QVariant::Type::Double: {
+#endif
         auto *targetInput = m_stateMachineInstance->getNumber(key.toStdString());
         if (!targetInput) {
             return;
