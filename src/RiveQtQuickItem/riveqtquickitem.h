@@ -199,7 +199,6 @@ private:
     bool m_hasValidRenderNode { false };
     float m_lastMouseX { 0.f };
     float m_lastMouseY { 0.f };
-    rive::ListenerType m_listenerType { rive::ListenerType::enter };
 
     RiveQSGRenderNode *m_renderNode { nullptr };
 };
