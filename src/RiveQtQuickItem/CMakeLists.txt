@@ -137,20 +137,22 @@ set(QML_BINARY_DIR "${CMAKE_BINARY_DIR}/binary/" CACHE PATH "Binary directory fo
 # Copy the plugin and qmldir to the binary directory after building
 add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${QML_BINARY_DIR}/RiveQtQuickPlugin
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> ${QML_BINARY_DIR}/RiveQtQuickPlugin
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/qmldir ${QML_BINARY_DIR}/RiveQtQuickPlugin
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${QML_BINARY_DIR}/${PROJECT_NAME}"
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> "${QML_BINARY_DIR}/${PROJECT_NAME}"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/qmldir" "${QML_BINARY_DIR}/${PROJECT_NAME}"
     COMMENT "Copying plugin and qmldir to binary directory"
 )
 
 if (${QT_VERSION_MAJOR} EQUAL 6)
     add_custom_command(
         TARGET ${PROJECT_NAME} POST_BUILD
+        # from binary to source dir
         COMMAND ${CMAKE_COMMAND} -E copy "${QML_BINARY_DIR}/${PROJECT_NAME}/${PROJECT_NAME}.qmltypes" ${CMAKE_CURRENT_SOURCE_DIR}
     )
 elseif(${QT_VERSION_MAJOR} EQUAL 5)
     add_custom_command(
         TARGET ${PROJECT_NAME} POST_BUILD
+        # from source to binary dir
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.qmltypes" "${QML_BINARY_DIR}/${PROJECT_NAME}/${PROJECT_NAME}.qmltypes"
     )
 endif()
@@ -176,10 +178,4 @@ endif()
 #                ${QML_BINARY_DIR}
 #        )
 #    endif()
-##   Qt6 produces a more comprehensive output than qmlplugindump. We could just check in the qmltypes file from there and copy it
-##   this would also work for a debug build
-##    add_custom_command(
-##        TARGET ${PROJECT_NAME} POST_BUILD
-##        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/RiveQtQuickPlugin.qmltypes ${QML_BINARY_DIR}/RiveQtQuickPlugin
-##    )
 #endif()
