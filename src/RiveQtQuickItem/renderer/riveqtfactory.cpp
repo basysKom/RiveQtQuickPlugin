@@ -29,7 +29,6 @@ RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, rive::Artboar
         auto node = new RiveQSGRHIRenderNode(artboardInstance, item);
         node->setFillMode(m_renderSettings.fillMode);
         return node;
-        break;
     }
 #else
     case QSGRendererInterface::GraphicsApi::OpenGL:

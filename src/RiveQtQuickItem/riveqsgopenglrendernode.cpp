@@ -74,7 +74,7 @@ void RiveQSGOpenGLRenderNode::renderOpenGL(const RenderState *state)
     glEnable(GL_SCISSOR_TEST);
     glScissor(scissorX, scissorY, itemWidth, itemHeight);
 
-    //    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Clear color with alpha set to zero
+    //    glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // Clear color with alpha set to zero
     //    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     // this renders the artboard!
