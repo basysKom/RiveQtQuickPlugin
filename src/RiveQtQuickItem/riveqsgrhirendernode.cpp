@@ -118,11 +118,6 @@ void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
     markDirty(QSGNode::DirtyGeometry);
 }
 
-void RiveQSGRHIRenderNode::setFillMode(const RiveRenderSettings::FillMode fillMode)
-{
-    m_renderer->setFillMode(fillMode);
-}
-
 void RiveQSGRHIRenderNode::renderOffscreen()
 {
     if (!m_displayBuffer || m_rect.width() == 0 || m_rect.height() == 0 || !m_item)
@@ -218,17 +213,50 @@ void RiveQSGRHIRenderNode::prepare()
         }
     }
 
-    if (m_artboardInstance) {
-        m_renderer->recycleRiveNodes();
-
-        m_renderer->updateArtboardSize(QSize(m_artboardInstance->width(), m_artboardInstance->height()));
-        m_renderer->setProjectionMatrix(projectionMatrix(), matrix());
-
-        m_artboardInstance->draw(m_renderer);
-
-    } else {
+    if (!m_artboardInstance) {
         return;
     }
+
+    m_renderer->recycleRiveNodes();
+
+    m_renderer->updateArtboardSize(QSize(m_artboardInstance->width(), m_artboardInstance->height()));
+
+    { // update projection matrix
+
+        QMatrix4x4 projMatrix = *projectionMatrix();
+        QMatrix4x4 combinedMatrix = *projectionMatrix();
+
+        const auto window2itemScaleX = m_item->window()->width() / m_item->width();
+        const auto window2itemScaleY = m_item->window()->height() / m_item->height();
+
+        projMatrix.scale(window2itemScaleX, window2itemScaleY);
+
+        const auto item2artboardScaleX = m_item->width() / m_artboardInstance->width();
+        const auto item2artboardScaleY = m_item->height() / m_artboardInstance->height();
+
+        combinedMatrix.translate(m_topLeftRivePosition.x(), m_topLeftRivePosition.y());
+
+        switch (m_fillMode) {
+        case RiveRenderSettings::Stretch: {
+            combinedMatrix.scale(window2itemScaleX * item2artboardScaleX, window2itemScaleY * item2artboardScaleY);
+            break;
+        }
+        case RiveRenderSettings::PreserveAspectCrop: {
+            const auto scaleFactor = qMax(item2artboardScaleX, item2artboardScaleY);
+            combinedMatrix.scale(window2itemScaleX * scaleFactor, window2itemScaleY * scaleFactor);
+            break;
+        }
+        default:
+        case RiveRenderSettings::PreserveAspectFit: {
+            const auto scaleFactor = qMin(item2artboardScaleX, item2artboardScaleY);
+            combinedMatrix.scale(window2itemScaleX * scaleFactor, window2itemScaleY * scaleFactor);
+            break;
+        }
+        }
+        m_renderer->setProjectionMatrix(&projMatrix, &combinedMatrix);
+    }
+
+    m_artboardInstance->draw(m_renderer);
 
     if (!m_cleanUpTextureTarget) {
         QRhiColorAttachment colorAttachment(m_displayBuffer);

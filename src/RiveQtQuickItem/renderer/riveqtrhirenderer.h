@@ -96,9 +96,6 @@ class RiveQtRhiRenderer : public rive::Renderer
 public:
     RiveQtRhiRenderer(QQuickItem *item);
     virtual ~RiveQtRhiRenderer();
-
-    void setFillMode(const RiveRenderSettings::FillMode fillMode) { m_fillMode = fillMode; }
-
     void setRiveRect(const QRectF &bounds) { m_riveRect = bounds; }
 
     void save() override;
@@ -111,7 +108,7 @@ public:
                        rive::rcp<rive::RenderBuffer> uvCoords_f32, rive::rcp<rive::RenderBuffer> indices_u16, rive::BlendMode blendMode,
                        float opacity) override;
 
-    void setProjectionMatrix(const QMatrix4x4 *projectionMatrix, const QMatrix4x4 *modelMatrix);
+    void setProjectionMatrix(const QMatrix4x4 *projectionMatrix, const QMatrix4x4 *combinedMatrix);
     void updateArtboardSize(const QSize &artboardSize) { m_artboardSize = artboardSize; }
     void updateViewPort(const QRectF &viewportRect, QRhiTexture *displayBuffer);
     void recycleRiveNodes();
@@ -132,12 +129,9 @@ private:
     QRhiTexture *m_displayBuffer;
 
     QMatrix4x4 m_projectionMatrix;
-    QMatrix4x4 m_modelMatrix;
     QMatrix4x4 m_combinedMatrix;
 
     QSize m_artboardSize;
     QRectF m_viewportRect;
     QRectF m_riveRect;
-
-    RiveRenderSettings::FillMode m_fillMode;
 };

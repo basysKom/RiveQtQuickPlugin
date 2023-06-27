@@ -218,7 +218,7 @@ void RiveQtQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &o
 void RiveQtQuickItem::mousePressEvent(QMouseEvent *event)
 {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    hitTest(event->pos(), rive::ListenerType::down);
+    hitTest(event->position(), rive::ListenerType::down);
 #else
     hitTest(event->pos(), rive::ListenerType::down);
 #endif
@@ -417,8 +417,6 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
     if (!isVisible()) {
         return false;
     }
-
-    qDebug() << "Hit Test" << pos << m_renderNode->topLeft() << m_renderNode->scaleFactorX() << m_renderNode->scaleFactorY();
 
     m_lastMouseX = (pos.x() - m_renderNode->topLeft().rx()) / m_renderNode->scaleFactorX();
     m_lastMouseY = (pos.y() - m_renderNode->topLeft().ry()) / m_renderNode->scaleFactorY();

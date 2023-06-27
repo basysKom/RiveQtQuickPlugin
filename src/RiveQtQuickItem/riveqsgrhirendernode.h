@@ -17,8 +17,8 @@
 
 #include <rive/artboard.hpp>
 
-#include "riveqsgrendernode.h"
 #include "datatypes.h"
+#include "riveqsgrendernode.h"
 
 //-----------------
 class RiveQtQuickItem;
@@ -33,7 +33,7 @@ public:
 
     virtual void updateArtboardInstance(rive::ArtboardInstance *artboardInstance) override;
     void setRect(const QRectF &bounds) override;
-    void setFillMode(RiveRenderSettings::FillMode fillMode);
+    void setFillMode(const RiveRenderSettings::FillMode mode) { m_fillMode = mode; }
 
     void renderOffscreen() override;
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -69,4 +69,5 @@ protected:
     QRhiTextureRenderTarget *m_cleanUpTextureTarget { nullptr };
 
     bool m_verticesDirty = true;
+    RiveRenderSettings::FillMode m_fillMode;
 };
