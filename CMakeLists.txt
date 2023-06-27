@@ -11,7 +11,7 @@ cmake_minimum_required(VERSION 3.16)
 project(RiveQtQuickPlugin
     VERSION 0.1.0.0
     DESCRIPTION "Cross-platform rive animation renderer for Qt Quick."
-    HOMEPAGE_URL "https://github.com/jebos/RiveQtQuickPlugin"
+    HOMEPAGE_URL "https://github.com/basysKom/RiveQtQuickPlugin"
     LANGUAGES CXX
 )
 
@@ -48,7 +48,7 @@ add_subdirectory(${PLUGIN_SOURCE_DIR})
 # Build examples if enabled
 if(RQQRP_BUILD_EXAMPLES)
     set(EXAMPLES_BINARY_DIR "${CMAKE_BINARY_DIR}/binary/examples" CACHE PATH "Binary directory for examples")
-    set(PLUGIN_TARGET_PATH ${CMAKE_BINARY_DIR}/binary/RiveQtQuickPlugin/)
+    set(PLUGIN_TARGET_PATH "${CMAKE_BINARY_DIR}/binary/${PROJECT_NAME}/")
 
     add_subdirectory(examples)
 endif()
