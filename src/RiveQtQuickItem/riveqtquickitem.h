@@ -186,7 +186,7 @@ private:
     int m_currentStateMachineIndex { -1 };
     int m_initialStateMachineIndex { -1 };
 
-    RiveQtStateMachineInputMap *m_stateMachineInputMap { nullptr };
+    RiveQtStateMachineInputMap *m_stateMachineInputMap { new RiveQtStateMachineInputMap(nullptr, this) };
 
     RiveRenderSettings m_renderSettings;
 

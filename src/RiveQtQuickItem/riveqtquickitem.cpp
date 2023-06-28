@@ -81,12 +81,9 @@ void RiveQtQuickItem::triggerAnimation(int id)
 
 void RiveQtQuickItem::updateStateMachineInputMap()
 {
-    if (m_stateMachineInputMap) {
-        m_stateMachineInputMap->deleteLater();
-    }
-
     // maybe its a bit maniac and insane to push raw instance pointers around.
     // well what could go wrong. aka TODO: dont do this
+    m_stateMachineInputMap->deleteLater();
     m_stateMachineInputMap = new RiveQtStateMachineInputMap(m_currentStateMachineInstance.get(), this);
     emit stateMachineInterfaceChanged();
 }
@@ -97,6 +94,13 @@ void RiveQtQuickItem::updateInternalArtboard()
 
     if (m_currentArtboardIndex == -1 && m_initialArtboardIndex != -1) {
         setCurrentArtboardIndex(m_initialArtboardIndex);
+    }
+
+    if (m_loadingStatus == Idle && m_currentArtboardInstance) {
+        qCDebug(rqqpItem) << "Unloading artboard instance";
+        m_currentArtboardInstance = nullptr;
+        emit internalArtboardChanged();
+        return;
     }
 
     if (m_loadingStatus != Loaded) {
@@ -140,9 +144,18 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
     if (m_scheduleArtboardChange) {
         updateInternalArtboard();
+
         if (m_renderNode) {
             m_renderNode->updateArtboardInstance(m_currentArtboardInstance.get());
         }
+
+        if (!m_currentArtboardInstance) {
+            qCDebug(rqqpItem) << "No artboard loaded.";
+            m_currentStateMachineInstance = nullptr;
+            emit internalStateMachineChanged();
+            return m_renderNode;
+        }
+
         m_scheduleArtboardChange = false;
         updateCurrentStateMachineIndex();
         m_scheduleStateMachineChange = true;
@@ -278,6 +291,15 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
     emit loadingStatusChanged();
 
     if (source.isEmpty()) {
+        m_riveFile = nullptr;
+        m_scheduleArtboardChange = true;
+        m_scheduleStateMachineChange = true;
+        m_artboardInfoList.clear();
+        emit artboardsChanged();
+        m_animationList.clear();
+        emit animationsChanged();
+        m_stateMachineList.clear();
+        emit stateMachinesChanged();
         m_loadingStatus = Idle;
         emit loadingStatusChanged();
         return;
@@ -643,8 +665,6 @@ void RiveQtQuickItem::setCurrentStateMachineIndex(const int newCurrentStateMachi
     emit currentStateMachineIndexChanged();
 
     m_scheduleStateMachineChange = true; // we have to do this in the render thread.
-    m_stateMachineInputMap->deleteLater();
-    m_stateMachineInputMap = nullptr;
     emit stateMachineInterfaceChanged();
 
     update();
