@@ -13,6 +13,7 @@
 
 #include <private/qtriangulator_p.h>
 
+#include "rqqplogging.h"
 #include "renderer/riveqtopenglrenderer.h"
 #include "renderer/riveqtutils.h"
 
@@ -50,7 +51,7 @@ RiveQtOpenGLPath::RiveQtOpenGLPath(rive::RawPath &rawPath, rive::FillRule fillRu
         }
     }
 
-    generateVerticies();
+    generateVertices();
 }
 
 void RiveQtOpenGLPath::rewind()
@@ -76,6 +77,7 @@ void RiveQtOpenGLPath::fillRule(rive::FillRule value)
 void RiveQtOpenGLPath::addRenderPath(RenderPath *path, const rive::Mat2D &m)
 {
     if (!path) {
+
         return;
     }
 
@@ -84,7 +86,7 @@ void RiveQtOpenGLPath::addRenderPath(RenderPath *path, const rive::Mat2D &m)
 
     m_subPaths.emplace_back(SubPath(qtPath, matrix));
 
-    generateVerticies();
+    generateVertices();
 }
 
 QVector<QVector<QVector2D>> RiveQtOpenGLPath::toVertices() const
@@ -93,8 +95,7 @@ QVector<QVector<QVector2D>> RiveQtOpenGLPath::toVertices() const
 }
 
 // TODO: Optimize, this gets called each frame for a stroke/path
-// there will be shortcuts and cacheing possible
-//
+// there will be shortcuts and caching possible
 QVector<QVector<QVector2D>> RiveQtOpenGLPath::toVerticesLine(const QPen &pen) const
 {
     qreal lineWidth = pen.widthF();
@@ -287,22 +288,25 @@ QVector<QVector2D> RiveQtOpenGLPath::qpainterPathToVector2D(const QPainterPath &
 {
     QVector<QVector2D> pathData;
 
-    if (!path.isEmpty()) {
-        QTriangleSet triangles = qTriangulate(path);
+    if (path.isEmpty()) {
+        //        qCDebug(rqqpRendering) << "Path is empty, cannot calculate vertices";
+        return pathData;
+    }
 
-        for (int i = 0; i < triangles.indices.size(); i++) {
-            int index;
-            if (triangles.indices.type() == QVertexIndexVector::UnsignedInt) {
-                index = static_cast<const quint32 *>(triangles.indices.data())[i];
-            } else {
-                index = static_cast<const quint16 *>(triangles.indices.data())[i];
-            }
+    QTriangleSet triangles = qTriangulate(path);
 
-            qreal x = triangles.vertices[2 * index];
-            qreal y = triangles.vertices[2 * index + 1];
-
-            pathData.append(QVector2D(x, y));
+    for (int i = 0; i < triangles.indices.size(); i++) {
+        int index;
+        if (triangles.indices.type() == QVertexIndexVector::UnsignedInt) {
+            index = static_cast<const quint32 *>(triangles.indices.data())[i];
+        } else {
+            index = static_cast<const quint16 *>(triangles.indices.data())[i];
         }
+
+        qreal x = triangles.vertices[2 * index];
+        qreal y = triangles.vertices[2 * index + 1];
+
+        pathData.append(QVector2D(x, y));
     }
 
     return pathData;
@@ -312,60 +316,66 @@ QVector<QVector2D> RiveQtOpenGLPath::qpainterPathToOutlineVector2D(const QPainte
 {
     QVector<QVector2D> pathData;
 
-    if (!path.isEmpty()) {
-        QPointF point = path.elementAt(0);
-        QVector2D centerPoint = QVector2D(point.x(), point.y());
+    if (path.isEmpty()) {
+        //        qCDebug(rqqpRendering) << "Path is empty, cannot calulate outline vector";
+        return pathData;
+    }
 
-        // Add the center point of the triangle fan.
-        pathData.append(centerPoint);
+    QPointF point = path.elementAt(0);
+    QVector2D centerPoint = QVector2D(point.x(), point.y());
 
-        for (int i = 1; i < path.elementCount(); ++i) {
-            QPainterPath::Element element = path.elementAt(i);
+    // Add the center point of the triangle fan.
+    pathData.append(centerPoint);
 
-            switch (element.type) {
-            case QPainterPath::MoveToElement:
-            case QPainterPath::LineToElement: {
-                QPointF point = element;
-                pathData.append(QVector2D(point.x(), point.y()));
-                break;
-            }
+    for (int i = 1; i < path.elementCount(); ++i) {
+        QPainterPath::Element element = path.elementAt(i);
 
-            case QPainterPath::CurveToElement: {
-                QPointF startPoint = pathData.last().toPointF();
-                QPointF controlPoint1 = element;
-                QPointF controlPoint2 = path.elementAt(i + 1);
-                QPointF endPoint = path.elementAt(i + 2);
-
-                // Calculate the number of segments you want for the curve.
-                // You can change this value depending on the desired level of detail.
-                const int segments = 20;
-
-                for (int j = 1; j <= segments; ++j) {
-                    qreal t = static_cast<qreal>(j) / segments;
-                    QPointF point = cubicBezier(startPoint, controlPoint1, controlPoint2, endPoint, t);
-                    pathData.append(QVector2D(point.x(), point.y()));
-                }
-
-                i += 2; // Skip the next two control points, as we already processed them.
-                break;
-            }
-            default:
-                break;
-            }
+        switch (element.type) {
+        case QPainterPath::MoveToElement:
+        case QPainterPath::LineToElement: {
+            QPointF point = element;
+            pathData.append(QVector2D(point.x(), point.y()));
+            break;
         }
 
-        if (m_isClosed) {
-            // Connect the last point to the first point.
-            pathData.append(QVector2D(point.x(), point.y()));
+        case QPainterPath::CurveToElement: {
+            QPointF startPoint = pathData.last().toPointF();
+            QPointF controlPoint1 = element;
+            QPointF controlPoint2 = path.elementAt(i + 1);
+            QPointF endPoint = path.elementAt(i + 2);
+
+            // Calculate the number of segments you want for the curve.
+            // You can change this value depending on the desired level of detail.
+            const int segments = 20;
+
+            for (int j = 1; j <= segments; ++j) {
+                qreal t = static_cast<qreal>(j) / segments;
+                QPointF point = cubicBezier(startPoint, controlPoint1, controlPoint2, endPoint, t);
+                pathData.append(QVector2D(point.x(), point.y()));
+            }
+
+            i += 2; // Skip the next two control points, as we already processed them.
+            break;
+        }
+        default:
+            break;
         }
     }
+
+    if (m_isClosed) {
+        // Connect the last point to the first point.
+        pathData.append(QVector2D(point.x(), point.y()));
+    }
+
     return pathData;
 }
 
-void RiveQtOpenGLPath::generateVerticies()
+void RiveQtOpenGLPath::generateVertices()
 {
-    if (m_path.isEmpty() && m_subPaths.empty())
+    if (m_path.isEmpty() && m_subPaths.empty()) {
+        qCDebug(rqqpRendering) << "Current path and sub paths are empty, cannot generate vertices.";
         return;
+    }
 
     m_pathSegmentsData.clear();
     m_pathSegmentsOutlineData.clear();
@@ -600,7 +610,7 @@ void RiveQtOpenGLRenderer::composeFinalImage(rive::BlendMode blendMode)
         m_blendShaderProgram->setUniformValue("u_blendTexture", 0);
         m_blendShaderProgram->setUniformValue("u_displayTexture", 1);
         m_blendShaderProgram->setUniformValue("u_blendMode", static_cast<int>(blendMode));
-        m_blendShaderProgram->setUniformValue("u_projection", m_projMatrix);
+        m_blendShaderProgram->setUniformValue("u_projection", m_projectionMatrix);
         m_blendShaderProgram->setUniformValue("u_applyTranform", false);
 
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -636,7 +646,7 @@ void RiveQtOpenGLRenderer::composeFinalImage(rive::BlendMode blendMode)
 
     m_blendShaderProgram->setUniformValue("u_displayTexture", 0);
     m_blendShaderProgram->setUniformValue("u_blendMode", 0);
-    m_blendShaderProgram->setUniformValue("u_projection", m_projMatrix);
+    m_blendShaderProgram->setUniformValue("u_projection", m_projectionMatrix);
     m_blendShaderProgram->setUniformValue("u_applyTranform", true);
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -694,7 +704,12 @@ void RiveQtOpenGLRenderer::configureGradientShader(const QGradient *gradient)
 
 void RiveQtOpenGLRenderer::drawPath(rive::RenderPath *path, rive::RenderPaint *paint)
 {
-    if (!path || !paint) {
+    if (!path) {
+        qCDebug(rqqpRendering) << "Cannot draw path that is nullptr.";
+        return;
+    }
+    if (!paint) {
+        qCDebug(rqqpRendering) << "Cannot draw path, paint is empty.";
         return;
     }
 
@@ -792,7 +807,7 @@ void RiveQtOpenGLRenderer::drawPath(rive::RenderPath *path, rive::RenderPaint *p
             // Gradient code ends here
 
             m_pathShaderProgram->setUniformValue("u_viewportDimensions", QVector2D(m_viewportWidth, m_viewportHeight));
-            m_pathShaderProgram->setUniformValue("u_projection", m_projMatrix);
+            m_pathShaderProgram->setUniformValue("u_projection", m_projectionMatrix);
             m_pathShaderProgram->setUniformValue("u_transform", transform());
             m_pathShaderProgram->setAttributeBuffer(posAttr, GL_FLOAT, 0, 2, 0);
 
@@ -856,7 +871,7 @@ void RiveQtOpenGLRenderer::clipPath(rive::RenderPath *path)
 
         // Set the viewport dimensions
         m_pathShaderProgram->setUniformValue("u_viewportDimensions", QVector2D(m_viewportWidth, m_viewportHeight));
-        m_pathShaderProgram->setUniformValue("u_projection", m_projMatrix);
+        m_pathShaderProgram->setUniformValue("u_projection", m_projectionMatrix);
         m_pathShaderProgram->setUniformValue("u_transform", transform());
 
         // Set up the vertex attribute pointer for the position
@@ -920,7 +935,7 @@ void RiveQtOpenGLRenderer::drawImage(const rive::RenderImage *image, rive::Blend
     m_imageShaderProgram->bind();
 
     m_imageShaderProgram->setUniformValue("u_texture", 0);
-    m_imageShaderProgram->setUniformValue("u_projection", m_projMatrix);
+    m_imageShaderProgram->setUniformValue("u_projection", m_projectionMatrix);
     m_imageShaderProgram->setUniformValue("u_transform", transform());
     m_imageShaderProgram->setUniformValue("u_model", modelMatrix());
     m_imageShaderProgram->setUniformValue("u_opacity", opacity);
@@ -967,7 +982,7 @@ void RiveQtOpenGLRenderer::drawImageMesh(const rive::RenderImage *image, rive::r
     m_imageMeshShaderProgram->bind();
 
     m_imageMeshShaderProgram->setUniformValue("u_texture", 0);
-    m_imageMeshShaderProgram->setUniformValue("u_projection", m_projMatrix);
+    m_imageMeshShaderProgram->setUniformValue("u_projection", m_projectionMatrix);
     m_imageMeshShaderProgram->setUniformValue("u_transform", transform());
     m_imageMeshShaderProgram->setUniformValue("u_model", modelMatrix());
     m_imageMeshShaderProgram->setUniformValue("u_opacity", opacity);
@@ -991,7 +1006,7 @@ void RiveQtOpenGLRenderer::updateModelMatrix(const QMatrix4x4 &modelMatrix)
 
 void RiveQtOpenGLRenderer::updateProjectionMatrix(const QMatrix4x4 &projMatrix)
 {
-    m_projMatrix = projMatrix;
+    m_projectionMatrix = projMatrix;
 }
 
 void RiveQtOpenGLRenderer::updateViewportSize()

@@ -93,6 +93,7 @@ void RiveQtPainterRenderer::drawImage(const rive::RenderImage *image, rive::Blen
     // Assuming you have a method to convert rive::RenderImage* to QImage
     const QImage qtImage = convertRiveImageToQImage(image);
     if (qtImage.isNull()) {
+        qCDebug(rqqpRendering) << "Converting rive image to QImage failed. Image is null.";
         return;
     }
 

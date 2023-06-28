@@ -49,7 +49,7 @@ private:
     QVector<QVector2D> qpainterPathToOutlineVector2D(const QPainterPath &path);
     QPointF cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2, const QPointF &endPoint,
                         qreal t);
-    void generateVerticies();
+    void generateVertices();
 
     QPainterPath m_path;
     std::vector<SubPath> m_subPaths;
@@ -122,8 +122,8 @@ private:
     QOpenGLBuffer m_meshVertexBuffer;
     QOpenGLBuffer m_meshUvBuffer;
     QOpenGLBuffer m_meshIndexBuffer;
-
-    QMatrix4x4 m_projMatrix;
+    
+    QMatrix4x4 m_projectionMatrix;
     // QMatrix4x4 m_modelMatrix the modelMatrix is stored as base of our renderState!
 
     qreal m_width { 0 };
