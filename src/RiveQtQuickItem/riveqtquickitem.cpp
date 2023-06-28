@@ -342,7 +342,7 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
     m_scheduleArtboardChange = true;
     m_scheduleStateMachineChange = true;
 
-    qDebug("Successfully imported Rive file.");
+    qCDebug(rqqpItem) << "Successfully imported Rive file.";
     m_loadingStatus = Loaded;
     emit loadingStatusChanged();
 }
@@ -368,8 +368,8 @@ void RiveQtQuickItem::updateAnimations()
         info.duration = animation->duration();
         info.fps = animation->fps();
 
-        qDebug() << "Animation" << i << "found.\tDuration:" << animation->duration() << "\tFPS:" << animation->fps()
-                 << "\tName:" << info.name;
+        qCDebug(rqqpInspection) << "Animation" << i << "found.\tDuration:" << animation->duration() << "\tFPS:" << animation->fps()
+                                << "\tName:" << info.name;
 
         m_animationList.append(info);
     }
@@ -602,7 +602,7 @@ void RiveQtQuickItem::setCurrentArtboardIndex(const int newIndex)
         return;
     }
 
-    qDebug() << "Setting current artboard index to" << newIndex;
+    qCDebug(rqqpItem) << "Setting current artboard index to" << newIndex;
     m_currentArtboardIndex = newIndex;
     emit currentArtboardIndexChanged();
 
