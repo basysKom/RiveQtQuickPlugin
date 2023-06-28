@@ -76,7 +76,6 @@ ApplicationWindow {
                         delegate: Button {
                             text: modelData
                             onClicked: {
-                                console.log("clicked", modelData)
                                 dropView.fileSource = ":/rive/" + modelData
                             }
                         }
