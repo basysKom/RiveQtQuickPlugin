@@ -14,6 +14,7 @@
 
 #include <private/qtriangulator_p.h>
 
+#include "rqqplogging.h"
 #include "renderer/riveqtrhirenderer.h"
 #include "rhi/texturetargetnode.h"
 
@@ -87,6 +88,7 @@ void RiveQtRhiGLPath::fillRule(rive::FillRule value)
 void RiveQtRhiGLPath::addRenderPath(RenderPath *path, const rive::Mat2D &m)
 {
     if (!path) {
+        qCDebug(rqqpRendering) << "Skip adding nullptr render path.";
         return;
     }
 
@@ -110,11 +112,14 @@ void RiveQtRhiGLPath::setQPainterPath(QPainterPath path)
 void RiveQtRhiGLPath::setSegmentCount(const unsigned segmentCount)
 {
     if (segmentCount == 0u) {
+        qCDebug(rqqpRendering) << "Segment count cannot be 0. Using 1 instead.";
         m_segmentCount = 1u;
-        return;
+    } else if (segmentCount > 100u) {
+        qCDebug(rqqpRendering) << "Segment count is limited to 100 to avoid exceedingly long rendertime.";
+        m_segmentCount = 100u;
+    } else {
+        m_segmentCount = segmentCount;
     }
-
-    m_segmentCount = std::min(segmentCount, 100u);
 }
 
 QVector<QVector<QVector2D>> RiveQtRhiGLPath::toVertices()
@@ -136,21 +141,17 @@ QVector<QVector<QVector2D>> RiveQtRhiGLPath::toVerticesLine(const QPen &pen)
     m_pathOutlineData.clear();
 
     if (m_pathSegmentsOutlineData.isEmpty()) {
-        return m_pathOutlineData;
-    }
-
-    qreal lineWidth = pen.widthF();
-
-    Qt::PenJoinStyle joinType = pen.joinStyle();
-    Qt::PenCapStyle capStyle = pen.capStyle();
-
-    if (m_pathSegmentsOutlineData.isEmpty()) {
         generateVertices();
 
         if (m_pathSegmentsOutlineData.isEmpty()) {
             return m_pathOutlineData;
         }
     }
+
+    qreal lineWidth = pen.widthF();
+
+    Qt::PenJoinStyle joinType = pen.joinStyle();
+    Qt::PenCapStyle capStyle = pen.capStyle();
 
     for (QVector<QVector2D> pathData : m_pathSegmentsOutlineData) {
         if (pathData.size() <= 1) {
@@ -303,6 +304,7 @@ QVector<QVector<QVector2D>> RiveQtRhiGLPath::toVerticesLine(const QPen &pen)
                     // add both while this shouldn't end here since we handle all known rive cases
                     // SvgMiterJoin = 0x100,
                     // MPenJoinStyle = 0x1c0
+                    qCDebug(rqqpRendering) << "Unknown join type is handled using defaults. This should not happen.";
                     addMiterJoin(p1, p2, offset);
                     addRoundJoin(p1, p2, offset, 20);
                 }
@@ -452,7 +454,6 @@ void RiveQtRhiGLPath::generateVertices()
     }
 
     m_pathSegmentsData.clear();
-
     m_pathSegmentsData.append(qpainterPathToVector2D(m_path));
 
     for (RhiSubPath &RhiSubPath : m_subPaths) {
@@ -526,7 +527,12 @@ void RiveQtRhiRenderer::transform(const rive::Mat2D &transform)
 
 void RiveQtRhiRenderer::drawPath(rive::RenderPath *path, rive::RenderPaint *paint)
 {
-    if (!path || !paint) {
+    if (!path) {
+        qCDebug(rqqpRendering) << "Cannot draw path that is nullptr.";
+        return;
+    }
+    if (!paint) {
+        qCDebug(rqqpRendering) << "Cannot draw path, paint is empty.";
         return;
     }
 
@@ -562,13 +568,14 @@ void RiveQtRhiRenderer::drawPath(rive::RenderPath *path, rive::RenderPaint *pain
     }
 
 #if 0 // this allows to draw the clipping area which it useful for debugging :)
-  TextureTargetNode *drawClipping = getRiveDrawTargetNode();
-  drawClipping->setOpacity(currentOpacity()); // inherit the opacity from the parent
-  drawClipping->setColor(QColor(255, 0, 0, 5));
-  drawClipping->updateGeometry(m_rhiRenderStack.back().clippingGeometry, QMatrix4x4());
+    TextureTargetNode *drawClipping = getRiveDrawTargetNode();
+    drawClipping->setOpacity(currentOpacity()); // inherit the opacity from the parent
+    drawClipping->setColor(QColor(255, 0, 0, 5));
+    drawClipping->updateGeometry(m_rhiRenderStack.back().clippingGeometry, QMatrix4x4());
 #endif
 
     node->updateClippingGeometry(m_rhiRenderStack.back().clippingGeometry);
+
     node->updateGeometry(pathData, transformMatrix());
 
     m_rhiRenderStack.back().stackNodes.append(node);
