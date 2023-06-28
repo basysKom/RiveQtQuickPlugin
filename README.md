@@ -87,6 +87,15 @@ RiveQtQuickItem {
 
 ```
 
+## Logging
+
+There are 4 logging categories, so it is easy to filter relevant output:
+
+- **rqqpItem:** Logs related to the RiveQtQuickItem, like file loading, properties, etc.
+- **rqqpRendering:** Logs related to rendering and the rendering classes
+- **rqqpInspection:** Logs related to the content of the rive file like artboards, animations, statemachine info.
+- **rqqpInteraction:** Logs related to user interaction with the item and rive content
+
 ### Example Project
 
 Check out the "example" folder in this repository for a complete example project demonstrating how to use the `RiveQtQuickPlugin`.
