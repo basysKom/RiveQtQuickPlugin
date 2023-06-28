@@ -6,6 +6,7 @@
 
 #include <QQuickWindow>
 
+#include "rqqplogging.h"
 #include "riveqsgopenglrendernode.h"
 #include "riveqtquickitem.h"
 
@@ -18,9 +19,14 @@ void RiveQSGOpenGLRenderNode::updateArtboardInstance(rive::ArtboardInstance *art
 void RiveQSGOpenGLRenderNode::setArtboardRect(const QRectF &bounds)
 {
     RiveQSGBaseNode::setArtboardRect(bounds);
-
     m_scaleFactorX *= m_item->window()->devicePixelRatio();
     m_scaleFactorY *= m_item->window()->devicePixelRatio();
+}
+
+void RiveQSGOpenGLRenderNode::setRect(const QRectF &bounds)
+{
+    qCDebug(rqqpRendering) << "Bounds" << bounds;
+    RiveQSGBaseNode::setRect(bounds);
 }
 
 RiveQSGOpenGLRenderNode::RiveQSGOpenGLRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
@@ -38,8 +44,6 @@ void RiveQSGOpenGLRenderNode::render(const RenderState *state)
 void RiveQSGOpenGLRenderNode::renderOpenGL(const RenderState *state)
 {
     if (!m_artboardInstance) {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         return;
     }
 
@@ -54,6 +58,8 @@ void RiveQSGOpenGLRenderNode::renderOpenGL(const RenderState *state)
     modelMatrix.translate(globalPos.x(), globalPos.y());
     modelMatrix.translate(m_topLeftRivePosition.x(), m_topLeftRivePosition.y());
     modelMatrix.scale(m_scaleFactorX, m_scaleFactorY);
+
+    m_renderer.reset();
 
     m_renderer.updateViewportSize();
     m_renderer.updateModelMatrix(modelMatrix);
@@ -74,13 +80,10 @@ void RiveQSGOpenGLRenderNode::renderOpenGL(const RenderState *state)
     glEnable(GL_SCISSOR_TEST);
     glScissor(scissorX, scissorY, itemWidth, itemHeight);
 
-    //    glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // Clear color with alpha set to zero
-    //    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    // this renders the artboard!
-    m_artboardInstance->draw(&m_renderer);
-    glDisable(GL_SCISSOR_TEST);
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    //    // this renders the artboard!
+    m_artboardInstance->draw(&m_renderer);
+    glDisable(GL_SCISSOR_TEST);
 }

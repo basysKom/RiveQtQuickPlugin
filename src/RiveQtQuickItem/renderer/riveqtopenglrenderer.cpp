@@ -503,20 +503,24 @@ void RiveQtOpenGLRenderer::initGL()
 
 void RiveQtOpenGLRenderer::reset()
 {
-    m_displayFramebuffer->bind();
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // Clear color with alpha set to zero
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    m_displayFramebuffer->release();
-
-    m_alphaMaskFramebuffer->bind();
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // Clear color with alpha set to zero
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    m_alphaMaskFramebuffer->release();
-
-    m_blendFramebuffer->bind();
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // Clear color with alpha set to zero
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    m_blendFramebuffer->release();
+    if (m_displayFramebuffer) {
+        m_displayFramebuffer->bind();
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // Clear color with alpha set to zero
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        m_displayFramebuffer->release();
+    }
+    if (m_alphaMaskFramebuffer) {
+        m_alphaMaskFramebuffer->bind();
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // Clear color with alpha set to zero
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        m_alphaMaskFramebuffer->release();
+    }
+    if (m_blendFramebuffer) {
+        m_blendFramebuffer->bind();
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // Clear color with alpha set to zero
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        m_blendFramebuffer->release();
+    }
 }
 
 void RiveQtOpenGLRenderer::save()
