@@ -77,7 +77,6 @@ void RiveQtOpenGLPath::fillRule(rive::FillRule value)
 void RiveQtOpenGLPath::addRenderPath(RenderPath *path, const rive::Mat2D &m)
 {
     if (!path) {
-
         return;
     }
 
