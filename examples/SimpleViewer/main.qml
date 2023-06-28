@@ -27,7 +27,8 @@ ApplicationWindow {
     }
 
     Rectangle {
-        anchors.bottom: bar.bottom
+        id: separator
+        anchors.top: bar.bottom
         anchors.left: parent.left
         anchors.right: parent.right
 
@@ -37,7 +38,7 @@ ApplicationWindow {
     }
 
     StackLayout {
-        anchors.top: bar.bottom
+        anchors.top: separator.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
@@ -139,6 +140,7 @@ ApplicationWindow {
                         when: riveItem.currentStateMachineIndex !== null
                     }
                 }
+
                 Slider {
                     id: slider
 
