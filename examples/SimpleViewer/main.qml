@@ -72,11 +72,14 @@ ApplicationWindow {
 
                     Repeater {
                         id: buttonRepeater
-                        model: ["bullet_man.riv", "jellyfish.riv", "icon_set.riv", "juice.riv", "water-bar-demo.riv"]
+                        model: ["bullet_man.riv", "jellyfish.riv", "icon_set.riv", "juice.riv", "water-bar-demo.riv", "Clear"]
                         delegate: Button {
                             text: modelData
                             onClicked: {
-                                dropView.fileSource = ":/rive/" + modelData
+                                if (modelData === "Clear")
+                                    dropView.fileSource = ""
+                                else
+                                    dropView.fileSource = ":/rive/" + modelData
                             }
                         }
                     }
