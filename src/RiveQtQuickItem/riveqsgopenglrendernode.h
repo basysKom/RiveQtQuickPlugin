@@ -28,6 +28,7 @@ public:
     virtual void updateArtboardInstance(rive::ArtboardInstance *artboardInstance) override;
 
     void setArtboardRect(const QRectF &bounds) override;
+    void setRect(const QRectF &bounds) override;
 
 protected:
     void renderOpenGL(const RenderState *state);
