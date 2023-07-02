@@ -310,6 +310,7 @@ void TextureTargetNode::prepareRender(QRhiCommandBuffer *cb)
             blend.enable = true;
             blend.srcColor = QRhiGraphicsPipeline::SrcAlpha;
             blend.dstColor = QRhiGraphicsPipeline::OneMinusSrcAlpha;
+
             blend.srcAlpha = QRhiGraphicsPipeline::One;
             blend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
             m_drawPipeLine->setTargetBlends({ blend });
@@ -537,165 +538,167 @@ void TextureTargetNode::render(QRhiCommandBuffer *commandBuffer)
     renderBlend(commandBuffer);
 }
 
-void TextureTargetNode::renderBlend(QRhiCommandBuffer *cb)
+void TextureTargetNode::renderBlend(QRhiCommandBuffer *commandBuffer)
 {
-    Q_ASSERT(cb);
+    Q_ASSERT(commandBuffer);
 
     QSGRendererInterface *renderInterface = m_window->rendererInterface();
     QRhi *rhi = static_cast<QRhi *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiResource));
     Q_ASSERT(rhi);
 
-    if (m_shaderBlending) {
-        m_blendResourceUpdates = rhi->nextResourceUpdateBatch();
-
-        if (m_blendVerticesDirty) {
-            if (m_blendVertexBuffer) {
-                delete m_blendVertexBuffer;
-                m_blendVertexBuffer = nullptr;
-            }
-            m_blendVerticesDirty = false;
-        }
-
-        if (!m_blendSrc) {
-            m_blendSrc = rhi->newTexture(QRhiTexture::RGBA8, QSize(m_bounds.width(), m_bounds.height()), 1,
-                                         QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource);
-            m_blendSrc->create();
-            m_cleanupList.append(m_blendSrc);
-        }
-        m_blendResourceUpdates->copyTexture(m_blendSrc, m_displayBuffer);
-
-        if (!m_blendDest) {
-            m_blendDest = rhi->newTexture(QRhiTexture::RGBA8, QSize(m_bounds.width(), m_bounds.height()), 1,
-                                          QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource);
-            m_blendDest->create();
-            m_cleanupList.append(m_blendDest);
-        }
-
-        if (m_blendDest && m_internalDisplayBufferTexture) {
-            m_blendResourceUpdates->copyTexture(m_blendDest, m_internalDisplayBufferTexture);
-        }
-
-        if (!m_blendTextureRenderTarget) {
-            QRhiColorAttachment colorAttachment(m_displayBuffer);
-
-            QRhiTextureRenderTargetDescription desc(colorAttachment);
-            // desc.setDepthStencilBuffer(m_stencilClippingBuffer);
-            m_blendTextureRenderTarget = rhi->newTextureRenderTarget(desc);
-
-            m_cleanupList.append(m_blendTextureRenderTarget);
-            m_blendTextureRenderTarget->create();
-        }
-
-        if (!m_blendRenderDescriptor) {
-            m_blendRenderDescriptor = m_blendTextureRenderTarget->newCompatibleRenderPassDescriptor();
-            m_blendTextureRenderTarget->setRenderPassDescriptor(m_blendRenderDescriptor);
-            m_cleanupList.append(m_blendRenderDescriptor);
-        }
-
-        if (!m_blendVertexBuffer) {
-            int blendVertexCount = m_blendVertices.count();
-
-            int blendPositionBufferSize = blendVertexCount * sizeof(QVector2D);
-            m_blendVertexBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, blendPositionBufferSize);
-            m_cleanupList.append(m_blendVertexBuffer);
-            m_blendVertexBuffer->create();
-
-            QByteArray blendPositionData;
-            blendPositionData.resize(blendPositionBufferSize);
-            memcpy(blendPositionData.data(), m_blendVertices.constData(), blendPositionBufferSize);
-            m_blendResourceUpdates->uploadStaticBuffer(m_blendVertexBuffer, blendPositionData);
-
-            int blendTexCoordBufferSize = blendVertexCount * sizeof(QVector2D);
-            m_blendTexCoordBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, blendTexCoordBufferSize);
-            m_cleanupList.append(m_blendTexCoordBuffer);
-            m_blendTexCoordBuffer->create();
-
-            QByteArray blendTexCoordData;
-            blendTexCoordData.resize(blendTexCoordBufferSize);
-            memcpy(blendTexCoordData.data(), m_blendTexCoords.constData(), blendTexCoordBufferSize);
-            m_blendResourceUpdates->uploadStaticBuffer(m_blendTexCoordBuffer, blendTexCoordData);
-        }
-
-        if (!m_blendSampler) {
-            m_blendSampler = rhi->newSampler(QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None, QRhiSampler::ClampToEdge,
-                                             QRhiSampler::ClampToEdge);
-            m_cleanupList.append(m_blendSampler);
-            m_blendSampler->create();
-        }
-
-        if (!m_blendUniformBuffer) {
-            m_blendUniformBuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 80);
-            m_cleanupList.append(m_blendUniformBuffer);
-            m_blendUniformBuffer->create();
-        }
-
-        if (!m_blendResourceBindings) {
-            m_blendResourceBindings = rhi->newShaderResourceBindings();
-            m_blendResourceBindings->setBindings({
-                QRhiShaderResourceBinding::uniformBuffer(
-                    0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, m_blendUniformBuffer),
-                QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_blendSrc, m_blendSampler),
-                QRhiShaderResourceBinding::sampledTexture(2, QRhiShaderResourceBinding::FragmentStage, m_blendDest, m_blendSampler),
-            });
-
-            m_blendResourceBindings->create();
-            m_cleanupList.append(m_blendResourceBindings);
-        }
-
-        if (!m_blendPipeLine) {
-            m_blendPipeLine = rhi->newGraphicsPipeline();
-            m_cleanupList.append(m_blendPipeLine);
-            //
-            // If layer.enabled == true on our QQuickItem, the rendering face is flipped for
-            // backends with isYUpInFrameBuffer == true (OpenGL). This does not happen with
-            // RHI backends with isYUpInFrameBuffer == false. We swap the triangle winding
-            // order to work around this.
-            //
-            m_blendPipeLine->setFrontFace(rhi->isYUpInFramebuffer() ? QRhiGraphicsPipeline::CW : QRhiGraphicsPipeline::CCW);
-            m_blendPipeLine->setCullMode(QRhiGraphicsPipeline::None);
-            m_blendPipeLine->setTopology(QRhiGraphicsPipeline::TriangleStrip);
-
-            m_blendPipeLine->setStencilTest(false);
-            m_blendPipeLine->setShaderResourceBindings(m_blendResourceBindings);
-            m_blendPipeLine->setShaderStages(m_blendShaders.cbegin(), m_blendShaders.cend());
-
-            QRhiVertexInputLayout inputLayout;
-            inputLayout.setBindings({
-                { sizeof(QVector2D) },
-                { sizeof(QVector2D) },
-            });
-            inputLayout.setAttributes({
-                { 0, 0, QRhiVertexInputAttribute::Float2, 0 }, // Position1
-                { 1, 1, QRhiVertexInputAttribute::Float2, 0 } // Texture coordinate
-            });
-
-            m_blendPipeLine->setVertexInputLayout(inputLayout);
-            m_blendPipeLine->setRenderPassDescriptor(m_blendRenderDescriptor);
-
-            m_blendPipeLine->create();
-        }
-
-        if (m_shaderBlending) {
-            QMatrix4x4 mvp = (*m_projectionMatrix);
-            mvp.translate(-m_bounds.x(), -m_bounds.y());
-            int flipped = rhi->isYUpInFramebuffer() ? 1 : 0;
-            m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 0, 64, mvp.constData());
-            m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 64, 4, &m_blendMode);
-            m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 68, 4, &flipped);
-        }
-
-        cb->beginPass(m_blendTextureRenderTarget, QColor(0, 0, 0, 0), { 1.0f, 0 }, m_blendResourceUpdates);
-        QSize blendRenderTargetSize = m_blendTextureRenderTarget->pixelSize();
-
-        cb->setGraphicsPipeline(m_blendPipeLine);
-        cb->setViewport(QRhiViewport(0, 0, blendRenderTargetSize.width(), blendRenderTargetSize.height()));
-        cb->setShaderResources(m_blendResourceBindings);
-        QRhiCommandBuffer::VertexInput blendVertexBindings[] = { { m_blendVertexBuffer, 0 }, { m_blendTexCoordBuffer, 0 } };
-        cb->setVertexInput(0, 2, blendVertexBindings);
-
-        cb->draw(m_blendVertices.count());
-        cb->endPass();
+    if (!m_shaderBlending) {
+        return;
     }
+
+    m_blendResourceUpdates = rhi->nextResourceUpdateBatch();
+
+    if (m_blendVerticesDirty) {
+        if (m_blendVertexBuffer) {
+            delete m_blendVertexBuffer;
+            m_blendVertexBuffer = nullptr;
+        }
+        m_blendVerticesDirty = false;
+    }
+
+    if (!m_blendSrc) {
+        m_blendSrc = rhi->newTexture(QRhiTexture::RGBA8, QSize(m_bounds.width(), m_bounds.height()), 1,
+                                     QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource);
+        m_blendSrc->create();
+        m_cleanupList.append(m_blendSrc);
+    }
+    m_blendResourceUpdates->copyTexture(m_blendSrc, m_displayBuffer);
+
+    if (!m_blendDest) {
+        m_blendDest = rhi->newTexture(QRhiTexture::RGBA8, QSize(m_bounds.width(), m_bounds.height()), 1,
+                                      QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource);
+        m_blendDest->create();
+        m_cleanupList.append(m_blendDest);
+    }
+
+    if (m_blendDest && m_internalDisplayBufferTexture) {
+        m_blendResourceUpdates->copyTexture(m_blendDest, m_internalDisplayBufferTexture);
+    }
+
+    if (!m_blendTextureRenderTarget) {
+        QRhiColorAttachment colorAttachment(m_displayBuffer);
+
+        QRhiTextureRenderTargetDescription desc(colorAttachment);
+        // desc.setDepthStencilBuffer(m_stencilClippingBuffer);
+        m_blendTextureRenderTarget = rhi->newTextureRenderTarget(desc);
+
+        m_cleanupList.append(m_blendTextureRenderTarget);
+        m_blendTextureRenderTarget->create();
+    }
+
+    if (!m_blendRenderDescriptor) {
+        m_blendRenderDescriptor = m_blendTextureRenderTarget->newCompatibleRenderPassDescriptor();
+        m_blendTextureRenderTarget->setRenderPassDescriptor(m_blendRenderDescriptor);
+        m_cleanupList.append(m_blendRenderDescriptor);
+    }
+
+    if (!m_blendVertexBuffer) {
+        int blendVertexCount = m_blendVertices.count();
+
+        int blendPositionBufferSize = blendVertexCount * sizeof(QVector2D);
+        m_blendVertexBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, blendPositionBufferSize);
+        m_cleanupList.append(m_blendVertexBuffer);
+        m_blendVertexBuffer->create();
+
+        QByteArray blendPositionData;
+        blendPositionData.resize(blendPositionBufferSize);
+        memcpy(blendPositionData.data(), m_blendVertices.constData(), blendPositionBufferSize);
+        m_blendResourceUpdates->uploadStaticBuffer(m_blendVertexBuffer, blendPositionData);
+
+        int blendTexCoordBufferSize = blendVertexCount * sizeof(QVector2D);
+        m_blendTexCoordBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, blendTexCoordBufferSize);
+        m_cleanupList.append(m_blendTexCoordBuffer);
+        m_blendTexCoordBuffer->create();
+
+        QByteArray blendTexCoordData;
+        blendTexCoordData.resize(blendTexCoordBufferSize);
+        memcpy(blendTexCoordData.data(), m_blendTexCoords.constData(), blendTexCoordBufferSize);
+        m_blendResourceUpdates->uploadStaticBuffer(m_blendTexCoordBuffer, blendTexCoordData);
+    }
+
+    if (!m_blendSampler) {
+        m_blendSampler = rhi->newSampler(QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None, QRhiSampler::ClampToEdge,
+                                         QRhiSampler::ClampToEdge);
+        m_cleanupList.append(m_blendSampler);
+        m_blendSampler->create();
+    }
+
+    if (!m_blendUniformBuffer) {
+        m_blendUniformBuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 80);
+        m_cleanupList.append(m_blendUniformBuffer);
+        m_blendUniformBuffer->create();
+    }
+
+    if (!m_blendResourceBindings) {
+        m_blendResourceBindings = rhi->newShaderResourceBindings();
+        m_blendResourceBindings->setBindings({
+            QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
+                                                     m_blendUniformBuffer),
+            QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_blendSrc, m_blendSampler),
+            QRhiShaderResourceBinding::sampledTexture(2, QRhiShaderResourceBinding::FragmentStage, m_blendDest, m_blendSampler),
+        });
+
+        m_blendResourceBindings->create();
+        m_cleanupList.append(m_blendResourceBindings);
+    }
+
+    if (!m_blendPipeLine) {
+        m_blendPipeLine = rhi->newGraphicsPipeline();
+        m_cleanupList.append(m_blendPipeLine);
+        //
+        // If layer.enabled == true on our QQuickItem, the rendering face is flipped for
+        // backends with isYUpInFrameBuffer == true (OpenGL). This does not happen with
+        // RHI backends with isYUpInFrameBuffer == false. We swap the triangle winding
+        // order to work around this.
+        //
+        m_blendPipeLine->setFrontFace(rhi->isYUpInFramebuffer() ? QRhiGraphicsPipeline::CW : QRhiGraphicsPipeline::CCW);
+        m_blendPipeLine->setCullMode(QRhiGraphicsPipeline::None);
+        m_blendPipeLine->setTopology(QRhiGraphicsPipeline::TriangleStrip);
+
+        m_blendPipeLine->setStencilTest(false);
+        m_blendPipeLine->setShaderResourceBindings(m_blendResourceBindings);
+        m_blendPipeLine->setShaderStages(m_blendShaders.cbegin(), m_blendShaders.cend());
+
+        QRhiVertexInputLayout inputLayout;
+        inputLayout.setBindings({
+            { sizeof(QVector2D) },
+            { sizeof(QVector2D) },
+        });
+        inputLayout.setAttributes({
+            { 0, 0, QRhiVertexInputAttribute::Float2, 0 }, // Position1
+            { 1, 1, QRhiVertexInputAttribute::Float2, 0 } // Texture coordinate
+        });
+
+        m_blendPipeLine->setVertexInputLayout(inputLayout);
+        m_blendPipeLine->setRenderPassDescriptor(m_blendRenderDescriptor);
+
+        m_blendPipeLine->create();
+    }
+
+    if (m_shaderBlending) {
+        QMatrix4x4 mvp = (*m_projectionMatrix);
+        mvp.translate(-m_bounds.x(), -m_bounds.y());
+        int flipped = rhi->isYUpInFramebuffer() ? 1 : 0;
+        m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 0, 64, mvp.constData());
+        m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 64, 4, &m_blendMode);
+        m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 68, 4, &flipped);
+    }
+
+    commandBuffer->beginPass(m_blendTextureRenderTarget, QColor(0, 0, 0, 0), { 1.0f, 0 }, m_blendResourceUpdates);
+    QSize blendRenderTargetSize = m_blendTextureRenderTarget->pixelSize();
+
+    commandBuffer->setGraphicsPipeline(m_blendPipeLine);
+    commandBuffer->setViewport(QRhiViewport(0, 0, blendRenderTargetSize.width(), blendRenderTargetSize.height()));
+    commandBuffer->setShaderResources(m_blendResourceBindings);
+    QRhiCommandBuffer::VertexInput blendVertexBindings[] = { { m_blendVertexBuffer, 0 }, { m_blendTexCoordBuffer, 0 } };
+    commandBuffer->setVertexInput(0, 2, blendVertexBindings);
+
+    commandBuffer->draw(m_blendVertices.count());
+    commandBuffer->endPass();
 }
 
 void TextureTargetNode::setColor(const QColor &color)
