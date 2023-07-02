@@ -36,6 +36,8 @@ if (${QT_VERSION_MAJOR} EQUAL 6)
     qt_policy(SET QTP0001 OLD)
 endif()
 
+add_compile_options(-gdwarf-4)
+
 # Add rive-cpp dependency if required
 if(${RQQRP_DOWNLOAD_BUILD_DEPENDENCIES})
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/rive/cmake)
