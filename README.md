@@ -88,20 +88,19 @@ RiveQtQuickItem {
 
 ### Available Properties
 
-| Name                     | Type             | Description
-|--------------------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| fileSource               | string           | File path to the file that shall be loaded. An empty string unloads the current file.                                                                                            |
-| loadingStatus            | int (enum)       | Current loading state of the rive item (read only)                                                                                    |
-| artboards                | list of struct   | Artboard information of the loaded rive file                                                                                          |
-| animations               | list of struct   | Animation information of the loaded rive file                                                                                         |
-| stateMachines            | list of struct   | State machine information of the loaded rive file                                                                                     |
-| currentArboardIndex      | int              | Specifies the currently displayed artboard. Can be used to overwrite the internal default artboard, which is often not set correctly  |
-| currentStateMachineIndex | int              | Specifies the currently active state machine. Can be used to overwrite the internal default state machine.                            |
-| interactive              | bool             | If true (default), mouse buttons are are accepted to interact with the items triggers                                                 |
-| stateMachineInterface    | QML Property Map | (Read only) Contains the triggers of the current state machine                                                                        |
-| renderQuality            | int (enum)       | Specifies the render quality (e.g. to set the number of vertices per line)                                                            |
-| fillMode                 | int (enum)       | Specified how the artboard is rendered into the qml item. Available options are: PreserveAspectFit, PreserveAspectCrop, Stretch.      |
-
+| Name                     | Type             | Description                                                                                                                      | Access |
+|--------------------------|------------------|----------------------------------------------------------------------------------------------------------------------------------|--------|
+| fileSource               | string           | File path to the file that shall be loaded. An empty string unloads the current file.                                            | rw     |
+| loadingStatus            | int (enum)       | Current loading state of the rive item.                                                                                          | ro     |
+| artboards                | list of struct   | Artboard information of the loaded rive file.                                                                                    | rw     |
+| animations               | list of struct   | Animation information of the loaded rive file.                                                                                   | rw     |
+| stateMachines            | list of struct   | State machine information of the loaded rive file.                                                                               | rw     |
+| currentArtboardIndex     | int              | Specifies the currently displayed artboard. Can be used to overwrite the internal default artboard.                              | rw     |
+| currentStateMachineIndex | int              | Specifies the currently active state machine. Can be used to overwrite the internal default state machine.                       | rw     |
+| interactive              | bool             | If true (default), mouse buttons are accepted to interact with the item's triggers.                                              | rw     |
+| stateMachineInterface    | QML Property Map | Contains the triggers of the current state machine.                                                                              | ro     |
+| renderQuality            | int (enum)       | Specifies the render quality (e.g., to set the number of vertices per line).                                                     | rw     |
+| fillMode                 | int (enum)       | Specifies how the artboard is rendered into the QML item. Available options are: PreserveAspectFit, PreserveAspectCrop, Stretch. | rw     |
 
 ## Logging
 
@@ -124,7 +123,7 @@ Qt 5.15.2:
 
 `export QML2_IMPORT_PATH=YOUR/BUILD/DIR/binary/`
 
-Qt 6.5.0:
+Qt 6:
 
 `export QML_IMPORT_PATH=YOUR/BUILD/DIR/binary/`
 
