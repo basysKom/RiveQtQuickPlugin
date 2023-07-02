@@ -14,19 +14,21 @@
 
 #include "riveqtstatemachineinputmap.h"
 
-RiveQtStateMachineInputMap::RiveQtStateMachineInputMap(rive::StateMachineInstance *stateMachineInstance, QObject *parent)
+RiveQtStateMachineInputMap::RiveQtStateMachineInputMap(std::weak_ptr<rive::StateMachineInstance> stateMachineInstance, QObject *parent)
     : QQmlPropertyMap(this, parent)
     , m_stateMachineInstance(stateMachineInstance)
 {
     connect(this, &QQmlPropertyMap::valueChanged, this, &RiveQtStateMachineInputMap::onInputValueChanged);
 
-    if (!stateMachineInstance)
+    if (m_stateMachineInstance.expired())
         return;
+
+    const auto stateMachineInstanceShared = m_stateMachineInstance.lock();
 
     QStringList triggerList;
 
-    for (int i = 0; i < stateMachineInstance->inputCount(); i++) {
-        auto input = stateMachineInstance->input(i);
+    for (int i = 0; i < stateMachineInstanceShared->inputCount(); i++) {
+        auto input = stateMachineInstanceShared->input(i);
 
         const QString &propertyName = QString::fromStdString(input->name());
 
@@ -58,11 +60,13 @@ RiveQtStateMachineInputMap::RiveQtStateMachineInputMap(rive::StateMachineInstanc
 
 void RiveQtStateMachineInputMap::updateValues()
 {
-    if (!m_stateMachineInstance)
+    if (m_stateMachineInstance.expired())
         return;
 
-    for (int i = 0; i < m_stateMachineInstance->inputCount(); i++) {
-        auto input = m_stateMachineInstance->input(i);
+    const auto stateMachineInstanceShared = m_stateMachineInstance.lock();
+
+    for (int i = 0; i < stateMachineInstanceShared->inputCount(); i++) {
+        auto input = stateMachineInstanceShared->input(i);
         QString propertyName = QString::fromStdString(input->name());
 
         if (input->inputCoreType() == rive::StateMachineNumber::typeKey) {
@@ -85,10 +89,12 @@ void RiveQtStateMachineInputMap::updateValues()
 
 void RiveQtStateMachineInputMap::activateTrigger(const QString &trigger)
 {
-    if (!m_stateMachineInstance)
+    if (m_stateMachineInstance.expired())
         return;
 
-    auto *targetInput = m_stateMachineInstance->getTrigger(trigger.toStdString());
+    const auto stateMachineInstanceShared = m_stateMachineInstance.lock();
+
+    auto *targetInput = stateMachineInstanceShared->getTrigger(trigger.toStdString());
 
     if (!targetInput)
         return;
@@ -98,8 +104,10 @@ void RiveQtStateMachineInputMap::activateTrigger(const QString &trigger)
 
 void RiveQtStateMachineInputMap::onInputValueChanged(const QString &key, const QVariant &value)
 {
-    if (!m_stateMachineInstance)
+    if (m_stateMachineInstance.expired())
         return;
+
+    const auto stateMachineInstanceShared = m_stateMachineInstance.lock();
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     switch (value.typeId()) {
@@ -108,13 +116,13 @@ void RiveQtStateMachineInputMap::onInputValueChanged(const QString &key, const Q
     switch (value.type()) {
     case QVariant::Type::Bool: {
 #endif
-        auto *targetInput = m_stateMachineInstance->getBool(key.toStdString());
+        auto *targetInput = stateMachineInstanceShared->getBool(key.toStdString());
         if (!targetInput)
             return;
 
         if (value.toBool() != targetInput->value()) {
             targetInput->value(value.toBool());
-            m_stateMachineInstance->needsAdvance();
+            stateMachineInstanceShared->needsAdvance();
             insert(key, value);
         }
         break;
@@ -126,7 +134,7 @@ void RiveQtStateMachineInputMap::onInputValueChanged(const QString &key, const Q
     case QVariant::Type::Int:
     case QVariant::Type::Double: {
 #endif
-        auto *targetInput = m_stateMachineInstance->getNumber(key.toStdString());
+        auto *targetInput = stateMachineInstanceShared->getNumber(key.toStdString());
         if (!targetInput) {
             return;
         }
