@@ -176,7 +176,7 @@ private:
 
     std::unique_ptr<rive::ArtboardInstance> m_currentArtboardInstance { nullptr };
     std::unique_ptr<rive::LinearAnimationInstance> m_animationInstance { nullptr };
-    std::unique_ptr<rive::StateMachineInstance> m_currentStateMachineInstance { nullptr };
+    std::shared_ptr<rive::StateMachineInstance> m_currentStateMachineInstance { nullptr };
 
     bool m_scheduleArtboardChange { false };
     bool m_scheduleStateMachineChange { false };
@@ -186,7 +186,7 @@ private:
     int m_currentStateMachineIndex { -1 };
     int m_initialStateMachineIndex { -1 };
 
-    RiveQtStateMachineInputMap *m_stateMachineInputMap { new RiveQtStateMachineInputMap(nullptr, this) };
+    RiveQtStateMachineInputMap *m_stateMachineInputMap { nullptr };
 
     RiveRenderSettings m_renderSettings;
 

@@ -15,7 +15,7 @@ class RiveQtStateMachineInputMap : public QQmlPropertyMap
     Q_OBJECT
 
 public:
-    RiveQtStateMachineInputMap(rive::StateMachineInstance *stateMachineInstance, QObject *parent = nullptr);
+    RiveQtStateMachineInputMap(std::weak_ptr<rive::StateMachineInstance> stateMachineInstance, QObject *parent = nullptr);
 
     Q_INVOKABLE void activateTrigger(const QString &trigger);
 
@@ -28,6 +28,6 @@ private slots:
     void onInputValueChanged(const QString &key, const QVariant &value);
 
 private:
-    rive::StateMachineInstance *m_stateMachineInstance;
+    std::weak_ptr<rive::StateMachineInstance> m_stateMachineInstance;
     bool m_dirty { false };
 };

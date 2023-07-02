@@ -81,10 +81,8 @@ void RiveQtQuickItem::triggerAnimation(int id)
 
 void RiveQtQuickItem::updateStateMachineInputMap()
 {
-    // maybe its a bit maniac and insane to push raw instance pointers around.
-    // well what could go wrong. aka TODO: dont do this
     m_stateMachineInputMap->deleteLater();
-    m_stateMachineInputMap = new RiveQtStateMachineInputMap(m_currentStateMachineInstance.get(), this);
+    m_stateMachineInputMap = new RiveQtStateMachineInputMap(m_currentStateMachineInstance, this);
     emit stateMachineInterfaceChanged();
 }
 
