@@ -32,6 +32,8 @@ set(PROJECT_SOURCES
    riveqsgsoftwarerendernode.cpp
    riveqsgrendernode.h
    riveqsgrendernode.cpp
+   riveqtpath.cpp
+   riveqtpath.h
    rqqplogging.h
    rqqplogging.cpp
    qmldir
