@@ -6,7 +6,6 @@
 
 #include <QVector4D>
 #include <QMatrix4x4>
-#include <QDebug>
 
 #include <rive/shapes/paint/color.hpp>
 #include <rive/renderer.hpp>
