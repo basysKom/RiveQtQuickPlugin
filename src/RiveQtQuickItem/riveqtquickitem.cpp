@@ -126,8 +126,7 @@ void RiveQtQuickItem::updateInternalArtboard()
 
     m_scheduleStateMachineChange = true;
 
-    // we need the animation instance, that's why this looks weird.
-    m_animationInstance = m_currentArtboardInstance->animationNamed(m_currentArtboardInstance->firstAnimation()->name());
+    m_animationInstance = nullptr;
 
     emit internalArtboardChanged();
 }
