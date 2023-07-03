@@ -4,8 +4,6 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include <QDebug>
-
 #define _USE_MATH_DEFINES
 #include <math.h>
 
