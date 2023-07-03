@@ -10,6 +10,7 @@
 #include "renderer/riveqtpainterrenderer.h"
 #include "riveqsgrhirendernode.h"
 #include "riveqsgsoftwarerendernode.h"
+#include "riveqtpath.h"
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #    include "renderer/riveqtrhirenderer.h"
@@ -86,11 +87,10 @@ std::unique_ptr<rive::RenderPath> RiveQtFactory::makeRenderPath(rive::RawPath &r
         return std::make_unique<RiveQtPainterPath>(rawPath, fillRule);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     case RiveQtRenderType::RHIRenderer:
-        return std::make_unique<RiveQtRhiGLPath>(rawPath, fillRule, segmentCount());
 #else
     case RiveQtRenderType::QOpenGLRenderer:
-        return std::make_unique<RiveQtOpenGLPath>(rawPath, fillRule);
 #endif
+        return std::make_unique<RiveQtPath>(rawPath, fillRule, segmentCount());
     case RiveQtRenderType::None:
     default:
         return std::make_unique<RiveQtPainterPath>(rawPath, fillRule); // TODO Add Empty Path
@@ -104,11 +104,10 @@ std::unique_ptr<rive::RenderPath> RiveQtFactory::makeEmptyRenderPath()
         return std::make_unique<RiveQtPainterPath>();
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     case RiveQtRenderType::RHIRenderer:
-        return std::make_unique<RiveQtRhiGLPath>(segmentCount());
 #else
     case RiveQtRenderType::QOpenGLRenderer:
-        return std::make_unique<RiveQtOpenGLPath>();
 #endif
+        return std::make_unique<RiveQtPath>(segmentCount());
     case RiveQtRenderType::None:
     default:
         return std::make_unique<RiveQtPainterPath>(); // TODO Add Empty Path

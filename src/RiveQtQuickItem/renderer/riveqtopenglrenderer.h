@@ -19,58 +19,9 @@
 
 #include <rive/renderer.hpp>
 #include <rive/math/raw_path.hpp>
+#include "riveqtpath.h"
 
 #include "qopenglframebufferobject.h"
-
-class SubPath;
-
-class RiveQtOpenGLPath : public rive::RenderPath
-{
-public:
-    RiveQtOpenGLPath() = default;
-    RiveQtOpenGLPath(const RiveQtOpenGLPath &rqp);
-    RiveQtOpenGLPath(rive::RawPath &rawPath, rive::FillRule fillRule);
-
-    void rewind() override;
-    void moveTo(float x, float y) override { m_path.moveTo(x, y); }
-    void lineTo(float x, float y) override { m_path.lineTo(x, y); }
-    void cubicTo(float ox, float oy, float ix, float iy, float x, float y) override { m_path.cubicTo(ox, oy, ix, iy, x, y); }
-    void close() override { m_path.closeSubpath(); }
-    void fillRule(rive::FillRule value) override;
-    void addRenderPath(RenderPath *path, const rive::Mat2D &transform) override;
-
-    QPainterPath toQPainterPath() const { return m_path; }
-
-    QVector<QVector<QVector2D>> toVertices() const;
-    QVector<QVector<QVector2D>> toVerticesLine(const QPen &pen) const;
-
-private:
-    QVector<QVector2D> qpainterPathToVector2D(const QPainterPath &path);
-    QVector<QVector2D> qpainterPathToOutlineVector2D(const QPainterPath &path);
-    QPointF cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2, const QPointF &endPoint,
-                        qreal t);
-    void generateVertices();
-
-    QPainterPath m_path;
-    std::vector<SubPath> m_subPaths;
-    QVector<QVector<QVector2D>> m_pathSegmentsData;
-    QVector<QVector<QVector2D>> m_pathSegmentsOutlineData;
-
-    bool m_isClosed { false };
-};
-
-class SubPath
-{
-private:
-    RiveQtOpenGLPath *m_Path;
-    QMatrix4x4 m_Transform;
-
-public:
-    SubPath(RiveQtOpenGLPath *path, const QMatrix4x4 &transform);
-
-    RiveQtOpenGLPath *path() const;
-    QMatrix4x4 transform() const;
-};
 
 struct RenderState
 {
@@ -122,7 +73,7 @@ private:
     QOpenGLBuffer m_meshVertexBuffer;
     QOpenGLBuffer m_meshUvBuffer;
     QOpenGLBuffer m_meshIndexBuffer;
-    
+
     QMatrix4x4 m_projectionMatrix;
     // QMatrix4x4 m_modelMatrix the modelMatrix is stored as base of our renderState!
 
