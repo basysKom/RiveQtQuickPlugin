@@ -13,6 +13,8 @@ RiveQtPath::RiveQtPath(const unsigned segmentCount)
 {
     m_path.setFillRule(Qt::FillRule::WindingFill);
     setSegmentCount(segmentCount);
+    m_pathSegmentOutlineDataDirty = true;
+    m_pathSegmentDataDirty = true;
 }
 
 RiveQtPath::RiveQtPath(const RiveQtPath &other)
@@ -61,6 +63,8 @@ void RiveQtPath::rewind()
     m_pathSegmentsOutlineData.clear();
     m_subPaths.clear();
     m_path.clear();
+    m_pathSegmentOutlineDataDirty = true;
+    m_pathSegmentDataDirty = true;
 }
 
 void RiveQtPath::fillRule(rive::FillRule value)
@@ -131,11 +135,7 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
     m_pathOutlineData.clear();
 
     if (m_pathSegmentsOutlineData.isEmpty()) {
-        generateVertices();
-
-        if (m_pathSegmentsOutlineData.isEmpty()) {
-            return m_pathOutlineData;
-        }
+        return m_pathOutlineData;
     }
 
     qreal lineWidth = pen.widthF();
@@ -143,7 +143,7 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
     Qt::PenJoinStyle joinType = pen.joinStyle();
     Qt::PenCapStyle capStyle = pen.capStyle();
 
-    for (QVector<QVector2D> pathData : m_pathSegmentsOutlineData) {
+    for (QVector<QVector2D> pathData : qAsConst(m_pathSegmentsOutlineData)) {
         if (pathData.size() <= 1) {
             continue;
         }
@@ -446,11 +446,11 @@ void RiveQtPath::generateVertices()
     m_pathSegmentsData.clear();
     m_pathSegmentsData.append(qpainterPathToVector2D(m_path));
 
-    for (SubPath &SubPath : m_subPaths) {
-        QPainterPath sourcePath = SubPath.path()->toQPainterPath();
-        QPainterPath transformedPath = RiveQtUtils::transformPathWithMatrix4x4(sourcePath, SubPath.transform());
+    for (SubPath &subPath : m_subPaths) {
+        QPainterPath sourcePath = subPath.path()->toQPainterPath();
+        QPainterPath transformedPath = RiveQtUtils::transformPathWithMatrix4x4(sourcePath, subPath.transform());
 
-        m_pathSegmentsData.append(SubPath.path()->m_pathSegmentsData);
+        m_pathSegmentsData.append(subPath.path()->m_pathSegmentsData);
         m_pathSegmentsData.append(qpainterPathToVector2D(transformedPath));
     }
     m_pathSegmentDataDirty = false;
@@ -470,12 +470,12 @@ void RiveQtPath::generateOutlineVertices()
     m_pathSegmentsOutlineData.clear();
     m_pathSegmentsOutlineData.append(qpainterPathToOutlineVector2D(m_path));
 
-    for (SubPath &SubPath : m_subPaths) {
-        QPainterPath sourcePath = SubPath.path()->toQPainterPath();
-        QPainterPath transformedPath = RiveQtUtils::transformPathWithMatrix4x4(sourcePath, SubPath.transform());
+    for (SubPath &subPath : m_subPaths) {
+        QPainterPath sourcePath = subPath.path()->toQPainterPath();
+        QPainterPath transformedPath = RiveQtUtils::transformPathWithMatrix4x4(sourcePath, subPath.transform());
 
+        m_pathSegmentsOutlineData.append(subPath.path()->m_pathSegmentsOutlineData);
         m_pathSegmentsOutlineData.append(qpainterPathToOutlineVector2D(transformedPath));
-        m_pathSegmentsOutlineData.append(SubPath.path()->m_pathSegmentsOutlineData);
     }
     m_pathSegmentOutlineDataDirty = false;
 }

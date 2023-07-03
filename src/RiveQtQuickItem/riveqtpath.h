@@ -55,8 +55,8 @@ private:
     QVector<QVector<QVector2D>> m_pathOutlineData;
 
     bool m_isClosed { false };
-    bool m_pathSegmentDataDirty { false };
-    bool m_pathSegmentOutlineDataDirty { false };
+    bool m_pathSegmentDataDirty { true };
+    bool m_pathSegmentOutlineDataDirty { true };
 
     unsigned m_segmentCount { 10 };
 };
