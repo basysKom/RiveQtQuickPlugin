@@ -177,11 +177,6 @@ void TextureTargetNode::prepareRender(QRhiCommandBuffer *commandBuffer)
     QRhi *rhi = static_cast<QRhi *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiResource));
     Q_ASSERT(rhi);
 
-    //    delete m_drawPipeLine;
-    //    m_drawPipeLine = nullptr;
-    //    delete m_clipPipeLine;
-    //    m_clipPipeLine = nullptr;
-
     // This configures our main uniform Buffer
     if (!m_uniformBuffer) {
         m_uniformBuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 848);
