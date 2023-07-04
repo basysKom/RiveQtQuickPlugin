@@ -84,7 +84,6 @@ void RiveQSGOpenGLRenderNode::renderOpenGL(const RenderState *state)
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     // this renders the artboard!
-
     m_artboardInstance.lock()->draw(&m_renderer);
     glDisable(GL_SCISSOR_TEST);
 }
