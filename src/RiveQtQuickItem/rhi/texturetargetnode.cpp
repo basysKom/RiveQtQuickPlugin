@@ -294,9 +294,6 @@ void TextureTargetNode::prepareRender(QRhiCommandBuffer *commandBuffer)
     }
 
     if (!m_drawPipeLine) {
-        // this line causes a lot of memoy being leaked every frame. Apparently, the m_drawPipeline is null at this point, so it is not
-        // cleanly destroyed somewhere else.
-        // calling a delete on the pointer
         delete m_drawPipeLine;
         m_drawPipeLine = rhi->newGraphicsPipeline();
         //
@@ -314,7 +311,6 @@ void TextureTargetNode::prepareRender(QRhiCommandBuffer *commandBuffer)
             blend.enable = true;
             blend.srcColor = QRhiGraphicsPipeline::SrcAlpha;
             blend.dstColor = QRhiGraphicsPipeline::OneMinusSrcAlpha;
-
             blend.srcAlpha = QRhiGraphicsPipeline::One;
             blend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
             m_drawPipeLine->setTargetBlends({ blend });
