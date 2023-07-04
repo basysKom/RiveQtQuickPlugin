@@ -13,7 +13,7 @@
 void RiveQSGOpenGLRenderNode::updateArtboardInstance(std::weak_ptr<rive::ArtboardInstance> artboardInstance)
 {
     m_renderer.reset();
-    m_artboardInstance = artboardInstance;
+    RiveQSGBaseNode::updateArtboardInstance(artboardInstance);
 }
 
 void RiveQSGOpenGLRenderNode::setArtboardRect(const QRectF &bounds)
