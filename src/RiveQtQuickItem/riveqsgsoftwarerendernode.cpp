@@ -45,6 +45,12 @@ void RiveQSGSoftwareRenderNode::renderSoftware(const RenderState *state)
         return;
     }
 
+    auto *renderInterface = m_window->rendererInterface();
+    if (renderInterface->graphicsApi() != QSGRendererInterface::GraphicsApi::Software) {
+
+        return;
+    }
+
     auto artboardInstance = m_artboardInstance.lock();
 
     QPointF globalPos = m_item->mapToItem(nullptr, QPointF(0, 0));
@@ -71,42 +77,35 @@ void RiveQSGSoftwareRenderNode::renderSoftware(const RenderState *state)
     m_topLeftRivePosition.setX(offsetX);
     m_topLeftRivePosition.setY(offsetY);
 
-    auto *renderInterface = m_window->rendererInterface();
-
     QPainter *painter = nullptr;
-    if (renderInterface->graphicsApi() == QSGRendererInterface::GraphicsApi::Software) {
-        void *vPainter = renderInterface->getResource(m_window, QSGRendererInterface::Resource::PainterResource);
-        if (vPainter) {
-            painter = static_cast<QPainter *>(vPainter);
-        } else {
-            return;
-        }
+
+    void *vPainter = renderInterface->getResource(m_window, QSGRendererInterface::Resource::PainterResource);
+    if (vPainter) {
+        painter = static_cast<QPainter *>(vPainter);
     } else {
         return;
     }
 
-    if (m_item) {
-        painter->save();
-        {
-            //  Set the model-view matrix and apply the translation and scale
-            QMatrix4x4 matrix = *state->projectionMatrix();
-            QTransform modelViewTransform = matrix4x4ToTransform(matrix);
+    painter->save();
+    {
+        //  Set the model-view matrix and apply the translation and scale
+        QMatrix4x4 matrix = *state->projectionMatrix();
+        QTransform modelViewTransform = matrix4x4ToTransform(matrix);
 
-            // Apply transformations in the correct order
-            modelViewTransform.translate(x, y);
-            modelViewTransform.translate(offsetX, offsetY);
-            modelViewTransform.scale(scaleFactor, scaleFactor);
+        // Apply transformations in the correct order
+        modelViewTransform.translate(x, y);
+        modelViewTransform.translate(offsetX, offsetY);
+        modelViewTransform.scale(scaleFactor, scaleFactor);
 
-            painter->setTransform(modelViewTransform, false);
-        }
-
-        m_renderer.setPainter(painter);
-
-        painter->save();
-        {
-            artboardInstance->draw(&m_renderer);
-        }
-        painter->restore();
+        painter->setTransform(modelViewTransform, false);
     }
+
+    m_renderer.setPainter(painter);
+
+    painter->save();
+    {
+        artboardInstance->draw(&m_renderer);
+    }
+
     painter->restore();
 }
