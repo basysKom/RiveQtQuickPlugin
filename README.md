@@ -29,7 +29,7 @@ The plugin has been tested on:
 
 - Windows using the MSVC 2019 compiler and Qt 5.15.2
 
-- Linux (Ubuntu 22.04 LTS) using Clang14 and Qt 5.15.2, Qt 6.5.0
+- Linux (Ubuntu 22.04 LTS) using Clang14 and Qt 5.15.2, Qt 6.5.1
 
   - Ensure that all clang dependencies are installed 
 
@@ -40,7 +40,7 @@ The plugin has been tested on:
 
 ## Dependencies
 
-- Qt 5.15.2 or Qt 6.5.0
+- Qt 5.15.2 or Qt 6.5.1
 - Rive C++ Runtime (available at [https://github.com/rive-app/rive-cpp](https://github.com/rive-app/rive-cpp))
   * **Hint:** You don't have to compile the it from the repo. Cmake will download rive-cpp and its dependencies and build them using cmake. The result is a static lib the plugin links against.
 
@@ -90,17 +90,17 @@ RiveQtQuickItem {
 
 | Name                     | Type             | R/W | Description |
 |--------------------------|------------------|-----|---------------------------------------------------------------------------------------------------------------------------------------|
-| fileSource               | string           | R/W | File path to the file that shall be loaded. An empty string unloads the current file.                                                 |
+| fileSource               | string           | RW | File path to the file that shall be loaded. An empty string unloads the current file.                                                 |
 | loadingStatus            | int (enum)       | RO  | Current loading state of the rive item.                                                                                               |
-| artboards                | list of struct   | R/W | Artboard information of the loaded rive file.                                                                                         |
-| animations               | list of struct   | R/W | Animation information of the loaded rive file.                                                                                        |
-| stateMachines            | list of struct   | R/W | State machine information of the loaded rive file.                                                                                    |
-| currentArboardIndex      | int              | R/W | Specifies the currently displayed artboard. Can be used to overwrite the internal default artboard, which is often not set correctly. |
-| currentStateMachineIndex | int              | R/W | Specifies the currently active state machine. Can be used to overwrite the internal default state machine.                            |
-| interactive              | bool             | R/W | If true (default), mouse buttons are are accepted to interact with the items triggers.                                                |
+| artboards                | list of struct   | RW | Artboard information of the loaded rive file.                                                                                         |
+| animations               | list of struct   | RW | Animation information of the loaded rive file.                                                                                        |
+| stateMachines            | list of struct   | RW | State machine information of the loaded rive file.                                                                                    |
+| currentArboardIndex      | int              | RW | Specifies the currently displayed artboard. Can be used to overwrite the internal default artboard, which is often not set correctly. |
+| currentStateMachineIndex | int              | RW | Specifies the currently active state machine. Can be used to overwrite the internal default state machine.                            |
+| interactive              | bool             | RW | If true (default), mouse buttons are are accepted to interact with the items triggers.                                                |
 | stateMachineInterface    | QML Property Map | RO  | Contains the triggers of the current state machine.                                                                                   |
-| renderQuality            | int (enum)       | R/W | Specifies the render quality (e.g. to set the number of vertices per line).                                                           |
-| fillMode                 | int (enum)       | R/W | Specified how the artboard is rendered into the qml item. Available options are: PreserveAspectFit, PreserveAspectCrop, Stretch.      |
+| renderQuality            | int (enum)       | RW | Specifies the render quality (e.g. to set the number of vertices per line).                                                           |
+| fillMode                 | int (enum)       | RW | Specified how the artboard is rendered into the qml item. Available options are: PreserveAspectFit, PreserveAspectCrop, Stretch.      |
 
 
 ## Logging
@@ -120,11 +120,11 @@ Check out the "example" folder in this repository for a complete example project
 
 In order to run the example project, set the import path correctly
 
-Qt 5.15.2:
+Qt 5:
 
 `export QML2_IMPORT_PATH=YOUR/BUILD/DIR/binary/`
 
-Qt 6.5.0:
+Qt 6:
 
 `export QML_IMPORT_PATH=YOUR/BUILD/DIR/binary/`
 
