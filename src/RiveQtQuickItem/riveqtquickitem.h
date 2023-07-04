@@ -42,6 +42,7 @@ class RiveQtQuickItem : public QQuickItem
     Q_PROPERTY(QVector<StateMachineInfo> stateMachines READ stateMachines NOTIFY stateMachinesChanged)
 
     Q_PROPERTY(int currentArtboardIndex READ currentArtboardIndex WRITE setCurrentArtboardIndex NOTIFY currentArtboardIndexChanged)
+    Q_PROPERTY(int currentAnimationIndex READ currentAnimationIndex WRITE triggerAnimation NOTIFY currentAnimationIndexChanged)
     Q_PROPERTY(
         int currentStateMachineIndex READ currentStateMachineIndex WRITE setCurrentStateMachineIndex NOTIFY currentStateMachineIndexChanged)
 
@@ -60,7 +61,8 @@ public:
         Idle,
         Loading,
         Loaded,
-        Error
+        Error,
+        Unloading,
     };
     Q_ENUM(LoadingStatus)
 
@@ -77,6 +79,7 @@ public:
 
     LoadingStatus loadingStatus() const { return m_loadingStatus; }
 
+    int currentAnimationIndex() const;
     int currentArtboardIndex() const;
     void setCurrentArtboardIndex(const int newCurrentArtboardIndex);
 
@@ -115,10 +118,12 @@ signals:
     void loadingStatusChanged();
 
     void currentArtboardIndexChanged();
+    void currentAnimationIndexChanged();
     void currentStateMachineIndexChanged();
 
     void interactiveChanged();
 
+    void loadFileAfterUnloading(QString fileName);
     void internalArtboardChanged();
     void internalStateMachineChanged();
     void stateMachineInterfaceChanged();
@@ -180,6 +185,7 @@ private:
     bool m_scheduleStateMachineChange { false };
 
     int m_currentArtboardIndex { -1 };
+    int m_currentAnimationIndex { -1 };
     int m_initialArtboardIndex { -1 };
     int m_currentStateMachineIndex { -1 };
     int m_initialStateMachineIndex { -1 };

@@ -13,6 +13,7 @@ Rectangle {
 
     property alias model: buttonRepeater.model
     property alias title: title.text
+    property int highlightedIndex: -1
 
     clip: true
     color: "white"
@@ -48,6 +49,11 @@ Rectangle {
                         id: buttonDelegate
                         flat: true
                         padding: 2
+
+                        background: Rectangle {
+                            color: highlightedIndex === index ? "lightgrey" : "white"
+                        }
+
                         text: {
                             let result = ""
 

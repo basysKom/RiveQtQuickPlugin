@@ -18,10 +18,16 @@ Item {
 
         ControlPanel {
             title: "Artboards"
+
             model: riveItem.artboards
+            highlightedIndex: riveItem.currentArtboardIndex
             visible: model !== undefined ? model.length > 0 : false
             onClicked: modelData => {
-                           riveItem.currentArtboardIndex = modelData.id
+                           if (riveItem.currentArtboardIndex === modelData.id) {
+                               riveItem.currentArtboardIndex = -1
+                           } else {
+                                riveItem.currentArtboardIndex = modelData.id
+                           }
                        }
 
             Layout.fillHeight: true
@@ -33,23 +39,34 @@ Item {
             title: "Animations"
 
             model: riveItem.animations
+            highlightedIndex: riveItem.currentAnimationIndex
             visible: model !== undefined ? model.length > 0 : false
             onClicked: modelData => {
-                           riveItem.triggerAnimation(modelData.id)
+                           if (riveItem.currentAnimationIndex === modelData.id) {
+                               riveItem.currentAnimationIndex = -1
+                           } else {
+                               riveItem.currentAnimationIndex = modelData.id
+                           }
                        }
 
             Layout.fillHeight: true
             Layout.minimumWidth: 200
             Layout.minimumHeight: 200
+
         }
 
         ControlPanel {
             title: "State Machines"
 
             model: riveItem.stateMachines
+            highlightedIndex: riveItem.currentStateMachineIndex
             visible: model !== undefined ? model.length > 0 : false
             onClicked: modelData => {
-                           riveItem.currentStateMachineIndex = modelData.id
+                           if (riveItem.currentStateMachineIndex === modelData.id) {
+                               riveItem.currentStateMachineIndex = -1
+                           } else {
+                               riveItem.currentStateMachineIndex = modelData.id
+                           }
                        }
 
             Layout.fillHeight: true
@@ -89,7 +106,7 @@ Item {
                     anchors.margins: 1
 
                     currentArtboardIndex: 0
-                    currentStateMachineIndex: 0
+                    currentStateMachineIndex: -1
 
                     renderQuality: RiveQtQuickItem.Medium
                     fillMode: RiveQtQuickItem.PreserveAspectFit
