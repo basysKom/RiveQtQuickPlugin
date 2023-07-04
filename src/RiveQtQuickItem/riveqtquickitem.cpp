@@ -81,6 +81,8 @@ void RiveQtQuickItem::triggerAnimation(int id)
 
 void RiveQtQuickItem::updateStateMachineInputMap()
 {
+    // maybe its a bit maniac and insane to push raw instance pointers around.
+    // well what could go wrong. aka TODO: dont do this
     m_stateMachineInputMap->deleteLater();
     m_stateMachineInputMap = new RiveQtStateMachineInputMap(m_currentStateMachineInstance, this);
     emit stateMachineInterfaceChanged();
@@ -143,7 +145,7 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         updateInternalArtboard();
 
         if (m_renderNode) {
-            m_renderNode->updateArtboardInstance(m_currentArtboardInstance.get());
+            m_renderNode->updateArtboardInstance(m_currentArtboardInstance);
         }
 
         if (!m_currentArtboardInstance) {
@@ -157,7 +159,7 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         updateCurrentStateMachineIndex();
         m_scheduleStateMachineChange = true;
 
-        // Update the default animation when the artboard has changed.
+        // Update the default animation when the artboard has change.
         // We need the animation instance, that's why this looks a little weird.
         m_animationInstance = m_currentArtboardInstance->animationNamed(m_currentArtboardInstance->firstAnimation()->name());
     }
@@ -174,7 +176,7 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     }
 
     if (!m_renderNode && m_currentArtboardInstance) {
-        m_renderNode = m_riveQtFactory.renderNode(currentWindow, m_currentArtboardInstance.get(), this);
+        m_renderNode = m_riveQtFactory.renderNode(currentWindow, m_currentArtboardInstance, this);
     }
 
     qint64 currentTime = m_elapsedTimer.elapsed();
@@ -290,6 +292,10 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
 {
     m_loadingStatus = Loading;
     emit loadingStatusChanged();
+
+    if (m_renderNode) {
+        m_renderNode->updateArtboardInstance(std::weak_ptr<rive::ArtboardInstance>());
+    }
 
     if (source.isEmpty()) {
         m_riveFile = nullptr;
@@ -617,6 +623,7 @@ void RiveQtQuickItem::setCurrentArtboardIndex(const int newIndex)
         emit currentArtboardIndexChanged();
 
         m_scheduleArtboardChange = true; // we have to do this in the render thread.
+        delete m_renderNode;
         m_renderNode = nullptr;
         return;
     }
@@ -630,6 +637,7 @@ void RiveQtQuickItem::setCurrentArtboardIndex(const int newIndex)
     emit currentArtboardIndexChanged();
 
     m_scheduleArtboardChange = true; // we have to do this in the render thread.
+    delete m_renderNode;
     m_renderNode = nullptr;
     update();
 }

@@ -171,11 +171,16 @@ void TextureTargetNode::updateViewport(const QRectF &bounds, QRhiTexture *displa
     m_blendVerticesDirty = true;
 }
 
-void TextureTargetNode::prepareRender(QRhiCommandBuffer *cb)
+void TextureTargetNode::prepareRender(QRhiCommandBuffer *commandBuffer)
 {
     QSGRendererInterface *renderInterface = m_window->rendererInterface();
     QRhi *rhi = static_cast<QRhi *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiResource));
     Q_ASSERT(rhi);
+
+    //    delete m_drawPipeLine;
+    //    m_drawPipeLine = nullptr;
+    //    delete m_clipPipeLine;
+    //    m_clipPipeLine = nullptr;
 
     // This configures our main uniform Buffer
     if (!m_uniformBuffer) {
@@ -294,6 +299,10 @@ void TextureTargetNode::prepareRender(QRhiCommandBuffer *cb)
     }
 
     if (!m_drawPipeLine) {
+        // this line causes a lot of memoy being leaked every frame. Apparently, the m_drawPipeline is null at this point, so it is not
+        // cleanly destroyed somewhere else.
+        // calling a delete on the pointer
+        delete m_drawPipeLine;
         m_drawPipeLine = rhi->newGraphicsPipeline();
         //
         // If layer.enabled == true on our QQuickItem, the rendering face is flipped for

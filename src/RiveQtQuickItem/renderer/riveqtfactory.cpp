@@ -15,11 +15,11 @@
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #    include "renderer/riveqtrhirenderer.h"
 #else
-#    include "renderer/riveqtopenglrenderer.h"
 #    include "riveqsgopenglrendernode.h"
 #endif
 
-RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
+RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance,
+                                             RiveQtQuickItem *item)
 {
     switch (window->rendererInterface()->graphicsApi()) {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)

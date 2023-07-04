@@ -13,12 +13,12 @@
 #include "riveqtquickitem.h"
 #include "renderer/riveqtrhirenderer.h"
 
-void RiveQSGRHIRenderNode::updateArtboardInstance(rive::ArtboardInstance *artboardInstance)
+void RiveQSGRHIRenderNode::updateArtboardInstance(std::weak_ptr<rive::ArtboardInstance> artboardInstance)
 {
     m_artboardInstance = artboardInstance;
 }
 
-RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
+RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item)
     : RiveQSGRenderNode(artboardInstance, item)
     , m_displayBuffer(nullptr)
 {
@@ -68,12 +68,18 @@ RiveQSGRHIRenderNode::~RiveQSGRHIRenderNode()
 
 void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
 {
-    const auto scene = m_artboardInstance->defaultScene();
-    const auto sceneW = scene->width();
-    const auto sceneH = scene->height();
-    const auto aspectRatio = m_artboardInstance->defaultScene()->width() / m_artboardInstance->defaultScene()->height();
-    const auto width = aspectRatio * bounds.height();
-    //    const auto height = m_artboardInstance->defaultScene()->height();
+    if (auto artboardInstance = m_artboardInstance.lock(); artboardInstance) {
+        const auto scene = artboardInstance->defaultScene();
+        const auto sceneW = scene->width();
+        const auto sceneH = scene->height();
+        const auto aspectRatio = artboardInstance->defaultScene()->width() / artboardInstance->defaultScene()->height();
+        const auto width = aspectRatio * bounds.height();
+        //    const auto height = m_artboardInstance->defaultScene()->height();
+    } else {
+        return;
+    }
+
+    auto artboardInstance = m_artboardInstance.lock();
 
     //    qCDebug(rqqpRendering) << "Dim" << item->width() << item->height() << width << height;
     m_rect = bounds;
@@ -141,7 +147,7 @@ void RiveQSGRHIRenderNode::renderOffscreen()
 
 void RiveQSGRHIRenderNode::render(const RenderState *state)
 {
-    if (!m_artboardInstance) {
+    if (m_artboardInstance.expired()) {
         return;
     }
 
@@ -214,9 +220,11 @@ void RiveQSGRHIRenderNode::prepare()
         }
     }
 
-    if (!m_artboardInstance) {
+    if (m_artboardInstance.expired()) {
         return;
     }
+
+    auto artboardInstance = m_artboardInstance.lock();
 
     if (!m_renderer) {
         qWarning() << "Renderer is null";
@@ -225,7 +233,7 @@ void RiveQSGRHIRenderNode::prepare()
 
     m_renderer->recycleRiveNodes();
 
-    m_renderer->updateArtboardSize(QSize(m_artboardInstance->width(), m_artboardInstance->height()));
+    m_renderer->updateArtboardSize(QSize(artboardInstance->width(), artboardInstance->height()));
 
     { // update projection matrix
         QMatrix4x4 projMatrix = *projectionMatrix();
@@ -239,8 +247,8 @@ void RiveQSGRHIRenderNode::prepare()
 
         combinedMatrix.translate(m_topLeftRivePosition.x(), m_topLeftRivePosition.y());
 
-        const auto item2artboardScaleX = m_item->width() / m_artboardInstance->width();
-        const auto item2artboardScaleY = m_item->height() / m_artboardInstance->height();
+        const auto item2artboardScaleX = m_item->width() / artboardInstance->width();
+        const auto item2artboardScaleY = m_item->height() / artboardInstance->height();
 
         switch (m_fillMode) {
         case RiveRenderSettings::Stretch: {
@@ -263,7 +271,7 @@ void RiveQSGRHIRenderNode::prepare()
         m_renderer->setProjectionMatrix(&projMatrix, &combinedMatrix);
     }
 
-    m_artboardInstance->draw(m_renderer);
+    artboardInstance->draw(m_renderer);
 
     if (!m_cleanUpTextureTarget) {
         QRhiColorAttachment colorAttachment(m_displayBuffer);

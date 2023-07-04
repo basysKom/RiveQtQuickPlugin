@@ -11,12 +11,12 @@ QRectF RiveQSGRenderNode::rect() const
     return m_item->boundingRect();
 }
 
-RiveQSGRenderNode::RiveQSGRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
+RiveQSGRenderNode::RiveQSGRenderNode(std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item)
     : RiveQSGBaseNode(artboardInstance, item)
 {
 }
 
-RiveQSGBaseNode::RiveQSGBaseNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
+RiveQSGBaseNode::RiveQSGBaseNode(std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item)
     : m_artboardInstance(artboardInstance)
     , m_item(item)
 {
@@ -47,6 +47,8 @@ void RiveQSGBaseNode::setArtboardRect(const QRectF &bounds)
     m_topLeftRivePosition = bounds.topLeft();
     m_riveSize = bounds.size();
 
-    m_scaleFactorX = bounds.width() / m_artboardInstance->width();
-    m_scaleFactorY = bounds.height() / m_artboardInstance->height();
+    if (auto artboardInstance = m_artboardInstance.lock(); artboardInstance) {
+        m_scaleFactorX = bounds.width() / artboardInstance->width();
+        m_scaleFactorY = bounds.height() / artboardInstance->height();
+    }
 }

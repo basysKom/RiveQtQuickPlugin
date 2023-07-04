@@ -10,7 +10,7 @@
 #include "riveqsgopenglrendernode.h"
 #include "riveqtquickitem.h"
 
-void RiveQSGOpenGLRenderNode::updateArtboardInstance(rive::ArtboardInstance *artboardInstance)
+void RiveQSGOpenGLRenderNode::updateArtboardInstance(std::weak_ptr<rive::ArtboardInstance> artboardInstance)
 {
     m_renderer.reset();
     m_artboardInstance = artboardInstance;
@@ -29,7 +29,7 @@ void RiveQSGOpenGLRenderNode::setRect(const QRectF &bounds)
     RiveQSGBaseNode::setRect(bounds);
 }
 
-RiveQSGOpenGLRenderNode::RiveQSGOpenGLRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item)
+RiveQSGOpenGLRenderNode::RiveQSGOpenGLRenderNode(std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item)
     : RiveQSGRenderNode(artboardInstance, item)
 {
     initializeOpenGLFunctions();
@@ -43,7 +43,7 @@ void RiveQSGOpenGLRenderNode::render(const RenderState *state)
 
 void RiveQSGOpenGLRenderNode::renderOpenGL(const RenderState *state)
 {
-    if (!m_artboardInstance) {
+    if (m_artboardInstance.expired()) {
         return;
     }
 
@@ -84,6 +84,7 @@ void RiveQSGOpenGLRenderNode::renderOpenGL(const RenderState *state)
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     // this renders the artboard!
-    m_artboardInstance->draw(&m_renderer);
+
+    m_artboardInstance.lock()->draw(&m_renderer);
     glDisable(GL_SCISSOR_TEST);
 }
