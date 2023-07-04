@@ -13,11 +13,6 @@
 #include "riveqtquickitem.h"
 #include "renderer/riveqtrhirenderer.h"
 
-void RiveQSGRHIRenderNode::updateArtboardInstance(std::weak_ptr<rive::ArtboardInstance> artboardInstance)
-{
-    m_artboardInstance = artboardInstance;
-}
-
 RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item)
     : RiveQSGRenderNode(artboardInstance, item)
     , m_displayBuffer(nullptr)
@@ -68,22 +63,6 @@ RiveQSGRHIRenderNode::~RiveQSGRHIRenderNode()
 
 void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
 {
-    if (auto artboardInstance = m_artboardInstance.lock(); artboardInstance) {
-        const auto scene = artboardInstance->defaultScene();
-        const auto sceneW = scene->width();
-        const auto sceneH = scene->height();
-        const auto aspectRatio = artboardInstance->defaultScene()->width() / artboardInstance->defaultScene()->height();
-        const auto width = aspectRatio * bounds.height();
-        //    const auto height = m_artboardInstance->defaultScene()->height();
-    } else {
-        return;
-    }
-
-    auto artboardInstance = m_artboardInstance.lock();
-
-    //    qCDebug(rqqpRendering) << "Dim" << item->width() << item->height() << width << height;
-    m_rect = bounds;
-
     m_vertices.clear();
 
     m_vertices.append(QVector2D(bounds.x(), bounds.y()));
@@ -121,6 +100,7 @@ void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
 
     m_verticesDirty = true;
 
+    RiveQSGBaseNode::setRect(bounds);
     markDirty(QSGNode::DirtyGeometry);
 }
 

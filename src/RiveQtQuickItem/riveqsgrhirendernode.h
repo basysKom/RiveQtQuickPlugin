@@ -31,7 +31,6 @@ public:
     RiveQSGRHIRenderNode(std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item);
     virtual ~RiveQSGRHIRenderNode();
 
-    virtual void updateArtboardInstance(std::weak_ptr<rive::ArtboardInstance> artboardInstance) override;
     void setRect(const QRectF &bounds) override;
     void setFillMode(const RiveRenderSettings::FillMode mode) { m_fillMode = mode; }
 
