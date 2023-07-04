@@ -623,7 +623,6 @@ void RiveQtQuickItem::setCurrentArtboardIndex(const int newIndex)
         emit currentArtboardIndexChanged();
 
         m_scheduleArtboardChange = true; // we have to do this in the render thread.
-        delete m_renderNode;
         m_renderNode = nullptr;
         return;
     }
@@ -637,7 +636,6 @@ void RiveQtQuickItem::setCurrentArtboardIndex(const int newIndex)
     emit currentArtboardIndexChanged();
 
     m_scheduleArtboardChange = true; // we have to do this in the render thread.
-    delete m_renderNode;
     m_renderNode = nullptr;
     update();
 }
