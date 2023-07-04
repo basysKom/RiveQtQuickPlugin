@@ -50,9 +50,8 @@ Rectangle {
                         flat: true
                         padding: 2
 
-                        background: Rectangle {
-                            color: highlightedIndex === index ? "lightgrey" : "white"
-                        }
+                        checkable: true
+                        checked: highlightedIndex === index
 
                         text: {
                             let result = ""

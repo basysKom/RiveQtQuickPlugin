@@ -98,7 +98,6 @@ void RiveQtStateMachineInputMap::activateTrigger(const QString &trigger)
 
     if (!targetInput)
         return;
-
     targetInput->fire();
 }
 

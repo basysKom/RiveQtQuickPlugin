@@ -230,11 +230,14 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         m_renderNode->markDirty(QSGNode::DirtyForceUpdate);
     }
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    // in qt6 this is done in the offscreen render call
     if (m_renderNode && m_geometryChanged) {
         m_renderNode->setRect(QRectF(x(), y(), width(), height()));
         m_renderNode->setArtboardRect(artboardRect());
         m_geometryChanged = false;
     }
+#endif
 
     this->update();
 
@@ -470,6 +473,12 @@ void RiveQtQuickItem::renderOffscreen()
 {
     // its okay io call this since we are sure that the renderthread is not active when we get called
     if (m_renderNode && isVisible() && m_hasValidRenderNode) {
+        if (m_geometryChanged) {
+            m_renderNode->setRect(QRectF(x(), y(), width(), height()));
+            m_renderNode->setArtboardRect(artboardRect());
+            m_geometryChanged = false;
+        }
+
         m_renderNode->renderOffscreen();
     }
 }
@@ -688,7 +697,7 @@ int RiveQtQuickItem::currentStateMachineIndex() const
 
 void RiveQtQuickItem::setCurrentStateMachineIndex(const int newCurrentStateMachineIndex)
 {
-    qCDebug(rqqpItem) << Q_FUNC_INFO;
+    qCDebug(rqqpItem) << Q_FUNC_INFO << QThread::currentThread() << m_currentStateMachineIndex << newCurrentStateMachineIndex;
     if (m_currentStateMachineIndex == newCurrentStateMachineIndex) {
         return;
     }
@@ -707,7 +716,7 @@ void RiveQtQuickItem::setCurrentStateMachineIndex(const int newCurrentStateMachi
     emit currentStateMachineIndexChanged();
 
     m_scheduleStateMachineChange = true; // we have to do this in the render thread.
-    emit stateMachineInterfaceChanged();
+    // emit stateMachineInterfaceChanged();
 
     update();
 }
