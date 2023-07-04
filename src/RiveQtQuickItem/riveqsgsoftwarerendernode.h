@@ -23,7 +23,7 @@ class QQuickWindow;
 class RiveQSGSoftwareRenderNode : public RiveQSGRenderNode
 {
 public:
-    RiveQSGSoftwareRenderNode(QQuickWindow *window, rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
+    RiveQSGSoftwareRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item);
 
     QRectF rect() const override;
 

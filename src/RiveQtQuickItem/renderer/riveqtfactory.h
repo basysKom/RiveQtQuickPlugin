@@ -29,16 +29,16 @@ public:
         QOpenGLRenderer,
         RHIRenderer
     };
-    
+
     explicit RiveQtFactory(const RiveRenderSettings &renderSettings = RiveRenderSettings())
         : rive::Factory()
         , m_renderSettings(renderSettings)
     {
     }
-    
+
     void setRenderSettings(const RiveRenderSettings &renderSettings) { m_renderSettings = renderSettings; }
 
-    RiveQSGRenderNode *renderNode(QQuickWindow *window, rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
+    RiveQSGRenderNode *renderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item);
 
     rive::rcp<rive::RenderBuffer> makeBufferU16(rive::Span<const uint16_t> data) override;
     rive::rcp<rive::RenderBuffer> makeBufferU32(rive::Span<const uint32_t> data) override;
@@ -55,6 +55,6 @@ private:
     unsigned segmentCount();
 
     RiveQtRenderType renderType();
-    
+
     RiveRenderSettings m_renderSettings;
 };

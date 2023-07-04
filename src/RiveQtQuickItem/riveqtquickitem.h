@@ -69,8 +69,6 @@ public:
 
     Q_INVOKABLE void triggerAnimation(int id);
 
-    std::unique_ptr<rive::ArtboardInstance> &artboardInstance() { return m_currentArtboardInstance; };
-
     bool isTextureProvider() const override { return true; }
     QSGTextureProvider *textureProvider() const override { return m_textureProvider.data(); }
 
@@ -174,7 +172,7 @@ private:
     QString m_fileSource;
     LoadingStatus m_loadingStatus { Idle };
 
-    std::unique_ptr<rive::ArtboardInstance> m_currentArtboardInstance { nullptr };
+    std::shared_ptr<rive::ArtboardInstance> m_currentArtboardInstance { nullptr };
     std::unique_ptr<rive::LinearAnimationInstance> m_animationInstance { nullptr };
     std::shared_ptr<rive::StateMachineInstance> m_currentStateMachineInstance { nullptr };
 

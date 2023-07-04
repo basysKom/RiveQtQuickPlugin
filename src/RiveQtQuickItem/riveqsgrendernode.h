@@ -18,7 +18,7 @@ class RiveQtQuickItem;
 class RiveQSGBaseNode
 {
 public:
-    RiveQSGBaseNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
+    RiveQSGBaseNode(std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item);
 
     virtual void renderOffscreen() { }
     virtual void setRect(const QRectF &bounds);
@@ -26,12 +26,12 @@ public:
     virtual float scaleFactorX() const;
     virtual float scaleFactorY() const;
 
-    virtual void updateArtboardInstance(rive::ArtboardInstance *artboardInstance) { m_artboardInstance = artboardInstance; }
+    virtual void updateArtboardInstance(std::weak_ptr<rive::ArtboardInstance> artboardInstance) { m_artboardInstance = artboardInstance; }
 
     virtual void setArtboardRect(const QRectF &bounds);
 
 protected:
-    rive::ArtboardInstance *m_artboardInstance { nullptr };
+    std::weak_ptr<rive::ArtboardInstance> m_artboardInstance;
     RiveQtQuickItem *m_item { nullptr };
     QRectF m_rect;
     QPointF m_topLeftRivePosition { 0.f, 0.f };
@@ -44,7 +44,7 @@ protected:
 class RiveQSGRenderNode : public QSGRenderNode, public RiveQSGBaseNode
 {
 public:
-    RiveQSGRenderNode(rive::ArtboardInstance *artboardInstance, RiveQtQuickItem *item);
+    RiveQSGRenderNode(std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item);
 
     StateFlags changedStates() const override { return QSGRenderNode::BlendState; }
     RenderingFlags flags() const override { return QSGRenderNode::BoundedRectRendering | QSGRenderNode::DepthAwareRendering; }
