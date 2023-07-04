@@ -48,12 +48,10 @@ void RiveQSGOpenGLRenderNode::renderOpenGL(const RenderState *state)
     }
 
     const float devicePixelRatio = m_item->window()->devicePixelRatio();
-
-    const QPointF globalPos = m_item->mapToItem(nullptr, QPointF(0, 0)) * devicePixelRatio;
-
     QMatrix4x4 projectionMatrix = *state->projectionMatrix();
     projectionMatrix.scale(1 / devicePixelRatio, 1 / devicePixelRatio);
 
+    const QPointF globalPos = m_item->mapToItem(nullptr, QPointF(0, 0)) * devicePixelRatio;
     QMatrix4x4 modelMatrix;
     modelMatrix.translate(globalPos.x(), globalPos.y());
     modelMatrix.translate(m_topLeftRivePosition.x(), m_topLeftRivePosition.y());
