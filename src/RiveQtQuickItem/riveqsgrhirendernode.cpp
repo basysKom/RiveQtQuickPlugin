@@ -122,7 +122,6 @@ void RiveQSGRHIRenderNode::renderOffscreen()
         m_renderer->render(cb);
     }
     rhi->endOffscreenFrame();
-    //    m_renderer->cleanNodes();
 }
 
 void RiveQSGRHIRenderNode::render(const RenderState *state)
