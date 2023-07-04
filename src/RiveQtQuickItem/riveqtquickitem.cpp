@@ -158,6 +158,10 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         m_scheduleArtboardChange = false;
         updateCurrentStateMachineIndex();
         m_scheduleStateMachineChange = true;
+
+        // Update the default animation when the artboard has changed.
+        // We need the animation instance, that's why this looks a little weird.
+        m_animationInstance = m_currentArtboardInstance->animationNamed(m_currentArtboardInstance->firstAnimation()->name());
     }
 
     if (m_scheduleStateMachineChange && m_currentArtboardInstance) {

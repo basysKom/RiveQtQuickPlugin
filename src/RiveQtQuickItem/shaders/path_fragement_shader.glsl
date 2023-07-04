@@ -30,7 +30,7 @@ uniform sampler2D u_alphaMaskTexture;
 
 uniform bool u_useAlphaMask;
 
-vec4 getGradientColor( float gradientCoord) {
+vec4 getGradientColor(float gradientCoord) {
     vec4 gradientColor = u_stopColors[0];
 
     if (gradientCoord >= u_stopPositions[u_numStops - 1].x) {

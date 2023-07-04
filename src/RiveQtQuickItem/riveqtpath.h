@@ -6,12 +6,11 @@
 #pragma once
 
 #include <QPainterPath>
+#include <QMatrix4x4>
 #include <QPen>
 
 #include <rive/renderer.hpp>
 #include <rive/math/raw_path.hpp>
-
-#include "datatypes.h"
 
 class SubPath;
 
@@ -20,7 +19,7 @@ class RiveQtPath : public rive::RenderPath
 public:
     RiveQtPath(const unsigned segmentCount);
     RiveQtPath(const RiveQtPath &other);
-    RiveQtPath(rive::RawPath &rawPath, rive::FillRule fillRule, const unsigned segmentCount);
+    RiveQtPath(const rive::RawPath &rawPath, rive::FillRule fillRule, const unsigned segmentCount);
 
     void rewind() override;
     void moveTo(float x, float y) override { m_path.moveTo(x, y); }

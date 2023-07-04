@@ -2,12 +2,13 @@
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
+#include <QVector2D>
 
-#include "riveqtpath.h"
-#include "riveqtutils.h"
+#include <private/qtriangulator_p.h>
 
 #include "rqqplogging.h"
-#include <private/qtriangulator_p.h>
+#include "riveqtpath.h"
+#include "riveqtutils.h"
 
 RiveQtPath::RiveQtPath(const unsigned segmentCount)
 {
@@ -27,7 +28,7 @@ RiveQtPath::RiveQtPath(const RiveQtPath &other)
     m_segmentCount = other.m_segmentCount;
 }
 
-RiveQtPath::RiveQtPath(rive::RawPath &rawPath, rive::FillRule fillRule, const unsigned segmentCount)
+RiveQtPath::RiveQtPath(const rive::RawPath &rawPath, rive::FillRule fillRule, const unsigned segmentCount)
 {
     m_path.clear();
     m_path.setFillRule(RiveQtUtils::riveFillRuleToQt(fillRule));
