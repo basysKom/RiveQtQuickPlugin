@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 #include <QVector2D>
+#include <QtMath>
 
 #include <private/qtriangulator_p.h>
 

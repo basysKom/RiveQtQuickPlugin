@@ -49,6 +49,7 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     connect(this, &RiveQtQuickItem::internalArtboardChanged, this, &RiveQtQuickItem::currentArtboardIndexChanged, Qt::QueuedConnection);
     connect(this, &RiveQtQuickItem::internalArtboardChanged, this, &RiveQtQuickItem::updateAnimations, Qt::QueuedConnection);
     connect(this, &RiveQtQuickItem::internalArtboardChanged, this, &RiveQtQuickItem::updateStateMachines, Qt::QueuedConnection);
+    connect(this, &RiveQtQuickItem::loadFileAfterUnloading, this, &RiveQtQuickItem::loadRiveFile, Qt::QueuedConnection);
 
     connect(this, &RiveQtQuickItem::internalStateMachineChanged, this, &RiveQtQuickItem::updateStateMachineInputMap, Qt::QueuedConnection);
 
@@ -73,10 +74,21 @@ void RiveQtQuickItem::triggerAnimation(int id)
     if (id < 0 || id >= m_currentArtboardInstance->animationCount()) {
         qCDebug(rqqpItem) << "Requested animation id:" << id << "out of bounds: 0 -" << m_currentArtboardInstance->animationCount();
         m_animationInstance = nullptr;
+        m_currentAnimationIndex = -1;
+        emit currentAnimationIndexChanged();
         return;
     }
 
+    if (m_currentStateMachineIndex > -1) {
+        qCWarning(rqqpItem) << "Requested animation id:" << id << "will not animate since a statemachine with id"
+                            << m_currentStateMachineIndex << "is active.";
+    }
+
+    m_currentAnimationIndex = id;
     m_animationInstance = m_currentArtboardInstance->animationAt(id);
+
+    qCDebug(rqqpItem) << "Selected Animation" << QString::fromStdString(m_animationInstance->name());
+    emit currentAnimationIndexChanged();
 }
 
 void RiveQtQuickItem::updateStateMachineInputMap()
@@ -136,6 +148,21 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     QQuickWindow *currentWindow = window();
 
     m_renderNode = static_cast<RiveQSGRenderNode *>(oldNode);
+
+    // unload the file from the render thread to make sure its not accessed at time of unloading
+    if (m_loadingStatus == Unloading && m_renderNode) {
+        m_renderNode->updateArtboardInstance(std::weak_ptr<rive::ArtboardInstance>());
+
+        // reset all
+        m_riveFile = nullptr;
+        m_scheduleArtboardChange = true;
+        m_scheduleStateMachineChange = true;
+
+        // now load the file from the main thread -> connected as Queued Connection to make sure its called in its owning thread
+        emit loadFileAfterUnloading(m_fileSource);
+
+        return m_renderNode;
+    }
 
     if (!isVisible()) {
         return m_renderNode;
@@ -288,25 +315,35 @@ void RiveQtQuickItem::setFileSource(const QString &source)
     loadRiveFile(source);
 }
 
+int RiveQtQuickItem::currentAnimationIndex() const
+{
+    return m_currentAnimationIndex;
+}
+
 void RiveQtQuickItem::loadRiveFile(const QString &source)
 {
+    if (m_loadingStatus != Idle && m_loadingStatus != Unloading) {
+        // clear the data
+        m_artboardInfoList.clear();
+        emit artboardsChanged();
+
+        m_animationList.clear();
+        emit animationsChanged();
+
+        m_stateMachineList.clear();
+        emit stateMachinesChanged();
+
+        m_loadingStatus = Unloading;
+        emit loadingStatusChanged();
+
+        m_fileSource = source;
+        return;
+    }
+
     m_loadingStatus = Loading;
     emit loadingStatusChanged();
 
-    if (m_renderNode) {
-        m_renderNode->updateArtboardInstance(std::weak_ptr<rive::ArtboardInstance>());
-    }
-
     if (source.isEmpty()) {
-        m_riveFile = nullptr;
-        m_scheduleArtboardChange = true;
-        m_scheduleStateMachineChange = true;
-        m_artboardInfoList.clear();
-        emit artboardsChanged();
-        m_animationList.clear();
-        emit animationsChanged();
-        m_stateMachineList.clear();
-        emit stateMachinesChanged();
         m_loadingStatus = Idle;
         emit loadingStatusChanged();
         return;
@@ -430,6 +467,7 @@ void RiveQtQuickItem::updateStateMachines()
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 void RiveQtQuickItem::renderOffscreen()
 {
+    // its okay io call this since we are sure that the renderthread is not active when we get called
     if (m_renderNode && isVisible() && m_hasValidRenderNode) {
         m_renderNode->renderOffscreen();
     }
@@ -448,6 +486,8 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
         return false;
     }
 
+    // m_renderNode is managed and owend by the renderThread the calls should be ok (as they only read)
+    // but still some potential to cause trouble
     m_lastMouseX = (pos.x() - m_renderNode->topLeft().rx()) / m_renderNode->scaleFactorX();
     m_lastMouseY = (pos.y() - m_renderNode->topLeft().ry()) / m_renderNode->scaleFactorY();
 
@@ -658,12 +698,6 @@ void RiveQtQuickItem::setCurrentStateMachineIndex(const int newCurrentStateMachi
     }
 
     if (!m_riveFile->artboard(m_currentArtboardIndex)) {
-        return;
-    }
-
-    if (newCurrentStateMachineIndex >= m_riveFile->artboard(m_currentArtboardIndex)->stateMachineCount()) {
-        qCDebug(rqqpItem) << "Requested State Machine Index" << newCurrentStateMachineIndex << "out of bounds. Upper bound <"
-                          << m_riveFile->artboard()->stateMachineCount();
         return;
     }
 
