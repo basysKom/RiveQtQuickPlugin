@@ -63,7 +63,7 @@ public:
     void updateClippingGeometry(const QVector<QVector<QVector2D>> &clippingGeometry);
 
 private:
-    void prepareRender(QRhiCommandBuffer *cb);
+    void prepareRender();
 
     bool m_recycled { true };
     bool m_clip { false };
@@ -95,7 +95,8 @@ private:
     QRhiShaderResourceBindings *m_clippingResourceBindings { nullptr };
     QRhiShaderResourceBindings *m_blendResourceBindings { nullptr };
 
-    QRhiGraphicsPipeline *m_drawPipeLine { nullptr };
+    QMap<rive::BlendMode, QRhiGraphicsPipeline *> m_drawPipelines;
+
     QRhiGraphicsPipeline *m_blendPipeLine { nullptr };
     QRhiGraphicsPipeline *m_clipPipeLine { nullptr };
 

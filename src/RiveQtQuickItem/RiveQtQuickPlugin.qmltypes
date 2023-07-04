@@ -17,7 +17,7 @@ Module {
         exportMetaObjectRevisions: [256]
         Enum {
             name: "LoadingStatus"
-            values: ["Idle", "Loading", "Loaded", "Error"]
+            values: ["Idle", "Loading", "Loaded", "Error", "Unloading"]
         }
         Property {
             name: "fileSource"
@@ -71,12 +71,20 @@ Module {
             index: 5
         }
         Property {
+            name: "currentAnimationIndex"
+            type: "int"
+            read: "currentAnimationIndex"
+            write: "triggerAnimation"
+            notify: "currentAnimationIndexChanged"
+            index: 6
+        }
+        Property {
             name: "currentStateMachineIndex"
             type: "int"
             read: "currentStateMachineIndex"
             write: "setCurrentStateMachineIndex"
             notify: "currentStateMachineIndexChanged"
-            index: 6
+            index: 7
         }
         Property {
             name: "interactive"
@@ -84,7 +92,7 @@ Module {
             read: "interactive"
             write: "setInteractive"
             notify: "interactiveChanged"
-            index: 7
+            index: 8
         }
         Property {
             name: "stateMachineInterface"
@@ -92,7 +100,7 @@ Module {
             isPointer: true
             read: "stateMachineInterface"
             notify: "stateMachineInterfaceChanged"
-            index: 8
+            index: 9
             isReadonly: true
         }
         Property {
@@ -101,7 +109,7 @@ Module {
             read: "renderQuality"
             write: "setRenderQuality"
             notify: "renderQualityChanged"
-            index: 9
+            index: 10
         }
         Property {
             name: "fillMode"
@@ -109,7 +117,7 @@ Module {
             read: "fillMode"
             write: "setFillMode"
             notify: "fillModeChanged"
-            index: 10
+            index: 11
         }
         Signal { name: "animationsChanged" }
         Signal { name: "artboardsChanged" }
@@ -117,8 +125,13 @@ Module {
         Signal { name: "fileSourceChanged" }
         Signal { name: "loadingStatusChanged" }
         Signal { name: "currentArtboardIndexChanged" }
+        Signal { name: "currentAnimationIndexChanged" }
         Signal { name: "currentStateMachineIndexChanged" }
         Signal { name: "interactiveChanged" }
+        Signal {
+            name: "loadFileAfterUnloading"
+            Parameter { name: "fileName"; type: "QString" }
+        }
         Signal { name: "internalArtboardChanged" }
         Signal { name: "internalStateMachineChanged" }
         Signal { name: "stateMachineInterfaceChanged" }
