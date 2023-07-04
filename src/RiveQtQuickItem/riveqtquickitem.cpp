@@ -125,6 +125,7 @@ void RiveQtQuickItem::updateInternalArtboard()
     m_currentArtboardInstance->updateComponents();
 
     m_scheduleStateMachineChange = true;
+    m_geometryChanged = true;
 
     m_animationInstance = nullptr;
 
