@@ -89,7 +89,7 @@ RiveQtQuickItem {
 ### Available Properties
 
 | Name                     | Type             | R/W | Description |
-|--------------------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+|--------------------------|------------------|-----|---------------------------------------------------------------------------------------------------------------------------------------|
 | fileSource               | string           | R/W | File path to the file that shall be loaded. An empty string unloads the current file.                                                 |
 | loadingStatus            | int (enum)       | RO  | Current loading state of the rive item.                                                                                               |
 | artboards                | list of struct   | R/W | Artboard information of the loaded rive file.                                                                                         |
