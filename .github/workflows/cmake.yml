@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            qt-version: 5.15.2
+            arch: win64_msvc2019_64
+            compiler: msvc
+            host: windows
+            modules: ''
+          - os: windows-latest
+            qt-version: 6.5.0
+            arch: win64_msvc2019_64
+            compiler: msvc
+            host: windows
+            modules: 'qtshadertools'
+          - os: ubuntu-latest
+            qt-version: 5.15.2
+            arch: gcc_64
+            compiler: clang
+            host: linux
+            modules: ''
+          - os: ubuntu-latest
+            qt-version: 6.5.0
+            arch: gcc_64
+            compiler: clang
+            host: linux
+            modules: 'qtshadertools'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3.2.1
+        with:
+          version: ${{ matrix.qt-version }}
+          arch: ${{ matrix.arch }}
+          host: ${{ matrix.host }}
+          mirror: "http://mirrors.ocf.berkeley.edu/qt/"
+          cache: true
+          modules: ${{ matrix.modules }}
+
+      - name: Setup Environment Variables (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "QTDIR=${env:ProgramFiles(x86)}\Qt\${{ matrix.qt-version }}" >> $GITHUB_ENV
+          echo "Path=${env:Path};${env:ProgramFiles(x86)}\Qt\${{ matrix.qt-version }}\bin" >> $GITHUB_ENV
+
+      - name: Setup Environment Variables (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev
+          echo "QTDIR=/opt/qt${{ matrix.qt-version }}" >> $GITHUB_ENV
+          echo "Path=${env:Path}:/opt/qt${{ matrix.qt-version }}/bin" >> $GITHUB_ENV
+
+      - name: Setup Clang (Ubuntu)
+        if: matrix.compiler == 'clang' && matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get install -y clang
+          echo "CC=/usr/bin/clang" >> $GITHUB_ENV
+          echo "CXX=/usr/bin/clang++" >> $GITHUB_ENV
+
+      - name: Setup MSVC (Windows)
+        if: matrix.compiler == 'msvc' && matrix.os == 'windows-latest'
+        run: |
+          echo "CC=cl.exe" >> $GITHUB_ENV
+          echo "CXX=cl.exe" >> $GITHUB_ENV
+
+      - name: Install CMake
+        uses: lukka/get-cmake@v3.21.1
+
+      - name: Configure
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_PREFIX_PATH=$QTDIR ..
+
+      - name: Build
+        run: |
+          cd build         
+          cmake --build . --config Release
+
+      - name: Test
+        run: |
+          cd build
+          ctest --output-on-failure
