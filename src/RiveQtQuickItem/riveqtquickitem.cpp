@@ -21,6 +21,7 @@
 #include <rive/animation/state_machine_listener.hpp>
 #include <rive/file.hpp>
 
+#include "rive/animation/state_machine_input_instance.hpp"
 #include "rqqplogging.h"
 #include "riveqtquickitem.h"
 #include "renderer/riveqtfactory.h"
@@ -32,6 +33,7 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     // TODO: maybe we should also allow Hover Events to be used
     setFlag(QQuickItem::ItemHasContents, true);
     setAcceptedMouseButtons(Qt::AllButtons);
+    setAcceptHoverEvents(true);
 
     // we require a window to know the render backend and setup the correct.
     connect(this, &RiveQtQuickItem::windowChanged, this, [this]() { loadRiveFile(m_fileSource); });
@@ -273,9 +275,8 @@ void RiveQtQuickItem::mousePressEvent(QMouseEvent *event)
     // todo: shall we tell qml about a hit and details about that?
 }
 
-void RiveQtQuickItem::mouseMoveEvent(QMouseEvent *event)
+void RiveQtQuickItem::hoverMoveEvent(QHoverEvent *event)
 {
-
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     hitTest(event->position(), rive::ListenerType::move);
 #else
@@ -284,15 +285,22 @@ void RiveQtQuickItem::mouseMoveEvent(QMouseEvent *event)
     // todo: shall we tell qml about a hit and details about that?
 }
 
-void RiveQtQuickItem::hoverMoveEvent(QHoverEvent *event)
+void RiveQtQuickItem::hoverEnterEvent(QHoverEvent *event)
 {
-
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    hitTest(event->position(), rive::ListenerType::move);
+    hitTest(event->position(), rive::ListenerType::enter);
 #else
-    hitTest(event->pos(), rive::ListenerType::move);
+    hitTest(event->pos(), rive::ListenerType::enter);
 #endif
-    // todo: shall we tell qml about a hit and details about that?
+}
+
+void RiveQtQuickItem::hoverLeaveEvent(QHoverEvent *event)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    hitTest(event->position(), rive::ListenerType::exit);
+#else
+    hitTest(event->pos(), rive::ListenerType::exit);
+#endif
 }
 
 void RiveQtQuickItem::mouseReleaseEvent(QMouseEvent *event)
@@ -501,46 +509,23 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
     m_lastMouseX = (pos.x() - m_renderNode->topLeft().rx()) / m_renderNode->scaleFactorX();
     m_lastMouseY = (pos.y() - m_renderNode->topLeft().ry()) / m_renderNode->scaleFactorY();
 
-    for (int i = 0; i < m_currentStateMachineInstance->stateMachine()->listenerCount(); ++i) {
-        auto *listener = m_currentStateMachineInstance->stateMachine()->listener(i);
-
-        if (!listener) {
-            qCDebug(rqqpInteraction) << "Listener is nullptr";
-            continue;
-        }
-
-        if (listener->listenerType() == rive::ListenerType::enter || listener->listenerType() == rive::ListenerType::exit) {
-            qCWarning(rqqpItem) << "Enter and Exit Actions are not yet supported";
-            continue;
-        }
-
-        if (listener->listenerType() != type) {
-            qCDebug(rqqpInteraction) << "Skipping listener of type" << (int)listener->listenerType() << "expected:" << (int)type;
-            continue;
-        }
-
-        for (const auto &id : listener->hitShapeIds()) {
-            auto *coreElement = m_currentStateMachineInstance->artboard()->resolve(id);
-
-            if (!coreElement->is<rive::Shape>()) {
-                qCDebug(rqqpInteraction) << "Skipping non shape";
-                continue;
-            }
-
-            rive::Shape *shape = dynamic_cast<rive::Shape *>(coreElement);
-            const rive::IAABB area = { static_cast<int32_t>(m_lastMouseX), static_cast<int32_t>(m_lastMouseY),
-                                       static_cast<int32_t>(m_lastMouseX + 1), static_cast<int32_t>(m_lastMouseY + 1) };
-            const bool hit = shape->hitTest(area);
-
-            if (hit) {
-                qCDebug(rqqpInteraction) << "ID:" << listener->targetId() << "- Hit";
-                listener->performChanges(m_currentStateMachineInstance.get(), rive::Vec2D(m_lastMouseX, m_lastMouseY));
-            } else {
-                qCDebug(rqqpInteraction) << "ID:" << listener->targetId() << "- No hit";
-            }
-        }
+    switch (type) {
+    case rive::ListenerType::move:
+        m_currentStateMachineInstance->pointerMove(rive::Vec2D(m_lastMouseX, m_lastMouseY));
+        return true;
+    case rive::ListenerType::down:
+        m_currentStateMachineInstance->pointerDown(rive::Vec2D(m_lastMouseX, m_lastMouseY));
+        return true;
+    case rive::ListenerType::up:
+        m_currentStateMachineInstance->pointerUp(rive::Vec2D(m_lastMouseX, m_lastMouseY));
+        return true;
+    case rive::ListenerType::enter:
+    case rive::ListenerType::exit:
+        // not handled in rivecpp as well
+        return false;
     }
-    return true;
+
+    return false;
 }
 
 const QVector<AnimationInfo> &RiveQtQuickItem::animations() const
