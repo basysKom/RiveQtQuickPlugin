@@ -214,6 +214,12 @@ void RiveQSGRHIRenderNode::prepare()
 
     m_renderer->updateArtboardSize(QSize(artboardInstance->width(), artboardInstance->height()));
 
+    // value range of 0 to 1 to describe the edges of the artboard on the final render ("clip the final texture")
+    float left = 0; // 0-1
+    float right = 1; // 0-1
+    float top = 0; // 0-1
+    float bottom = 1; // 0-1
+
     { // update projection matrix
         QMatrix4x4 projMatrix = *projectionMatrix();
 
@@ -242,6 +248,24 @@ void RiveQSGRHIRenderNode::prepare()
         default:
         case RiveRenderSettings::PreserveAspectFit: {
             const auto scaleFactor = qMin(item2artboardScaleX, item2artboardScaleY);
+
+            float widthFactor = m_item->width() - artboardInstance->width() * scaleFactor;
+            float heightFactor = m_item->height() - artboardInstance->height() * scaleFactor;
+
+            if (widthFactor > 0) {
+                // diff through 2 since its centered horizontal
+                widthFactor = (widthFactor / 2.0f) * 1.0f / m_item->width();
+                left = widthFactor;
+                right = 1.0 - widthFactor;
+            }
+
+            if (heightFactor > 0) {
+                // diff through 2 since its centered vertical
+                heightFactor = (heightFactor / 2.0f) * 1.0f / m_item->height();
+                top = heightFactor;
+                bottom = 1.0 - heightFactor;
+            }
+
             combinedMatrix.scale(scaleFactor, scaleFactor);
             break;
         }
@@ -303,7 +327,7 @@ void RiveQSGRHIRenderNode::prepare()
     }
 
     if (!m_uniformBuffer) {
-        m_uniformBuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 80);
+        m_uniformBuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 96);
         m_uniformBuffer->create();
         m_cleanupList.append(m_uniformBuffer);
     }
@@ -367,9 +391,14 @@ void RiveQSGRHIRenderNode::prepare()
 
     float opacity = inheritedOpacity();
     int flipped = rhi->isYUpInFramebuffer() ? 1 : 0;
+
     resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 0, 64, mvp.constData());
     resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 64, 4, &opacity);
     resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 68, 4, &flipped);
+    resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 72, 4, &left);
+    resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 76, 4, &right);
+    resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 80, 4, &top);
+    resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 84, 4, &bottom);
 
     swapChain->currentFrameCommandBuffer()->resourceUpdate(resourceUpdates);
 }
