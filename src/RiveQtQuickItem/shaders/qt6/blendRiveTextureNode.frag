@@ -17,14 +17,19 @@ layout(std140, binding = 0) uniform buf {
 layout(binding = 1) uniform sampler2D u_texture_src;
 layout(binding = 2) uniform sampler2D u_texture_dest;
 
-//ok
 vec4 overlay(vec4 srcColor, vec4 destColor) {
-    float ra = (destColor.r < 0.5) ? (2.0 * destColor.r * srcColor.r) : (1.0 - 2.0 * (1.0 - destColor.r) * (1.0 - srcColor.r));
-    float ga = (destColor.g < 0.5) ? (2.0 * destColor.g * srcColor.g) : (1.0 - 2.0 * (1.0 - destColor.g) * (1.0 - srcColor.g));
-    float ba = (destColor.b < 0.5) ? (2.0 * destColor.b * srcColor.b) : (1.0 - 2.0 * (1.0 - destColor.b) * (1.0 - srcColor.b));
-    float aa = srcColor.a + destColor.a * (1.0 - srcColor.a);
+    // not perfect matching the skia overlay blend still some visual differences...
+    float luminance = dot(srcColor.rgb, vec3(0.2126f, 0.7152f, 0.0722f));
 
-    return vec4(ra, ga, ba, srcColor.a );
+    vec3 blendedColor = mix(
+        2.0f * srcColor.rgb * destColor.rgb,
+        1.0f - 2.0f * (1.0f - srcColor.rgb) * (1.0f - destColor.rgb),
+        step(0.5f, luminance)
+      );
+
+    blendedColor = blendedColor * (destColor.a) + srcColor.rgb * ( 1.0f - destColor.a);
+
+    return vec4(blendedColor, 1);
 }
 
 // ok
