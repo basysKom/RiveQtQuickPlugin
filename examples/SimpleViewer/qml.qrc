@@ -13,5 +13,8 @@
         <file alias="nested-artboards-demo.riv">rive/nested-artboards-demo.riv</file>
         <file alias="travel-icon-pack.riv">rive/travel-icons-pack.riv</file>
         <file alias="tree-demo.riv">rive/tree-demo.riv</file>
+        <file alias="glow-grid.riv">rive/glow-grid.riv</file>
+        <file alias="sith-de-mayo.riv">rive/sith-de-mayo.riv</file>
+        <file alias="pathfinder.riv">rive/pathfinder.riv</file>
     </qresource>
 </RCC>

@@ -26,7 +26,7 @@ Item {
                            if (riveItem.currentArtboardIndex === modelData.id) {
                                riveItem.currentArtboardIndex = -1
                            } else {
-                                riveItem.currentArtboardIndex = modelData.id
+                               riveItem.currentArtboardIndex = modelData.id
                            }
                        }
 
@@ -52,7 +52,6 @@ Item {
             Layout.fillHeight: true
             Layout.minimumWidth: 200
             Layout.minimumHeight: 200
-
         }
 
         ControlPanel {
@@ -108,7 +107,7 @@ Item {
                     currentArtboardIndex: 0
                     currentStateMachineIndex: -1
 
-                    renderQuality: RiveQtQuickItem.Medium
+                    renderQuality: RiveQtQuickItem.Low
                     fillMode: RiveQtQuickItem.PreserveAspectFit
                 }
             }
