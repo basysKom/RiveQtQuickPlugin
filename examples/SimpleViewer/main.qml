@@ -72,7 +72,7 @@ ApplicationWindow {
 
                     Repeater {
                         id: buttonRepeater
-                        model: ["bullet_man.riv", "jellyfish.riv", "icon_set.riv", "juice.riv", "water-bar-demo.riv", "Clear"]
+                        model: ["cannonball-man.riv", "electrified-button.riv", "joystick.riv", "naridon-oni-fan-art.riv", "nested-artboards-demo.riv", "travel-icons-pack.riv", "Clear"]
                         delegate: Button {
                             text: modelData
                             onClicked: {
