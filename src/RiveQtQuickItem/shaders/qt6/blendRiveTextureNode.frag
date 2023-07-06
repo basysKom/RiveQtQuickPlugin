@@ -204,14 +204,80 @@ vec4 luminosity(vec4 srcColor, vec4 destColor) {
     return vec4(resultColor, resultA);
 }
 
-//ok
+
 vec4 screen(vec4 srcColor, vec4 destColor) {
-    vec4 result;
-    result.rgb = 1.0 - (1.0 - destColor.rgb * (1.0f - srcColor.a)) * (1.0 - srcColor.rgb * (1.0f + destColor.a));
-    result.a = max(srcColor.a, destColor.a);
+    if (destColor.a < 1.0f) {
+        vec3 result = 1.0 - (1.0 - destColor.rgb * (1.0f - srcColor.a)) * (1.0 - srcColor.rgb * (1.0f + destColor.a));
+        vec3 finalColor = mix(srcColor.rgb, result, destColor.a);
+        return vec4(finalColor, 1.0);
+    }
+    vec3 base = srcColor.rgb / srcColor.a;
+    vec3 blend = destColor.rgb / destColor.a;
+    vec3 result = 1.0 - (1.0 - base) * (1.0 - blend);
+    return vec4(result, 1.0);
+}
+
+vec4 multiply(vec4 srcColor, vec4 destColor) {
+    vec4 result = srcColor * destColor;
+    result.rgb *= result.a;  // Ensure premultiplied alphas
+
+    // Normalize alpha to 1.0
+    float maxAlpha = max(result.a, 1e-6);
+    result.rgb /= maxAlpha;
+
+    result.rgb = mix(srcColor.rgb, result.rgb, destColor.a);
+    result.a = 1.0;
+
     return result;
 }
 
+vec4 darken(vec4 srcColor, vec4 destColor) {
+    vec4 result = min(srcColor, destColor);
+
+    // Ensure premultiplied alphas
+    result.rgb *= result.a;
+
+    // Normalize alpha to 1.0
+    float maxAlpha = max(result.a, 1e-6);
+    result.rgb /= maxAlpha;
+
+    result.rgb = mix(srcColor.rgb, result.rgb, destColor.a);
+    result.a = 1.0;
+
+    return result;
+}
+
+vec4 lighten(vec4 srcColor, vec4 destColor) {
+    vec4 result = max(srcColor, destColor);
+
+    // Ensure premultiplied alphas
+    result.rgb *= result.a;
+
+    // Normalize alpha to 1.0
+    float maxAlpha = max(result.a, 1e-6);
+    result.rgb /= maxAlpha;
+
+    result.rgb = mix(srcColor.rgb, result.rgb, destColor.a);
+    result.a = 1.0;
+
+    return result;
+}
+
+vec4 difference(vec4 srcColor, vec4 destColor) {
+    vec4 result = abs(srcColor - destColor);
+
+    // Ensure premultiplied alphas
+    result.rgb *= result.a;
+
+    // Normalize alpha to 1.0
+    float maxAlpha = max(result.a, 1e-6);
+    result.rgb /= maxAlpha;
+
+    result.rgb = mix(srcColor.rgb, result.rgb, destColor.a);
+    result.a = 1.0;
+
+    return result;
+}
 
 vec4 blend(vec4 srcColor, vec4 destColor, int blendMode) {
 
@@ -223,10 +289,14 @@ vec4 blend(vec4 srcColor, vec4 destColor, int blendMode) {
     vec4 blendedColor;
     if (blendMode == 0) {          // unused layer! do not blend
         blendedColor = srcColor;
-    } else if (blendMode == 14) {
+    } else if (blendMode == 14) { // 14 corresponds to the screen blend mode
         blendedColor = screen(srcColor, destColor);
     } else if (blendMode == 15) { // 15 corresponds to the overlay blend mode
         blendedColor = overlay(srcColor, destColor);
+    } else if (blendMode == 16) { // 15 corresponds to the darken blend mode
+        blendedColor = darken(srcColor, destColor);
+    } else if (blendMode == 17) { // 15 corresponds to the lighten blend mode
+        blendedColor = lighten(srcColor, destColor);
     } else if (blendMode == 18) { // 18 corresponds to the color dodge blend mode
         blendedColor = colorDodge(srcColor, destColor);
     } else if (blendMode == 19) { // 19 corresponds to the color burn blend mode
@@ -235,8 +305,12 @@ vec4 blend(vec4 srcColor, vec4 destColor, int blendMode) {
         blendedColor = hardLight(srcColor, destColor);
     } else if (blendMode == 21) { // 21 corresponds to the soft light blend mode
         blendedColor = softLight(srcColor, destColor);
+    } else if (blendMode == 22) { // 22 corresponds to the difference blend mode
+        blendedColor = difference(srcColor, destColor);
     } else if (blendMode == 23) { // 23 corresponds to the exclusion blend mode
         blendedColor = exclusion(srcColor, destColor);
+    } else if (blendMode == 24) { // 24 correspons to the multiply blend blendMode
+        blendedColor = multiply(srcColor, destColor);
     } else if (blendMode == 25) { // 25 corresponds to the hue blend mode
         blendedColor = hue(srcColor, destColor);
     } else if (blendMode == 26) { // 26 corresponds to the saturation blend mode
@@ -259,5 +333,6 @@ void main()
    vec4 destColor = texture(u_texture_dest, texCoord);
    vec4 finalColor = blend(srcColor, destColor, blendMode);
 
+   finalColor.a = 1.0f;
    fragColor = finalColor;
 }

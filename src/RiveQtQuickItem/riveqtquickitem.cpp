@@ -495,8 +495,8 @@ void RiveQtQuickItem::renderOffscreen()
 bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type)
 {
     if (!m_riveFile || !m_currentArtboardInstance || !m_currentStateMachineInstance) {
-        qCDebug(rqqpItem) << Q_FUNC_INFO << "File, Artboard, StateMachine is null:" << (m_riveFile == nullptr)
-                          << (m_currentArtboardInstance == nullptr) << (m_currentStateMachineInstance == nullptr);
+        //        qCDebug(rqqpItem) << Q_FUNC_INFO << "File, Artboard, StateMachine is null:" << (m_riveFile == nullptr)
+        //                          << (m_currentArtboardInstance == nullptr) << (m_currentStateMachineInstance == nullptr);
         return false;
     }
 
@@ -508,7 +508,6 @@ bool RiveQtQuickItem::hitTest(const QPointF &pos, const rive::ListenerType &type
     // but still some potential to cause trouble
     m_lastMouseX = (pos.x() - m_renderNode->topLeft().rx()) / m_renderNode->scaleFactorX();
     m_lastMouseY = (pos.y() - m_renderNode->topLeft().ry()) / m_renderNode->scaleFactorY();
-
     switch (type) {
     case rive::ListenerType::move:
         m_currentStateMachineInstance->pointerMove(rive::Vec2D(m_lastMouseX, m_lastMouseY));
