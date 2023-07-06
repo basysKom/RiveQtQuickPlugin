@@ -58,6 +58,12 @@ private:
     bool m_pathSegmentOutlineDataDirty { true };
 
     unsigned m_segmentCount { 10 };
+    void addMiterJoin(QVector<QVector2D> &lineDataSegment, const QVector2D &p1, const QVector2D &p2, const QVector2D &offset);
+    void addRoundJoin(QVector<QVector2D> &lineDataSegment, const float &lineWidth, const QVector2D &p1, const QVector2D &p2, const QVector2D &offset,
+                      int numSegments);
+    void addBevelJoin(QVector<QVector2D> &lineDataSegment, const QVector2D &p1, const QVector2D &p2, const QVector2D &offset);
+    void addCap(QVector<QVector2D> &lineDataSegment, const float &lineWidth, const Qt::PenCapStyle &capStyle, const QVector2D &p,
+                const QVector2D &offset, const QVector2D &normal, const bool &isStart);
 };
 
 class SubPath
