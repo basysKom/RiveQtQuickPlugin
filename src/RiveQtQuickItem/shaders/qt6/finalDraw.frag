@@ -32,7 +32,6 @@ vec4 drawTexture(sampler2D s_texture, vec2 texCoord) {
 
 void main()
 {
-
     vec4 finalColor = drawTexture(u_texture, texCoord);
     fragColor = finalColor * qt_Opacity;
 }

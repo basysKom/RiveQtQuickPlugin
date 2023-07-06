@@ -94,13 +94,139 @@ TextureTargetNode::~TextureTargetNode()
 
 void TextureTargetNode::recycle()
 {
-    // this will not revert the pipelines or buffers
-    // those will only be reset on need
-    m_clip = false;
     m_geometryData.clear();
     m_clippingData.clear();
     m_texCoordData.clear();
     m_indicesData.clear();
+    useGradient = 0;
+    m_blendMode = rive::BlendMode::srcOver;
+    m_opacity = 1.0f;
+
+    if (m_clip) {
+        m_clip = false;
+        if (m_clippingResourceBindings) {
+            m_cleanupList.removeAll(m_clippingResourceBindings);
+            m_clippingResourceBindings->destroy();
+            delete m_clippingResourceBindings;
+            m_clippingResourceBindings = nullptr;
+        }
+        if (m_clippingUniformBuffer) {
+            m_cleanupList.removeAll(m_clippingUniformBuffer);
+            m_clippingUniformBuffer->destroy();
+            delete m_clippingUniformBuffer;
+            m_clippingUniformBuffer = nullptr;
+        }
+        if (m_displayBufferTarget) {
+            m_cleanupList.removeAll(m_displayBufferTarget);
+            m_displayBufferTarget->destroy();
+            delete m_displayBufferTarget;
+            m_displayBufferTarget = nullptr;
+        }
+        if (m_displayBufferTargetDescriptor) {
+            m_cleanupList.removeAll(m_displayBufferTargetDescriptor);
+            m_displayBufferTargetDescriptor->destroy();
+            delete m_displayBufferTargetDescriptor;
+            m_displayBufferTargetDescriptor = nullptr;
+        }
+        if (m_clipPipeLine) {
+            m_cleanupList.removeAll(m_clipPipeLine);
+            m_clipPipeLine->destroy();
+            delete m_clipPipeLine;
+            m_clipPipeLine = nullptr;
+        }
+    }
+    if (m_shaderBlending) {
+        m_shaderBlending = false;
+        m_blendVertices.clear();
+        m_blendVertices.append(QVector2D(m_bounds.x(), m_bounds.y()));
+        m_blendVertices.append(QVector2D(m_bounds.x(), m_bounds.y() + m_bounds.height()));
+        m_blendVertices.append(QVector2D(m_bounds.x() + m_bounds.width(), m_bounds.y()));
+        m_blendVertices.append(QVector2D(m_bounds.x() + m_bounds.width(), m_bounds.y() + m_bounds.height()));
+
+        if (m_blendTextureRenderTarget) {
+            m_cleanupList.removeAll(m_blendTextureRenderTarget);
+            m_blendTextureRenderTarget->destroy();
+            delete m_blendTextureRenderTarget;
+            m_blendTextureRenderTarget = nullptr;
+        }
+        if (m_blendRenderDescriptor) {
+            m_cleanupList.removeAll(m_blendRenderDescriptor);
+            m_blendRenderDescriptor->destroy();
+            delete m_blendRenderDescriptor;
+            m_blendRenderDescriptor = nullptr;
+        }
+        if (m_blendUniformBuffer) {
+            m_cleanupList.removeAll(m_blendUniformBuffer);
+            m_blendUniformBuffer->destroy();
+            delete m_blendUniformBuffer;
+            m_blendUniformBuffer = nullptr;
+        }
+
+        if (m_blendPipeLine) {
+            m_cleanupList.removeAll(m_blendPipeLine);
+            m_blendPipeLine->destroy();
+            delete m_blendPipeLine;
+            m_blendPipeLine = nullptr;
+        }
+
+        if (m_blendVertexBuffer) {
+            m_cleanupList.removeAll(m_blendVertexBuffer);
+            m_blendVertexBuffer->destroy();
+            delete m_blendVertexBuffer;
+            m_blendVertexBuffer = nullptr;
+        }
+
+        if (m_blendSampler) {
+            m_cleanupList.removeAll(m_blendSampler);
+            m_blendSampler->destroy();
+            delete m_blendSampler;
+            m_blendSampler = nullptr;
+        }
+
+        if (m_blendResourceBindings) {
+            m_cleanupList.removeAll(m_blendResourceBindings);
+            m_blendResourceBindings->destroy();
+            delete m_blendResourceBindings;
+            m_blendResourceBindings = nullptr;
+        }
+
+        if (m_blendSrc) {
+            m_cleanupList.removeAll(m_blendSrc);
+            m_blendSrc->destroy();
+            delete m_blendSrc;
+            m_blendSrc = nullptr;
+        }
+
+        if (m_blendDest) {
+            m_cleanupList.removeAll(m_blendDest);
+            m_blendDest->destroy();
+            delete m_blendDest;
+            m_blendDest = nullptr;
+        }
+    }
+
+    if (m_qImageTexture) {
+        if (m_sampler) {
+            m_cleanupList.removeAll(m_sampler);
+            m_sampler->destroy();
+            delete m_sampler;
+            m_sampler = nullptr;
+        }
+
+        if (m_qImageTexture) {
+            m_cleanupList.removeAll(m_qImageTexture);
+            m_qImageTexture->destroy();
+            delete m_qImageTexture;
+            m_qImageTexture = nullptr;
+        }
+
+        if (m_resourceBindings) {
+            m_cleanupList.removeAll(m_resourceBindings);
+            m_resourceBindings->destroy();
+            delete m_resourceBindings;
+            m_resourceBindings = nullptr;
+        }
+    }
     m_recycled = true;
 }
 
@@ -295,10 +421,6 @@ void TextureTargetNode::prepareRender()
         QList<rive::BlendMode> modes;
         modes << rive::BlendMode::luminosity; // default shader based no blending
         modes << rive::BlendMode::srcOver;
-        modes << rive::BlendMode::darken;
-        modes << rive::BlendMode::lighten;
-        modes << rive::BlendMode::difference;
-        modes << rive::BlendMode::multiply;
 
         for (auto mode : modes) {
             QRhiGraphicsPipeline *drawPipeLine = rhi->newGraphicsPipeline();
@@ -320,54 +442,6 @@ void TextureTargetNode::prepareRender()
                 blend.dstColor = QRhiGraphicsPipeline::OneMinusSrcAlpha;
                 blend.srcAlpha = QRhiGraphicsPipeline::One;
                 blend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
-                drawPipeLine->setTargetBlends({ blend });
-            }
-
-            if (mode == rive::BlendMode::darken) {
-                QRhiGraphicsPipeline::TargetBlend blend;
-                blend.enable = true;
-                blend.srcColor = QRhiGraphicsPipeline::One;
-                blend.dstColor = QRhiGraphicsPipeline::One;
-                blend.opColor = QRhiGraphicsPipeline::Min;
-                blend.srcAlpha = QRhiGraphicsPipeline::One;
-                blend.dstAlpha = QRhiGraphicsPipeline::One;
-                blend.opAlpha = QRhiGraphicsPipeline::Min;
-                drawPipeLine->setTargetBlends({ blend });
-            }
-
-            if (mode == rive::BlendMode::lighten) {
-                QRhiGraphicsPipeline::TargetBlend blend;
-                blend.enable = true;
-                blend.srcColor = QRhiGraphicsPipeline::One;
-                blend.dstColor = QRhiGraphicsPipeline::One;
-                blend.opColor = QRhiGraphicsPipeline::Max;
-                blend.srcAlpha = QRhiGraphicsPipeline::One;
-                blend.dstAlpha = QRhiGraphicsPipeline::One;
-                blend.opAlpha = QRhiGraphicsPipeline::Max;
-                drawPipeLine->setTargetBlends({ blend });
-            }
-
-            if (mode == rive::BlendMode::difference) {
-                QRhiGraphicsPipeline::TargetBlend blend;
-                blend.enable = true;
-                blend.srcColor = QRhiGraphicsPipeline::One;
-                blend.dstColor = QRhiGraphicsPipeline::One;
-                blend.opColor = QRhiGraphicsPipeline::ReverseSubtract;
-                blend.srcAlpha = QRhiGraphicsPipeline::One;
-                blend.dstAlpha = QRhiGraphicsPipeline::One;
-                blend.opAlpha = QRhiGraphicsPipeline::ReverseSubtract;
-                drawPipeLine->setTargetBlends({ blend });
-            }
-
-            if (mode == rive::BlendMode::multiply) {
-                QRhiGraphicsPipeline::TargetBlend blend;
-                blend.enable = true;
-                blend.srcColor = QRhiGraphicsPipeline::DstColor;
-                blend.dstColor = QRhiGraphicsPipeline::OneMinusSrcAlpha;
-                blend.opColor = QRhiGraphicsPipeline::Add;
-                blend.srcAlpha = QRhiGraphicsPipeline::One;
-                blend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
-                blend.opAlpha = QRhiGraphicsPipeline::Add;
                 drawPipeLine->setTargetBlends({ blend });
             }
 
@@ -567,6 +641,8 @@ void TextureTargetNode::renderBlend(QRhiCommandBuffer *cb)
 
         if (m_blendVerticesDirty) {
             if (m_blendVertexBuffer) {
+                m_cleanupList.removeAll(m_blendVertexBuffer);
+                m_blendVertexBuffer->destroy();
                 delete m_blendVertexBuffer;
                 m_blendVertexBuffer = nullptr;
             }
@@ -927,17 +1003,17 @@ void TextureTargetNode::setBlendMode(rive::BlendMode blendMode)
     case rive::BlendMode::color:
     case rive::BlendMode::luminosity:
     case rive::BlendMode::screen:
-        m_blendMode = blendMode;
-        m_shaderBlending = true; // intentional fallthrough
-        break;
-    case rive::BlendMode::srcOver:
+    case rive::BlendMode::multiply:
     case rive::BlendMode::darken:
     case rive::BlendMode::lighten:
     case rive::BlendMode::difference:
-    case rive::BlendMode::multiply:
+        m_blendMode = blendMode;
+        m_shaderBlending = true;
+        break;
+    case rive::BlendMode::srcOver:
     default:
+        m_blendMode = rive::BlendMode::srcOver;
         m_shaderBlending = false;
-        m_blendMode = qMax(rive::BlendMode::srcOver, qMin(rive::BlendMode::luminosity, blendMode));
         break;
     }
 
@@ -968,13 +1044,6 @@ void TextureTargetNode::setBlendMode(rive::BlendMode blendMode)
             m_displayBufferTargetDescriptor->destroy();
             delete m_displayBufferTargetDescriptor;
             m_displayBufferTargetDescriptor = nullptr;
-        }
-
-        if (m_clipPipeLine) {
-            m_cleanupList.removeAll(m_clipPipeLine);
-            m_clipPipeLine->destroy();
-            delete m_clipPipeLine;
-            m_clipPipeLine = nullptr;
         }
     }
 }
