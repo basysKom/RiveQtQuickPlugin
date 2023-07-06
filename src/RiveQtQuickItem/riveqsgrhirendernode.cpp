@@ -109,6 +109,10 @@ void RiveQSGRHIRenderNode::renderOffscreen()
     if (!m_displayBuffer || m_rect.width() == 0 || m_rect.height() == 0 || !m_item)
         return;
 
+    if (!m_cleanUpTextureTarget) {
+        return;
+    }
+
     QSGRendererInterface *renderInterface = m_window->rendererInterface();
     QRhi *rhi = static_cast<QRhi *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiResource));
 
