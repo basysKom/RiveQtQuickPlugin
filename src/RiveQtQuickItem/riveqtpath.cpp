@@ -245,6 +245,11 @@ void RiveQtPath::addCap(QVector<QVector2D> &lineDataSegment, const float &lineWi
     }
 };
 
+void fillBetweenRound(QVector<QVector2D> &output, const QVector2D &centerPoint, const QVector2D &start, const QVector2D &end,
+                      const float width, const int segmentCount)
+{
+}
+
 // TODO: Optimize, this gets called each frame for a stroke/path
 // there will be shortcuts and caching possible
 QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
@@ -303,12 +308,11 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
 
                     int numSegments = m_segmentCount;
 
-                    float phi = i == 0 ? -M_PI / numSegments : M_PI / numSegments;
+                    float phi = i == 0 ? M_PI / numSegments : -M_PI / numSegments;
 
                     const float cPhi = cos(phi);
                     const float sPhi = sin(phi);
-                    float rotationData[4] = { cPhi, -sPhi, sPhi, cPhi };
-                    QMatrix2x2 rotation(rotationData);
+                    float rotation[4] = { cPhi, -sPhi, sPhi, cPhi };
 
                     QVector<QVector2D> capVertices;
                     capVertices.reserve(3 * numSegments);
@@ -319,8 +323,8 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
                     for (int i = 0; i < numSegments; ++i) {
                         capVertices.append(centerPoint + currentOffset);
                         capVertices.append(centerPoint);
-                        const auto tmp = rotation.constData()[0] * currentOffset[0] + rotation.constData()[1] * currentOffset[1];
-                        currentOffset[1] = rotation.constData()[2] * currentOffset[0] + rotation.constData()[3] * currentOffset[1];
+                        const auto tmp = rotation[0] * currentOffset[0] + rotation[1] * currentOffset[1];
+                        currentOffset[1] = rotation[2] * currentOffset[0] + rotation[3] * currentOffset[1];
                         currentOffset[0] = tmp;
                         capVertices.append(centerPoint + currentOffset);
                     }
@@ -350,25 +354,32 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
                 }
             }
             if (i < endIndex - 1) {
-                const QVector2D &p3 = pathData[(i + 2) % pathData.count()];
+
+                QVector2D p3;
+                if (m_isClosed)
+                    p3 = pathData[(i + 3) % pathData.count()];
+                else
+                    p3 = pathData[(i + 2) % pathData.count()];
+
                 const auto diff2 = p3 - p2;
                 const auto normal2 = QVector2D(-diff2.y(), diff2.x()).normalized();
                 const auto offset2 = normal2 * lineWidth / 2.0;
                 switch (joinType) {
-
+                default:
+                    // this should never be the case, since we handle all rive types.
+                    // fallthrough intended
                 case Qt::PenJoinStyle::RoundJoin: {
                     {
                         auto phi = acos(normal.x() * normal2.x() + normal.y() * normal2.y()) / m_segmentCount;
 
                         bool turnLeft = normal.x() * normal2.y() - normal.y() * normal2.x() > 0;
-                        phi = turnLeft ? -phi : phi;
+                        phi = turnLeft ? phi : -phi;
                         QVector2D currentOffset = turnLeft ? -offset : offset;
 
-                        qDebug() << phi;
+                        //                        qDebug() << phi;
                         const float cPhi = cos(phi);
                         const float sPhi = sin(phi);
-                        float rotationData[4] = { cPhi, -sPhi, sPhi, cPhi };
-                        QMatrix2x2 rotation(rotationData);
+                        const float rotation[4] = { cPhi, -sPhi, sPhi, cPhi };
 
                         QVector<QVector2D> capVertices;
                         capVertices.reserve(3 * m_segmentCount);
@@ -379,12 +390,13 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
                             capVertices.append(centerPoint + currentOffset);
                             capVertices.append(centerPoint);
 
-                            const auto tmp = rotation.constData()[0] * currentOffset[0] + rotation.constData()[1] * currentOffset[1];
-                            currentOffset[1] = rotation.constData()[2] * currentOffset[0] + rotation.constData()[3] * currentOffset[1];
+                            const auto tmp = rotation[0] * currentOffset[0] + rotation[1] * currentOffset[1];
+                            currentOffset[1] = rotation[2] * currentOffset[0] + rotation[3] * currentOffset[1];
                             currentOffset[0] = tmp;
 
                             capVertices.append(centerPoint + currentOffset);
                         }
+
                         lineDataSegment = lineDataSegment + capVertices;
                     }
                     break;
@@ -395,7 +407,7 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
                     // addMiterJoin(p1, p2, offset);
                     // break;
                     // the fallthrough is intendend here
-                case Qt::PenJoinStyle::BevelJoin: {
+                case Qt::PenJoinStyle::BevelJoin:
                     // we could potentially save 1 triangle, but it's not worth it atm.
                     lineDataSegment.append(p2 + offset);
                     lineDataSegment.append(p2);
@@ -406,44 +418,8 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
                     lineDataSegment.append(p2 - offset2);
                     break;
                 }
-                default:
-                    break;
-                    // add both while this shouldn't end here since we handle all known rive cases
-                    // SvgMiterJoin = 0x100,
-                    // MPenJoinStyle = 0x1c0
-                    //                    qCDebug(rqqpRendering) << "Unknown join type is handled using defaults. This should not happen.";
-                    //                    addMiterJoin(lineDataSegment, p1, p2, offset);
-                    //                    addRoundJoin(lineDataSegment, lineWidth, p1, p2, offset, m_segmentCount);
-                }
             }
         }
-
-        //            QVector2D startNormal(-pathData[1].y() + pathData[0].y(), pathData[1].x() - pathData[0].x());
-        //            startNormal.normalize();
-        //            QVector2D endNormal(-pathData.last().y() + pathData[count - 2].y(), pathData.last().x() - pathData[count -
-        //            2].x()); endNormal.normalize();
-
-        //            addCap(lineDataSegment, lineWidth, capStyle, pathData.first(), startNormal * (lineWidth / 2.0), startNormal,
-        //            true); addCap(lineDataSegment, lineWidth, capStyle, pathData.last(), -endNormal * (lineWidth / 2.0), endNormal,
-        //            false);
-        //        }
-
-        // TODO: this converts the created TRIANGLE STRIP to TRIANGLES
-        // We should create TRIANGLES to start with...
-        // This is done to allow a multipass shader for blending
-        //        QVector<QVector2D> triangledSegmentData;
-        //        // make it triangles!
-        //        for (int i = 0; i < lineDataSegment.size() - 2; ++i) {
-        //            if (i % 2 == 0) {
-        //                triangledSegmentData.push_back(lineDataSegment[i]);
-        //                triangledSegmentData.push_back(lineDataSegment[i + 1]);
-        //                triangledSegmentData.push_back(lineDataSegment[i + 2]);
-        //            } else {
-        //                triangledSegmentData.push_back(lineDataSegment[i]);
-        //                triangledSegmentData.push_back(lineDataSegment[i + 2]);
-        //                triangledSegmentData.push_back(lineDataSegment[i + 1]);
-        //            }
-        //        }
 
         m_pathOutlineData.append(lineDataSegment);
     }
@@ -541,11 +517,6 @@ QVector<QVector2D> RiveQtPath::qpainterPathToOutlineVector2D(const QPainterPath 
 
     if (pathData.first() == pathData.last()) {
         m_isClosed = true;
-    }
-
-    if (m_isClosed) {
-        // Connect the last point to the first point.
-        pathData.append(QVector2D(point.x(), point.y()));
     }
 
     return pathData;
