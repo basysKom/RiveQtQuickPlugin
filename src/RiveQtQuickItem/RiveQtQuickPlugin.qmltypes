@@ -119,6 +119,14 @@ Module {
             notify: "fillModeChanged"
             index: 11
         }
+        Property {
+            name: "frameRate"
+            type: "int"
+            read: "frameRate"
+            notify: "frameRateChanged"
+            index: 12
+            isReadonly: true
+        }
         Signal { name: "animationsChanged" }
         Signal { name: "artboardsChanged" }
         Signal { name: "stateMachinesChanged" }
@@ -137,6 +145,7 @@ Module {
         Signal { name: "stateMachineInterfaceChanged" }
         Signal { name: "renderQualityChanged" }
         Signal { name: "fillModeChanged" }
+        Signal { name: "frameRateChanged" }
         Method { name: "updateStateMachineInputMap" }
         Method {
             name: "triggerAnimation"

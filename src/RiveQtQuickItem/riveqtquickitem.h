@@ -53,6 +53,8 @@ class RiveQtQuickItem : public QQuickItem
     Q_PROPERTY(RiveRenderSettings::RenderQuality renderQuality READ renderQuality WRITE setRenderQuality NOTIFY renderQualityChanged)
     Q_PROPERTY(RiveRenderSettings::FillMode fillMode READ fillMode WRITE setFillMode NOTIFY fillModeChanged)
 
+    Q_PROPERTY(int frameRate READ frameRate NOTIFY frameRateChanged)
+
     QML_ELEMENT
 
 public:
@@ -109,6 +111,8 @@ public:
         emit fillModeChanged();
     }
 
+    int frameRate() { return m_frameRate; }
+
 signals:
     void animationsChanged();
     void artboardsChanged();
@@ -130,6 +134,8 @@ signals:
 
     void renderQualityChanged();
     void fillModeChanged();
+
+    void frameRateChanged();
 
 protected:
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
@@ -205,6 +211,8 @@ private:
     bool m_hasValidRenderNode { false };
     float m_lastMouseX { 0.f };
     float m_lastMouseY { 0.f };
+
+    int m_frameRate { 0 };
 
     RiveQSGRenderNode *m_renderNode { nullptr };
 };

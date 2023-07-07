@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 #include <QVector2D>
+#include <QMatrix2x2>
 #include <QtMath>
 
 #include <private/qtriangulator_p.h>
@@ -273,73 +274,178 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
 
         QVector<QVector2D> lineDataSegment;
 
-        int count = pathData.count();
-        int endIndex = count; // m_isClosed ? count : count - 1;
+        const int endIndex = m_isClosed ? pathData.count() : pathData.count() - 1;
 
-        for (int i = 0; i < (m_isClosed ? endIndex : endIndex - 1); ++i) {
+        for (int i = 0; i < endIndex; ++i) {
             const QVector2D &p1 = pathData[i];
-            const QVector2D &p2 = pathData[(i + 1) % (endIndex)]; // if endIndex, take 0
+            const QVector2D &p2 = pathData[(i + 1) % (pathData.count())]; // if endIndex, take 0
             const QVector2D diff = p2 - p1;
 
             const QVector2D normal = QVector2D(-diff.y(), diff.x()).normalized();
 
             const QVector2D offset = normal * (lineWidth / 2.0);
 
-            if (!m_isClosed && (i == 0 || (i == endIndex && endIndex > 3))) {
-                addRoundJoin(lineDataSegment, lineWidth, p1, p2, offset, m_segmentCount);
-            } else {
+            // add the line segment
+            lineDataSegment.append(p1 + offset);
+            lineDataSegment.append(p1 - offset);
+            lineDataSegment.append(p2 + offset);
+
+            lineDataSegment.append(p2 + offset);
+            lineDataSegment.append(p2 - offset);
+            lineDataSegment.append(p1 - offset);
+
+            if (!m_isClosed && (i == 0 || i == endIndex - 1)) {
+                switch (capStyle) {
+                case Qt::PenCapStyle::FlatCap:
+                    // No additional vertices needed for FlatCap
+                    break;
+                case Qt::PenCapStyle::RoundCap: {
+
+                    int numSegments = m_segmentCount;
+
+                    float phi = i == 0 ? -M_PI / numSegments : M_PI / numSegments;
+
+                    const float cPhi = cos(phi);
+                    const float sPhi = sin(phi);
+                    float rotationData[4] = { cPhi, -sPhi, sPhi, cPhi };
+                    QMatrix2x2 rotation(rotationData);
+
+                    QVector<QVector2D> capVertices;
+                    capVertices.reserve(3 * numSegments);
+
+                    QVector2D currentOffset = offset;
+                    const auto centerPoint = i == 0 ? p1 : p2;
+
+                    for (int i = 0; i < numSegments; ++i) {
+                        capVertices.append(centerPoint + currentOffset);
+                        capVertices.append(centerPoint);
+                        const auto tmp = rotation.constData()[0] * currentOffset[0] + rotation.constData()[1] * currentOffset[1];
+                        currentOffset[1] = rotation.constData()[2] * currentOffset[0] + rotation.constData()[3] * currentOffset[1];
+                        currentOffset[0] = tmp;
+                        capVertices.append(centerPoint + currentOffset);
+                    }
+
+                    lineDataSegment = i == 0 ? capVertices + lineDataSegment : lineDataSegment + capVertices;
+                    break;
+                }
+                case Qt::PenCapStyle::SquareCap: {
+                    if (lineDataSegment.size() < 6)
+                        break;
+                    const auto direction = diff.normalized();
+                    if (i == 0) {
+                        lineDataSegment[0] -= direction * lineWidth / 2.0;
+                        lineDataSegment[1] -= direction * lineWidth / 2.0;
+                        lineDataSegment[5] -= direction * lineWidth / 2.0;
+                    } else { // is last element
+                        const auto end = lineDataSegment.size();
+                        lineDataSegment[end - 2] += direction * lineWidth / 2.0;
+                        lineDataSegment[end - 3] += direction * lineWidth / 2.0;
+                        lineDataSegment[end - 4] += direction * lineWidth / 2.0;
+                    }
+                    break;
+                }
+                default:
+                    // No additional vertices needed for other cap styles
+                    break;
+                }
+            }
+            if (i < endIndex - 1) {
+                const QVector2D &p3 = pathData[(i + 2) % pathData.count()];
+                const auto diff2 = p3 - p2;
+                const auto normal2 = QVector2D(-diff2.y(), diff2.x()).normalized();
+                const auto offset2 = normal2 * lineWidth / 2.0;
                 switch (joinType) {
+
+                case Qt::PenJoinStyle::RoundJoin: {
+                    {
+                        auto phi = acos(normal.x() * normal2.x() + normal.y() * normal2.y()) / m_segmentCount;
+
+                        bool turnLeft = normal.x() * normal2.y() - normal.y() * normal2.x() > 0;
+                        phi = turnLeft ? -phi : phi;
+                        QVector2D currentOffset = turnLeft ? -offset : offset;
+
+                        qDebug() << phi;
+                        const float cPhi = cos(phi);
+                        const float sPhi = sin(phi);
+                        float rotationData[4] = { cPhi, -sPhi, sPhi, cPhi };
+                        QMatrix2x2 rotation(rotationData);
+
+                        QVector<QVector2D> capVertices;
+                        capVertices.reserve(3 * m_segmentCount);
+
+                        const auto centerPoint = p2;
+
+                        for (int i = 0; i < m_segmentCount; ++i) {
+                            capVertices.append(centerPoint + currentOffset);
+                            capVertices.append(centerPoint);
+
+                            const auto tmp = rotation.constData()[0] * currentOffset[0] + rotation.constData()[1] * currentOffset[1];
+                            currentOffset[1] = rotation.constData()[2] * currentOffset[0] + rotation.constData()[3] * currentOffset[1];
+                            currentOffset[0] = tmp;
+
+                            capVertices.append(centerPoint + currentOffset);
+                        }
+                        lineDataSegment = lineDataSegment + capVertices;
+                    }
+                    break;
+                }
                 case Qt::PenJoinStyle::MiterJoin:
                     // Miter Join may not work so well, specifically on tesselated segmented bezier curves
                     // disable it for now,.. we may need to the join specific on the source (like curve)
                     // addMiterJoin(p1, p2, offset);
                     // break;
                     // the fallthrough is intendend here
-                case Qt::PenJoinStyle::RoundJoin:
-                    addRoundJoin(lineDataSegment, lineWidth, p1, p2, offset, m_segmentCount);
+                case Qt::PenJoinStyle::BevelJoin: {
+                    // we could potentially save 1 triangle, but it's not worth it atm.
+                    lineDataSegment.append(p2 + offset);
+                    lineDataSegment.append(p2);
+                    lineDataSegment.append(p2 + offset2);
+
+                    lineDataSegment.append(p2 - offset);
+                    lineDataSegment.append(p2);
+                    lineDataSegment.append(p2 - offset2);
                     break;
-                case Qt::PenJoinStyle::BevelJoin:
-                    addBevelJoin(lineDataSegment, p1, p2, offset);
-                    break;
+                }
                 default:
+                    break;
                     // add both while this shouldn't end here since we handle all known rive cases
                     // SvgMiterJoin = 0x100,
                     // MPenJoinStyle = 0x1c0
-                    qCDebug(rqqpRendering) << "Unknown join type is handled using defaults. This should not happen.";
-                    addMiterJoin(lineDataSegment, p1, p2, offset);
-                    addRoundJoin(lineDataSegment, lineWidth, p1, p2, offset, m_segmentCount);
+                    //                    qCDebug(rqqpRendering) << "Unknown join type is handled using defaults. This should not happen.";
+                    //                    addMiterJoin(lineDataSegment, p1, p2, offset);
+                    //                    addRoundJoin(lineDataSegment, lineWidth, p1, p2, offset, m_segmentCount);
                 }
             }
         }
 
-        if (!m_isClosed) {
-            QVector2D startNormal(-pathData[1].y() + pathData[0].y(), pathData[1].x() - pathData[0].x());
-            startNormal.normalize();
-            QVector2D endNormal(-pathData.last().y() + pathData[count - 2].y(), pathData.last().x() - pathData[count - 2].x());
-            endNormal.normalize();
+        //            QVector2D startNormal(-pathData[1].y() + pathData[0].y(), pathData[1].x() - pathData[0].x());
+        //            startNormal.normalize();
+        //            QVector2D endNormal(-pathData.last().y() + pathData[count - 2].y(), pathData.last().x() - pathData[count -
+        //            2].x()); endNormal.normalize();
 
-            addCap(lineDataSegment, lineWidth, capStyle, pathData.first(), startNormal * (lineWidth / 2.0), startNormal, true);
-            addCap(lineDataSegment, lineWidth, capStyle, pathData.last(), -endNormal * (lineWidth / 2.0), endNormal, false);
-        }
+        //            addCap(lineDataSegment, lineWidth, capStyle, pathData.first(), startNormal * (lineWidth / 2.0), startNormal,
+        //            true); addCap(lineDataSegment, lineWidth, capStyle, pathData.last(), -endNormal * (lineWidth / 2.0), endNormal,
+        //            false);
+        //        }
 
         // TODO: this converts the created TRIANGLE STRIP to TRIANGLES
         // We should create TRIANGLES to start with...
         // This is done to allow a multipass shader for blending
-        QVector<QVector2D> triangledSegmentData;
-        // make it triangles!
-        for (int i = 0; i < lineDataSegment.size() - 2; ++i) {
-            if (i % 2 == 0) {
-                triangledSegmentData.push_back(lineDataSegment[i]);
-                triangledSegmentData.push_back(lineDataSegment[i + 1]);
-                triangledSegmentData.push_back(lineDataSegment[i + 2]);
-            } else {
-                triangledSegmentData.push_back(lineDataSegment[i]);
-                triangledSegmentData.push_back(lineDataSegment[i + 2]);
-                triangledSegmentData.push_back(lineDataSegment[i + 1]);
-            }
-        }
+        //        QVector<QVector2D> triangledSegmentData;
+        //        // make it triangles!
+        //        for (int i = 0; i < lineDataSegment.size() - 2; ++i) {
+        //            if (i % 2 == 0) {
+        //                triangledSegmentData.push_back(lineDataSegment[i]);
+        //                triangledSegmentData.push_back(lineDataSegment[i + 1]);
+        //                triangledSegmentData.push_back(lineDataSegment[i + 2]);
+        //            } else {
+        //                triangledSegmentData.push_back(lineDataSegment[i]);
+        //                triangledSegmentData.push_back(lineDataSegment[i + 2]);
+        //                triangledSegmentData.push_back(lineDataSegment[i + 1]);
+        //            }
+        //        }
 
-        m_pathOutlineData.append(triangledSegmentData);
+        m_pathOutlineData.append(lineDataSegment);
     }
 
     m_pathSegmentOutlineDataDirty = false;
