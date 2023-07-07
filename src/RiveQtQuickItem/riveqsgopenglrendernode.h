@@ -21,7 +21,7 @@ class RiveQtQuickItem;
 class RiveQSGOpenGLRenderNode : public RiveQSGRenderNode, public QOpenGLFunctions
 {
 public:
-    RiveQSGOpenGLRenderNode(std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item);
+    RiveQSGOpenGLRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, const QRectF &geometry);
 
     void render(const RenderState *state) override;
 

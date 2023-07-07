@@ -13,14 +13,12 @@
 #include <private/qrhi_p.h>
 #include <private/qsgrendernode_p.h>
 
-TextureTargetNode::TextureTargetNode(QQuickItem *item, QRhiTexture *displayBuffer, const QRectF &viewPortRect,
+TextureTargetNode::TextureTargetNode(QQuickWindow *window, QRhiTexture *displayBuffer, const QRectF &viewPortRect,
                                      const QMatrix4x4 *combinedMatrix, const QMatrix4x4 *projectionMatrix)
-    : m_item(item)
-    , m_combinedMatrix(combinedMatrix)
+    : m_combinedMatrix(combinedMatrix)
     , m_projectionMatrix(projectionMatrix)
+    , m_window(window)
 {
-    m_window = item->window();
-
     QFile file;
     file.setFileName(":/shaders/qt6/drawRiveTextureNode.vert.qsb");
     file.open(QFile::ReadOnly);

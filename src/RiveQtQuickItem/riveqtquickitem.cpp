@@ -59,18 +59,15 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     connect(this, &RiveQtQuickItem::stateMachineInterfaceChanged, this, &RiveQtQuickItem::currentStateMachineIndexChanged,
             Qt::QueuedConnection);
 
+    connect(this, &RiveQtQuickItem::xChanged, this, [this]() { qDebug() << "X:" << this->x(); });
+
     m_elapsedTimer.start();
     m_lastUpdateTime = m_elapsedTimer.elapsed();
 
     update();
 }
 
-RiveQtQuickItem::~RiveQtQuickItem()
-{
-    if (m_renderNode) {
-        m_renderNode->detach();
-    }
-}
+RiveQtQuickItem::~RiveQtQuickItem() { }
 
 void RiveQtQuickItem::triggerAnimation(int id)
 {
@@ -156,6 +153,10 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     static QElapsedTimer et;
     QQuickWindow *currentWindow = window();
 
+    if (!currentWindow) {
+        return oldNode;
+    }
+
     m_renderNode = static_cast<RiveQSGRenderNode *>(oldNode);
 
     // unload the file from the render thread to make sure its not accessed at time of unloading
@@ -217,7 +218,7 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     }
 
     if (!m_renderNode && m_currentArtboardInstance) {
-        m_renderNode = m_riveQtFactory.renderNode(currentWindow, m_currentArtboardInstance, this);
+        m_renderNode = m_riveQtFactory.renderNode(currentWindow, m_currentArtboardInstance, this->boundingRect());
     }
 
     qint64 currentTime = m_elapsedTimer.elapsed();
@@ -271,6 +272,7 @@ void RiveQtQuickItem::geometryChange(const QRectF &newGeometry, const QRectF &ol
 
     update();
     QQuickItem::geometryChange(newGeometry, oldGeometry);
+    qDebug() << "GEOMETRY geometryChange";
 }
 #else
 void RiveQtQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
@@ -504,6 +506,7 @@ void RiveQtQuickItem::renderOffscreen()
     // its okay io call this since we are sure that the renderthread is not active when we get called
     if (m_renderNode && isVisible() && m_hasValidRenderNode) {
         if (m_geometryChanged) {
+            qDebug() << "GEOMETRY CHANGED";
             m_renderNode->setRect(QRectF(x(), y(), width(), height()));
             m_renderNode->setArtboardRect(artboardRect());
             m_geometryChanged = false;

@@ -13,14 +13,11 @@
 
 #include <rive/artboard.hpp>
 
-class RiveQtQuickItem;
-
 class RiveQSGBaseNode
 {
 public:
-    RiveQSGBaseNode(std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item);
+    RiveQSGBaseNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, const QRectF &geometry);
 
-    virtual void detach() { m_item = nullptr; }
     virtual void renderOffscreen() { }
     virtual void setRect(const QRectF &bounds);
     virtual QPointF topLeft() const;
@@ -33,10 +30,10 @@ public:
 
 protected:
     std::weak_ptr<rive::ArtboardInstance> m_artboardInstance;
-    RiveQtQuickItem *m_item { nullptr };
     QRectF m_rect;
     QPointF m_topLeftRivePosition { 0.f, 0.f };
     QSizeF m_riveSize { 0.f, 0.f };
+    QQuickWindow *m_window;
 
     float m_scaleFactorX { 1.0f };
     float m_scaleFactorY { 1.0f };
@@ -45,7 +42,7 @@ protected:
 class RiveQSGRenderNode : public QSGRenderNode, public RiveQSGBaseNode
 {
 public:
-    RiveQSGRenderNode(std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item);
+    RiveQSGRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, const QRectF &geometry);
 
     StateFlags changedStates() const override { return QSGRenderNode::BlendState; }
     RenderingFlags flags() const override { return QSGRenderNode::BoundedRectRendering | QSGRenderNode::DepthAwareRendering; }

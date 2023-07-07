@@ -8,18 +8,19 @@
 
 QRectF RiveQSGRenderNode::rect() const
 {
-    return m_item->boundingRect();
+    return m_rect;
 }
 
-RiveQSGRenderNode::RiveQSGRenderNode(std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item)
-    : RiveQSGBaseNode(artboardInstance, item)
+RiveQSGRenderNode::RiveQSGRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, const QRectF &geometry)
+    : RiveQSGBaseNode(window, artboardInstance, geometry)
 {
 }
 
-RiveQSGBaseNode::RiveQSGBaseNode(std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item)
+RiveQSGBaseNode::RiveQSGBaseNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, const QRectF &geometry)
     : m_artboardInstance(artboardInstance)
-    , m_item(item)
+    , m_window(window)
 {
+    Q_ASSERT(m_window);
 }
 
 void RiveQSGBaseNode::setRect(const QRectF &bounds)

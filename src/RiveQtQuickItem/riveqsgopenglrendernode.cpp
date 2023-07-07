@@ -19,8 +19,8 @@ void RiveQSGOpenGLRenderNode::updateArtboardInstance(std::weak_ptr<rive::Artboar
 void RiveQSGOpenGLRenderNode::setArtboardRect(const QRectF &bounds)
 {
     RiveQSGBaseNode::setArtboardRect(bounds);
-    m_scaleFactorX *= m_item->window()->devicePixelRatio();
-    m_scaleFactorY *= m_item->window()->devicePixelRatio();
+    m_scaleFactorX *= m_window->devicePixelRatio();
+    m_scaleFactorY *= m_window->devicePixelRatio();
 }
 
 void RiveQSGOpenGLRenderNode::setRect(const QRectF &bounds)
@@ -29,8 +29,9 @@ void RiveQSGOpenGLRenderNode::setRect(const QRectF &bounds)
     RiveQSGBaseNode::setRect(bounds);
 }
 
-RiveQSGOpenGLRenderNode::RiveQSGOpenGLRenderNode(std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item)
-    : RiveQSGRenderNode(artboardInstance, item)
+RiveQSGOpenGLRenderNode::RiveQSGOpenGLRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance,
+                                                 const QRectF &geometry)
+    : RiveQSGRenderNode(window, artboardInstance, geometry)
 {
     initializeOpenGLFunctions();
     m_renderer.initGL();
@@ -47,13 +48,20 @@ void RiveQSGOpenGLRenderNode::renderOpenGL(const RenderState *state)
         return;
     }
 
-    const float devicePixelRatio = m_item->window()->devicePixelRatio();
-    QMatrix4x4 projectionMatrix = *state->projectionMatrix();
-    projectionMatrix.scale(1 / devicePixelRatio, 1 / devicePixelRatio);
+    const float devicePixelRatio = m_window->devicePixelRatio();
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    const int viewportHeight = viewport[3];
 
-    const QPointF globalPos = m_item->mapToItem(nullptr, QPointF(0, 0)) * devicePixelRatio;
-    QMatrix4x4 modelMatrix;
-    modelMatrix.translate(globalPos.x(), globalPos.y());
+    QMatrix4x4 mvp = *state->projectionMatrix();
+    QMatrix4x4 modelMatrix = *matrix();
+
+    const auto itemWidth = m_rect.width() * devicePixelRatio;
+    const auto itemHeight = m_rect.height() * devicePixelRatio;
+
+    const auto scissorX = static_cast<int>(modelMatrix(0, 3));
+    const auto scissorY = static_cast<int>(viewportHeight - modelMatrix(1, 3) - itemHeight);
+
     modelMatrix.translate(m_topLeftRivePosition.x(), m_topLeftRivePosition.y());
     modelMatrix.scale(m_scaleFactorX, m_scaleFactorY);
 
@@ -61,19 +69,7 @@ void RiveQSGOpenGLRenderNode::renderOpenGL(const RenderState *state)
 
     m_renderer.updateViewportSize();
     m_renderer.updateModelMatrix(modelMatrix);
-    m_renderer.updateProjectionMatrix(projectionMatrix);
-
-    // TODO: scissorRect of RenderState is 0x0 width,
-    // just create it for now.
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-    const int viewportHeight = viewport[3];
-
-    const auto itemWidth = m_item->width() * devicePixelRatio;
-    const auto itemHeight = m_item->height() * devicePixelRatio;
-
-    const auto scissorX = static_cast<int>(globalPos.x());
-    const auto scissorY = static_cast<int>(viewportHeight - globalPos.y() - itemHeight);
+    m_renderer.updateProjectionMatrix(mvp);
 
     glEnable(GL_SCISSOR_TEST);
     glScissor(scissorX, scissorY, itemWidth, itemHeight);

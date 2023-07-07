@@ -35,7 +35,7 @@ struct RhiRenderState
 class RiveQtRhiRenderer : public rive::Renderer
 {
 public:
-    RiveQtRhiRenderer(QQuickItem *item);
+    RiveQtRhiRenderer(QQuickWindow *window);
     virtual ~RiveQtRhiRenderer();
     void setRiveRect(const QRectF &bounds) { m_riveRect = bounds; }
 
@@ -62,11 +62,10 @@ private:
     const QMatrix4x4 &transformMatrix() const;
     float currentOpacity();
 
-    QQuickItem *m_item;
-
     QVector<RhiRenderState> m_rhiRenderStack;
     QVector<TextureTargetNode *> m_renderNodes;
 
+    QQuickWindow *m_window;
     QRhiTexture *m_displayBuffer;
 
     QMatrix4x4 m_projectionMatrix;
