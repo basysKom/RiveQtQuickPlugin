@@ -19,7 +19,7 @@
 #endif
 
 RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance,
-                                             RiveQtQuickItem *item)
+                                             const QRectF &geometry)
 {
     switch (window->rendererInterface()->graphicsApi()) {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -27,18 +27,18 @@ RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr
     case QSGRendererInterface::GraphicsApi::MetalRhi:
     case QSGRendererInterface::GraphicsApi::VulkanRhi:
     case QSGRendererInterface::GraphicsApi::Direct3D11Rhi: {
-        auto node = new RiveQSGRHIRenderNode(artboardInstance, item);
+        auto node = new RiveQSGRHIRenderNode(window, artboardInstance, geometry);
         node->setFillMode(m_renderSettings.fillMode);
         return node;
     }
 #else
     case QSGRendererInterface::GraphicsApi::OpenGL:
-        return new RiveQSGOpenGLRenderNode(artboardInstance, item);
+        return new RiveQSGOpenGLRenderNode(window, artboardInstance, geometry);
         break;
 #endif
     case QSGRendererInterface::GraphicsApi::Software:
     default:
-        return new RiveQSGSoftwareRenderNode(window, artboardInstance, item);
+        return new RiveQSGSoftwareRenderNode(window, artboardInstance, geometry);
     }
 }
 

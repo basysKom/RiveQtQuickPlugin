@@ -34,7 +34,7 @@ class QQuickItem;
 class TextureTargetNode
 {
 public:
-    TextureTargetNode(QQuickItem *item, QRhiTexture *displayBuffer, const QRectF &viewPortRect, const QMatrix4x4 *combinedMatrix,
+    TextureTargetNode(QQuickWindow *window, QRhiTexture *displayBuffer, const QRectF &viewPortRect, const QMatrix4x4 *combinedMatrix,
                       const QMatrix4x4 *projectMatrix);
     virtual ~TextureTargetNode();
 
@@ -125,7 +125,6 @@ private:
     QRhiResourceUpdateBatch *m_blendResourceUpdates { nullptr };
 
     QQuickWindow *m_window { nullptr };
-    QQuickItem *m_item { nullptr };
 
     // Material Related // Shader Related data
     QColor m_color;

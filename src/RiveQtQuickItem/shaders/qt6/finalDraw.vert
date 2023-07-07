@@ -25,5 +25,5 @@ void main()
     } else {
         texCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y); // Pass the texture coordinates to the fragment shader
     }
-    gl_Position = qt_Matrix * vec4(vertex, 0.0, 1.0);
+    gl_Position = qt_Matrix *  vec4(vertex, 0.0, 1.0);
 }

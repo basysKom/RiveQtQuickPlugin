@@ -23,7 +23,7 @@ class QQuickWindow;
 class RiveQSGSoftwareRenderNode : public RiveQSGRenderNode
 {
 public:
-    RiveQSGSoftwareRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item);
+    RiveQSGSoftwareRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, const QRectF &geometry);
 
     QRectF rect() const override;
 
@@ -36,7 +36,6 @@ private:
     void renderSoftware(const RenderState *state);
 
     RiveQtPainterRenderer m_renderer;
-    QQuickWindow *m_window { nullptr };
 
     QPainter m_fallbackPainter;
     QPixmap m_fallbackPixmap;

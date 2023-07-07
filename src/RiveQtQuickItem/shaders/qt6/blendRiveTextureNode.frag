@@ -333,6 +333,6 @@ void main()
    vec4 destColor = texture(u_texture_dest, texCoord);
    vec4 finalColor = blend(srcColor, destColor, blendMode);
 
-   finalColor.a = 1.0f;
+   //finalColor.a = 1.0f;
    fragColor = finalColor;
 }

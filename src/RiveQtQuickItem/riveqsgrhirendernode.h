@@ -28,7 +28,7 @@ class RiveQtRhiRenderer;
 class RiveQSGRHIRenderNode : public RiveQSGRenderNode
 {
 public:
-    RiveQSGRHIRenderNode(std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item);
+    RiveQSGRHIRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, const QRectF &geometry);
     virtual ~RiveQSGRHIRenderNode();
 
     void setRect(const QRectF &bounds) override;
@@ -46,8 +46,6 @@ public:
     QSGRenderNode::StateFlags changedStates() const override;
 
 protected:
-    QQuickWindow *m_window { nullptr };
-
     QRhiBuffer *m_vertexBuffer { nullptr };
     QRhiBuffer *m_texCoordBuffer { nullptr };
     QRhiBuffer *m_uniformBuffer { nullptr };

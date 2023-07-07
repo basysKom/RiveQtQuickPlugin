@@ -18,9 +18,9 @@
 #include "renderer/riveqtrhirenderer.h"
 #include "rhi/texturetargetnode.h"
 
-RiveQtRhiRenderer::RiveQtRhiRenderer(QQuickItem *item)
+RiveQtRhiRenderer::RiveQtRhiRenderer(QQuickWindow *window)
     : rive::Renderer()
-    , m_item(item)
+    , m_window(window)
 {
     m_rhiRenderStack.push_back(RhiRenderState());
 }
@@ -203,7 +203,7 @@ TextureTargetNode *RiveQtRhiRenderer::getRiveDrawTargetNode()
     }
 
     if (!pathNode) {
-        pathNode = new TextureTargetNode(m_item, m_displayBuffer, m_viewportRect, &m_combinedMatrix, &m_projectionMatrix);
+        pathNode = new TextureTargetNode(m_window, m_displayBuffer, m_viewportRect, &m_combinedMatrix, &m_projectionMatrix);
         pathNode->take();
         m_renderNodes.append(pathNode);
     }

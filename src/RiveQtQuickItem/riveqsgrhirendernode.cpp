@@ -13,12 +13,11 @@
 #include "riveqtquickitem.h"
 #include "renderer/riveqtrhirenderer.h"
 
-RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item)
-    : RiveQSGRenderNode(artboardInstance, item)
+RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance,
+                                           const QRectF &geometry)
+    : RiveQSGRenderNode(window, artboardInstance, geometry)
     , m_displayBuffer(nullptr)
 {
-    m_window = item->window();
-
     QFile file;
     file.setFileName(":/shaders/qt6/finalDraw.vert.qsb");
     file.open(QFile::ReadOnly);
@@ -30,39 +29,23 @@ RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(std::weak_ptr<rive::ArtboardInstance>
 
     m_shaders.append(QRhiShaderStage(QRhiShaderStage::Fragment, QShader::fromSerialized(file.readAll())));
 
-    setRect(QRectF(item->x(), item->y(), item->width(), item->height()));
+    setRect(geometry);
 
     m_texCoords.append(QVector2D(0.0f, 0.0f));
     m_texCoords.append(QVector2D(0.0f, 1.0f));
     m_texCoords.append(QVector2D(1.0f, 0.0f));
     m_texCoords.append(QVector2D(1.0f, 1.0f));
 
-    m_renderer = new RiveQtRhiRenderer(item);
+    m_renderer = new RiveQtRhiRenderer(window);
     m_renderer->updateViewPort(m_rect, m_displayBuffer);
     m_renderer->setRiveRect({ m_topLeftRivePosition, m_riveSize });
 }
 
 RiveQSGRHIRenderNode::~RiveQSGRHIRenderNode()
 {
-    // tell my item that I'm gone.
-    if (m_item) {
-        if (m_item->m_renderNode == this) {
-            m_item->m_renderNode = nullptr;
-        }
-    } else {
-        // resources are already destroyed by qt
-        delete m_renderer;
-        return;
-    }
-
-    while (!m_cleanupList.empty()) {
-        auto *resource = m_cleanupList.first();
-        m_cleanupList.removeAll(resource);
-        resource->destroy();
-        delete resource;
-    }
-
     delete m_renderer;
+
+    releaseResources();
 }
 
 void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
@@ -80,18 +63,21 @@ void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
     if (m_displayBuffer) {
         m_cleanupList.removeAll(m_displayBuffer);
         m_displayBuffer->destroy();
+        m_displayBuffer->deleteLater();
         m_displayBuffer = nullptr;
     }
 
     if (m_sampler) {
         m_cleanupList.removeAll(m_sampler);
         m_sampler->destroy();
+        m_sampler->deleteLater();
         m_sampler = nullptr;
     }
 
     if (m_cleanUpTextureTarget) {
         m_cleanupList.removeAll(m_cleanUpTextureTarget);
         m_cleanUpTextureTarget->destroy();
+        m_cleanUpTextureTarget->deleteLater();
         m_cleanUpTextureTarget = nullptr;
     }
 
@@ -99,6 +85,7 @@ void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
     if (m_resourceBindings) {
         m_cleanupList.removeAll(m_resourceBindings);
         m_resourceBindings->destroy();
+        m_resourceBindings->deleteLater();
         m_resourceBindings = nullptr;
     }
 
@@ -110,7 +97,7 @@ void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
 
 void RiveQSGRHIRenderNode::renderOffscreen()
 {
-    if (!m_displayBuffer || m_rect.width() == 0 || m_rect.height() == 0 || !m_item)
+    if (!m_displayBuffer || m_rect.width() == 0 || m_rect.height() == 0)
         return;
 
     if (!m_cleanUpTextureTarget) {
@@ -160,18 +147,13 @@ void RiveQSGRHIRenderNode::releaseResources()
 {
     while (!m_cleanupList.empty()) {
         auto *resource = m_cleanupList.first();
-        m_cleanupList.removeAll(resource);
         resource->destroy();
-        delete resource;
+        resource->deleteLater();
+        m_cleanupList.removeAll(resource);
+        resource = nullptr;
     }
 
-    m_vertexBuffer = nullptr;
-    m_texCoordBuffer = nullptr;
-    m_uniformBuffer = nullptr;
-    m_pipeLine = nullptr;
-    m_resourceBindings = nullptr;
-    m_sampler = nullptr;
-    m_displayBuffer = nullptr;
+    Q_ASSERT(m_cleanupList.empty());
 }
 
 QSGRenderNode::RenderingFlags RiveQSGRHIRenderNode::flags() const
@@ -188,7 +170,7 @@ QSGRenderNode::StateFlags RiveQSGRHIRenderNode::changedStates() const
 
 void RiveQSGRHIRenderNode::prepare()
 {
-    if (!m_item) {
+    if (!m_window) {
         return;
     }
 
@@ -235,11 +217,8 @@ void RiveQSGRHIRenderNode::prepare()
     { // update projection matrix
         QMatrix4x4 projMatrix = *projectionMatrix();
 
-        if (!m_item) {
-            return;
-        }
-        const auto window2itemScaleX = m_item->window()->width() / m_item->width();
-        const auto window2itemScaleY = m_item->window()->height() / m_item->height();
+        const auto window2itemScaleX = m_window->width() / m_rect.width();
+        const auto window2itemScaleY = m_window->height() / m_rect.height();
 
         projMatrix.scale(window2itemScaleX, window2itemScaleY);
 
@@ -247,8 +226,8 @@ void RiveQSGRHIRenderNode::prepare()
 
         combinedMatrix.translate(m_topLeftRivePosition.x(), m_topLeftRivePosition.y());
 
-        const auto item2artboardScaleX = m_item->width() / artboardInstance->width();
-        const auto item2artboardScaleY = m_item->height() / artboardInstance->height();
+        const auto item2artboardScaleX = m_rect.width() / artboardInstance->width();
+        const auto item2artboardScaleY = m_rect.height() / artboardInstance->height();
 
         switch (m_fillMode) {
         case RiveRenderSettings::Stretch: {
@@ -264,19 +243,19 @@ void RiveQSGRHIRenderNode::prepare()
         case RiveRenderSettings::PreserveAspectFit: {
             const auto scaleFactor = qMin(item2artboardScaleX, item2artboardScaleY);
 
-            float widthFactor = m_item->width() - artboardInstance->width() * scaleFactor;
-            float heightFactor = m_item->height() - artboardInstance->height() * scaleFactor;
+            float widthFactor = m_rect.width() - artboardInstance->width() * scaleFactor;
+            float heightFactor = m_rect.height() - artboardInstance->height() * scaleFactor;
 
             if (widthFactor > 0) {
                 // diff through 2 since its centered horizontal
-                widthFactor = (widthFactor / 2.0f) * 1.0f / m_item->width();
+                widthFactor = (widthFactor / 2.0f) * 1.0f / m_rect.width();
                 left = widthFactor;
                 right = 1.0 - widthFactor;
             }
 
             if (heightFactor > 0) {
                 // diff through 2 since its centered vertical
-                heightFactor = (heightFactor / 2.0f) * 1.0f / m_item->height();
+                heightFactor = (heightFactor / 2.0f) * 1.0f / m_rect.height();
                 top = heightFactor;
                 bottom = 1.0 - heightFactor;
             }
@@ -304,7 +283,9 @@ void RiveQSGRHIRenderNode::prepare()
 
     if (m_verticesDirty) {
         if (m_vertexBuffer) {
-            delete m_vertexBuffer;
+            m_cleanupList.removeAll(m_vertexBuffer);
+            m_vertexBuffer->destroy();
+            m_vertexBuffer->deleteLater();
             m_vertexBuffer = nullptr;
         }
         m_verticesDirty = false;
@@ -342,7 +323,7 @@ void RiveQSGRHIRenderNode::prepare()
     }
 
     if (!m_uniformBuffer) {
-        m_uniformBuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 96);
+        m_uniformBuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 88);
         m_uniformBuffer->create();
         m_cleanupList.append(m_uniformBuffer);
     }
@@ -401,8 +382,11 @@ void RiveQSGRHIRenderNode::prepare()
     }
 
     QMatrix4x4 mvp = *projectionMatrix();
-    QPointF globalPos = m_item->parentItem()->mapToItem(nullptr, QPointF(0, 0));
-    mvp.translate(globalPos.x(), globalPos.y());
+    QMatrix4x4 modelMatrix = *matrix();
+
+    mvp = mvp * modelMatrix;
+
+    mvp.translate(-m_rect.x(), -m_rect.y());
 
     float opacity = inheritedOpacity();
     int flipped = rhi->isYUpInFramebuffer() ? 1 : 0;
