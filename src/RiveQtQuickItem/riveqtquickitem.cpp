@@ -148,6 +148,7 @@ void RiveQtQuickItem::updateInternalArtboard()
 
 QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
+    static QElapsedTimer et;
     QQuickWindow *currentWindow = window();
 
     m_renderNode = static_cast<RiveQSGRenderNode *>(oldNode);
@@ -163,11 +164,14 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
         // now load the file from the main thread -> connected as Queued Connection to make sure its called in its owning thread
         emit loadFileAfterUnloading(m_fileSource);
-
+        m_frameRate = 0;
+        emit frameRateChanged();
         return m_renderNode;
     }
 
     if (!isVisible()) {
+        m_frameRate = 0;
+        emit frameRateChanged();
         return m_renderNode;
     }
 
@@ -182,6 +186,8 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
             qCDebug(rqqpItem) << "No artboard loaded.";
             m_currentStateMachineInstance = nullptr;
             emit internalStateMachineChanged();
+            m_frameRate = 0;
+            emit frameRateChanged();
             return m_renderNode;
         }
 
@@ -242,6 +248,12 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 #endif
 
     this->update();
+
+    if (et.isValid()) {
+        m_frameRate = int(1000000000 / et.nsecsElapsed());
+        emit frameRateChanged();
+    }
+    et.start();
 
     m_hasValidRenderNode = true;
     return m_renderNode;

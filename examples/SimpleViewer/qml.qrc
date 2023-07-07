@@ -17,5 +17,6 @@
         <file alias="sith-de-mayo.riv">rive/sith-de-mayo.riv</file>
         <file alias="pathfinder.riv">rive/pathfinder.riv</file>
         <file alias="rivebot-transform.riv">rive/rivebot-transform.riv</file>
+        <file alias="simple-strokes.riv">rive/simple-strokes.riv</file>
     </qresource>
 </RCC>
