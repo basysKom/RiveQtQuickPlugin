@@ -49,6 +49,10 @@ RiveQSGRHIRenderNode::~RiveQSGRHIRenderNode()
         if (m_item->m_renderNode == this) {
             m_item->m_renderNode = nullptr;
         }
+    } else {
+        // resources are already destroyed by qt
+        delete m_renderer;
+        return;
     }
 
     while (!m_cleanupList.empty()) {
@@ -184,6 +188,10 @@ QSGRenderNode::StateFlags RiveQSGRHIRenderNode::changedStates() const
 
 void RiveQSGRHIRenderNode::prepare()
 {
+    if (!m_item) {
+        return;
+    }
+
     QSGRendererInterface *renderInterface = m_window->rendererInterface();
     QRhiSwapChain *swapChain =
         static_cast<QRhiSwapChain *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiSwapchainResource));
@@ -227,6 +235,9 @@ void RiveQSGRHIRenderNode::prepare()
     { // update projection matrix
         QMatrix4x4 projMatrix = *projectionMatrix();
 
+        if (!m_item) {
+            return;
+        }
         const auto window2itemScaleX = m_item->window()->width() / m_item->width();
         const auto window2itemScaleY = m_item->window()->height() / m_item->height();
 

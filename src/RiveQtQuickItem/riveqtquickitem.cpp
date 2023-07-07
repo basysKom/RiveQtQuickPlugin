@@ -65,7 +65,12 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     update();
 }
 
-RiveQtQuickItem::~RiveQtQuickItem() { }
+RiveQtQuickItem::~RiveQtQuickItem()
+{
+    if (m_renderNode) {
+        m_renderNode->detach();
+    }
+}
 
 void RiveQtQuickItem::triggerAnimation(int id)
 {
@@ -346,7 +351,7 @@ int RiveQtQuickItem::currentAnimationIndex() const
 
 void RiveQtQuickItem::loadRiveFile(const QString &source)
 {
-    if (m_loadingStatus != Idle && m_loadingStatus != Unloading) {
+    if (m_loadingStatus != Idle && m_loadingStatus != Unloading && m_loadingStatus != Loading) {
         // clear the data
         m_artboardInfoList.clear();
         emit artboardsChanged();
@@ -377,7 +382,7 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
 
     if (!currentWindow) {
         qCWarning(rqqpItem) << "No window found";
-        m_loadingStatus = Error;
+        m_loadingStatus = Loading;
         emit loadingStatusChanged();
         return;
     }
@@ -423,6 +428,8 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
             ArtBoardInfo info;
             info.id = i;
             info.name = QString::fromStdString(m_riveFile->artboardNameAt(i));
+            qCDebug(rqqpInspection) << "ArtBoardInfo" << i << "found.\tName:" << info.name;
+
             m_artboardInfoList.append(info);
         }
     }
@@ -482,6 +489,8 @@ void RiveQtQuickItem::updateStateMachines()
             StateMachineInfo info;
             info.id = i;
             info.name = QString::fromStdString(stateMachine->name());
+
+            qCDebug(rqqpInspection) << "StateMachineInfo" << i << "found.\tName:" << info.name;
 
             m_stateMachineList.append(info);
         }
