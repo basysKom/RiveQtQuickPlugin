@@ -20,6 +20,7 @@ class RiveQSGBaseNode
 public:
     RiveQSGBaseNode(std::weak_ptr<rive::ArtboardInstance> artboardInstance, RiveQtQuickItem *item);
 
+    virtual void detach() { m_item = nullptr; }
     virtual void renderOffscreen() { }
     virtual void setRect(const QRectF &bounds);
     virtual QPointF topLeft() const;
