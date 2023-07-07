@@ -127,131 +127,6 @@ QVector<QVector<QVector2D>> RiveQtPath::toVertices()
     return m_pathSegmentsData;
 }
 
-void RiveQtPath::addMiterJoin(QVector<QVector2D> &lineDataSegment, const QVector2D &p1, const QVector2D &p2, const QVector2D &offset)
-{
-    lineDataSegment.append(p1 + offset);
-    lineDataSegment.append(p2 + offset);
-    lineDataSegment.append(p1 - offset);
-    lineDataSegment.append(p2 - offset);
-};
-
-void RiveQtPath::addRoundJoin(QVector<QVector2D> &lineDataSegment, const float &lineWidth, const QVector2D &p1, const QVector2D &p2,
-                              const QVector2D &offset, int numSegments)
-{
-    QVector2D prevPoint1 = p1 - offset;
-    QVector2D prevPoint2 = p1 + offset;
-
-    float angleStep = M_PI / numSegments;
-    float angle = atan2(offset.y(), offset.x());
-
-    for (int i = 0; i < numSegments; ++i) {
-        float newAngle = angle + angleStep * (i + 1);
-        QVector2D newOffset(cos(newAngle) * lineWidth / 2, sin(newAngle) * lineWidth / 2);
-        QVector2D newPoint1 = p1 - newOffset;
-        QVector2D newPoint2 = p1 + newOffset;
-
-        lineDataSegment.append(prevPoint1);
-        lineDataSegment.append(prevPoint2);
-        lineDataSegment.append(newPoint1);
-
-        lineDataSegment.append(newPoint1);
-        lineDataSegment.append(prevPoint2);
-        lineDataSegment.append(newPoint2);
-
-        prevPoint1 = newPoint1;
-        prevPoint2 = newPoint2;
-    }
-
-    lineDataSegment.append(prevPoint1);
-    lineDataSegment.append(prevPoint2);
-    lineDataSegment.append(p2 - offset);
-
-    lineDataSegment.append(p2 - offset);
-    lineDataSegment.append(prevPoint2);
-    lineDataSegment.append(p2 + offset);
-
-    lineDataSegment.append(p1 + offset);
-    lineDataSegment.append(p2 + offset);
-    lineDataSegment.append(p1 - offset);
-    lineDataSegment.append(p2 - offset);
-};
-
-void RiveQtPath::addBevelJoin(QVector<QVector2D> &lineDataSegment, const QVector2D &p1, const QVector2D &p2, const QVector2D &offset)
-{
-    QVector2D p1_outer = p1 - offset;
-    QVector2D p1_inner = p1 + offset;
-    QVector2D p2_outer = p2 - offset;
-    QVector2D p2_inner = p2 + offset;
-
-    lineDataSegment.append(p1_outer);
-    lineDataSegment.append(p1_inner);
-    lineDataSegment.append(p2_inner);
-
-    lineDataSegment.append(p1_outer);
-    lineDataSegment.append(p2_inner);
-    lineDataSegment.append(p2_outer);
-};
-
-void RiveQtPath::addCap(QVector<QVector2D> &lineDataSegment, const float &lineWidth, const Qt::PenCapStyle &capStyle, const QVector2D &p,
-                        const QVector2D &offset, const QVector2D &normal, const bool &isStart)
-{
-    switch (capStyle) {
-    case Qt::PenCapStyle::FlatCap:
-        // No additional vertices needed for FlatCap
-        break;
-    case Qt::PenCapStyle::RoundCap: {
-        int numSegments = m_segmentCount;
-        float angleStep = M_PI / numSegments;
-        float startAngle = atan2(offset.y(), offset.x());
-
-        QVector<QVector2D> capVertices;
-        QVector2D previousOffset(cos(startAngle) * lineWidth / 2, sin(startAngle) * lineWidth / 2);
-        for (int i = 0; i < numSegments + 1; ++i) {
-            float newAngle = startAngle + angleStep * (i + 1);
-            QVector2D newOffset(cos(newAngle) * lineWidth / 2, sin(newAngle) * lineWidth / 2);
-
-            capVertices.append(p);
-            capVertices.append(p + previousOffset);
-            capVertices.append(p + newOffset);
-
-            previousOffset = newOffset;
-        }
-
-        if (isStart) {
-            lineDataSegment = capVertices + lineDataSegment;
-        } else {
-            lineDataSegment.append(capVertices);
-        }
-
-        break;
-    }
-    case Qt::PenCapStyle::SquareCap: {
-        QVector<QVector2D> capVertices;
-        capVertices.append(p - normal * (lineWidth / 2) + offset);
-        capVertices.append(p + normal * (lineWidth / 2) + offset);
-        capVertices.append(p - normal * (lineWidth / 2) - offset);
-        capVertices.append(p + normal * (lineWidth / 2) - offset);
-
-        if (isStart) {
-            lineDataSegment = capVertices + lineDataSegment;
-        } else {
-            lineDataSegment.append(capVertices);
-        }
-        break;
-    }
-    default:
-        // No additional vertices needed for other cap styles
-        break;
-    }
-};
-
-void fillBetweenRound(QVector<QVector2D> &output, const QVector2D &centerPoint, const QVector2D &start, const QVector2D &end,
-                      const float width, const int segmentCount)
-{
-}
-
-// TODO: Optimize, this gets called each frame for a stroke/path
-// there will be shortcuts and caching possible
 QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
 {
     if (m_pathSegmentOutlineDataDirty) {
@@ -267,8 +142,7 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
         return m_pathOutlineData;
     }
 
-    qreal lineWidth = pen.widthF();
-
+    const qreal lineWidth = pen.widthF();
     const Qt::PenJoinStyle &joinType = pen.joinStyle();
     const Qt::PenCapStyle &capStyle = pen.capStyle();
 
@@ -305,7 +179,6 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
                     // No additional vertices needed for FlatCap
                     break;
                 case Qt::PenCapStyle::RoundCap: {
-
                     int numSegments = m_segmentCount;
 
                     float phi = i == 0 ? M_PI / numSegments : -M_PI / numSegments;
@@ -366,49 +239,46 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
                 const auto offset2 = normal2 * lineWidth / 2.0;
                 switch (joinType) {
                 default:
+                    qCDebug(rqqpRendering) << "Unhandled path join type. Using rounded join. Type:" << joinType;
                     // this should never be the case, since we handle all rive types.
                     // fallthrough intended
                 case Qt::PenJoinStyle::RoundJoin: {
-                    {
-                        auto phi = acos(normal.x() * normal2.x() + normal.y() * normal2.y()) / m_segmentCount;
+                    auto phi = acos(normal.x() * normal2.x() + normal.y() * normal2.y()) / m_segmentCount;
 
-                        bool turnLeft = normal.x() * normal2.y() - normal.y() * normal2.x() > 0;
-                        phi = turnLeft ? phi : -phi;
-                        QVector2D currentOffset = turnLeft ? -offset : offset;
+                    const bool turnLeft = normal.x() * normal2.y() - normal.y() * normal2.x() > 0;
+                    phi = turnLeft ? phi : -phi;
+                    QVector2D currentOffset = turnLeft ? -offset : offset;
 
-                        //                        qDebug() << phi;
-                        const float cPhi = cos(phi);
-                        const float sPhi = sin(phi);
-                        const float rotation[4] = { cPhi, -sPhi, sPhi, cPhi };
+                    const float cPhi = cos(phi);
+                    const float sPhi = sin(phi);
+                    const float rotation[4] = { cPhi, -sPhi, sPhi, cPhi };
 
-                        QVector<QVector2D> capVertices;
-                        capVertices.reserve(3 * m_segmentCount);
+                    QVector<QVector2D> capVertices;
+                    capVertices.reserve(3 * m_segmentCount);
 
-                        const auto centerPoint = p2;
+                    const auto centerPoint = p2;
 
-                        for (int i = 0; i < m_segmentCount; ++i) {
-                            capVertices.append(centerPoint + currentOffset);
-                            capVertices.append(centerPoint);
+                    for (int i = 0; i < m_segmentCount; ++i) {
+                        capVertices.append(centerPoint + currentOffset);
+                        capVertices.append(centerPoint);
 
-                            const auto tmp = rotation[0] * currentOffset[0] + rotation[1] * currentOffset[1];
-                            currentOffset[1] = rotation[2] * currentOffset[0] + rotation[3] * currentOffset[1];
-                            currentOffset[0] = tmp;
+                        const auto tmp = rotation[0] * currentOffset[0] + rotation[1] * currentOffset[1];
+                        currentOffset[1] = rotation[2] * currentOffset[0] + rotation[3] * currentOffset[1];
+                        currentOffset[0] = tmp;
 
-                            capVertices.append(centerPoint + currentOffset);
-                        }
-
-                        lineDataSegment = lineDataSegment + capVertices;
+                        capVertices.append(centerPoint + currentOffset);
                     }
+
+                    lineDataSegment = lineDataSegment + capVertices;
+
                     break;
                 }
                 case Qt::PenJoinStyle::MiterJoin:
                     // Miter Join may not work so well, specifically on tesselated segmented bezier curves
                     // disable it for now,.. we may need to the join specific on the source (like curve)
-                    // addMiterJoin(p1, p2, offset);
-                    // break;
                     // the fallthrough is intendend here
                 case Qt::PenJoinStyle::BevelJoin:
-                    // we could potentially save 1 triangle, but it's not worth it atm.
+                    // we could potentially save 1 triangle, but it's probably not worth it...
                     lineDataSegment.append(p2 + offset);
                     lineDataSegment.append(p2);
                     lineDataSegment.append(p2 + offset2);
