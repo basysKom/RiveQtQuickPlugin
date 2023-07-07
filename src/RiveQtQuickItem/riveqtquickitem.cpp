@@ -383,7 +383,8 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
     }
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    connect(currentWindow, &QQuickWindow::beforeFrameBegin, this, &RiveQtQuickItem::renderOffscreen, Qt::ConnectionType::DirectConnection);
+    connect(currentWindow, &QQuickWindow::beforeFrameBegin, this, &RiveQtQuickItem::renderOffscreen,
+            static_cast<Qt::ConnectionType>(Qt::DirectConnection | Qt::UniqueConnection));
 #endif
 
     QFile file(source);
