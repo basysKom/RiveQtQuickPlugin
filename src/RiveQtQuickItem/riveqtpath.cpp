@@ -24,7 +24,6 @@ RiveQtPath::RiveQtPath(const unsigned segmentCount)
 RiveQtPath::RiveQtPath(const RiveQtPath &other)
 {
     m_path = other.m_path;
-    m_subPaths = other.m_subPaths;
     m_pathSegmentsData = other.m_pathSegmentsData;
     m_pathSegmentsOutlineData = other.m_pathSegmentsOutlineData;
     m_pathOutlineData = other.m_pathOutlineData;
@@ -65,7 +64,6 @@ void RiveQtPath::rewind()
 {
     m_pathSegmentsData.clear();
     m_pathSegmentsOutlineData.clear();
-    m_subPaths.clear();
     m_path.clear();
     m_pathSegmentOutlineDataDirty = true;
     m_pathSegmentDataDirty = true;
@@ -93,8 +91,13 @@ void RiveQtPath::addRenderPath(RenderPath *path, const rive::Mat2D &m)
     RiveQtPath *qtPath = static_cast<RiveQtPath *>(path);
     QMatrix4x4 matrix(m[0], m[2], 0, m[4], m[1], m[3], 0, m[5], 0, 0, 1, 0, 0, 0, 0, 1);
 
-    m_subPaths.emplace_back(SubPath(qtPath, matrix));
+    QPainterPath p = RiveQtUtils::transformPathWithMatrix4x4(qtPath->toQPainterPath(), matrix);
 
+    if (m_path.isEmpty()) {
+        m_path = p;
+    } else {
+        m_path.addPath(p);
+    }
     m_pathSegmentOutlineDataDirty = true;
     m_pathSegmentDataDirty = true;
 
@@ -399,7 +402,7 @@ void RiveQtPath::generateVertices()
         return;
     }
 
-    if (m_path.isEmpty() && m_subPaths.empty()) {
+    if (m_path.isEmpty()) {
         m_pathSegmentsData.clear();
         return;
     }
@@ -407,13 +410,6 @@ void RiveQtPath::generateVertices()
     m_pathSegmentsData.clear();
     m_pathSegmentsData.append(qpainterPathToVector2D(m_path));
 
-    for (SubPath &subPath : m_subPaths) {
-        QPainterPath sourcePath = subPath.path()->toQPainterPath();
-        QPainterPath transformedPath = RiveQtUtils::transformPathWithMatrix4x4(sourcePath, subPath.transform());
-
-        m_pathSegmentsData.append(subPath.path()->m_pathSegmentsData);
-        m_pathSegmentsData.append(qpainterPathToVector2D(transformedPath));
-    }
     m_pathSegmentDataDirty = false;
 }
 
@@ -423,34 +419,11 @@ void RiveQtPath::generateOutlineVertices()
         return;
     }
 
-    if (m_path.isEmpty() && m_subPaths.empty()) {
+    if (m_path.isEmpty()) {
         m_pathSegmentsOutlineData.clear();
         return;
     }
 
     m_pathSegmentsOutlineData.clear();
     m_pathSegmentsOutlineData.append(qpainterPathToOutlineVector2D(m_path));
-
-    for (SubPath &subPath : m_subPaths) {
-        QPainterPath sourcePath = subPath.path()->toQPainterPath();
-        QPainterPath transformedPath = RiveQtUtils::transformPathWithMatrix4x4(sourcePath, subPath.transform());
-
-        m_pathSegmentsOutlineData.append(subPath.path()->m_pathSegmentsOutlineData);
-        m_pathSegmentsOutlineData.append(qpainterPathToOutlineVector2D(transformedPath));
-    }
-}
-
-SubPath::SubPath(RiveQtPath *path, const QMatrix4x4 &transform)
-    : m_Path(path)
-    , m_Transform(transform)
-{
-}
-
-RiveQtPath *SubPath::path() const
-{
-    return m_Path;
-}
-QMatrix4x4 SubPath::transform() const
-{
-    return m_Transform;
 }
