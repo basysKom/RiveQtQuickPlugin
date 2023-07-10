@@ -48,7 +48,6 @@ private:
                         qreal t);
 
     QPainterPath m_path;
-    std::vector<SubPath> m_subPaths;
     QVector<QVector<QVector2D>> m_pathSegmentsData;
     QVector<QVector<QVector2D>> m_pathSegmentsOutlineData;
     QVector<QVector<QVector2D>> m_pathOutlineData;
@@ -59,22 +58,9 @@ private:
 
     unsigned m_segmentCount { 10 };
     void addMiterJoin(QVector<QVector2D> &lineDataSegment, const QVector2D &p1, const QVector2D &p2, const QVector2D &offset);
-    void addRoundJoin(QVector<QVector2D> &lineDataSegment, const float &lineWidth, const QVector2D &p1, const QVector2D &p2, const QVector2D &offset,
-                      int numSegments);
+    void addRoundJoin(QVector<QVector2D> &lineDataSegment, const float &lineWidth, const QVector2D &p1, const QVector2D &p2,
+                      const QVector2D &offset, int numSegments);
     void addBevelJoin(QVector<QVector2D> &lineDataSegment, const QVector2D &p1, const QVector2D &p2, const QVector2D &offset);
     void addCap(QVector<QVector2D> &lineDataSegment, const float &lineWidth, const Qt::PenCapStyle &capStyle, const QVector2D &p,
                 const QVector2D &offset, const QVector2D &normal, const bool &isStart);
-};
-
-class SubPath
-{
-public:
-    SubPath(RiveQtPath *path, const QMatrix4x4 &transform);
-
-    RiveQtPath *path() const;
-    QMatrix4x4 transform() const;
-
-private:
-    RiveQtPath *m_Path;
-    QMatrix4x4 m_Transform;
 };
