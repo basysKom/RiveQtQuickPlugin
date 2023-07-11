@@ -50,7 +50,6 @@ RiveQtPath::RiveQtPath(const rive::RawPath &rawPath, rive::FillRule fillRule, co
         case rive::PathVerb::close:
             m_path.lineTo(pts->x, pts->y);
             m_path.closeSubpath();
-            m_isClosed = true;
             break;
         default:
             break;
@@ -154,7 +153,13 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
 
         QVector<QVector2D> lineDataSegment;
 
-        const int endIndex = m_isClosed ? pathData.count() : pathData.count() - 1;
+        bool closed = false;
+
+        if (pathData.first() == pathData.last()) {
+            closed = true;
+        }
+
+        const int endIndex = closed ? pathData.count() : pathData.count() - 1;
 
         for (int i = 0; i < endIndex; ++i) {
             const QVector2D &p1 = pathData[i];
@@ -174,7 +179,7 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
             lineDataSegment.append(p2 - offset);
             lineDataSegment.append(p1 - offset);
 
-            if (!m_isClosed && (i == 0 || i == endIndex - 1)) {
+            if (!closed && (i == 0 || i == endIndex - 1)) {
                 switch (capStyle) {
                 case Qt::PenCapStyle::FlatCap:
                     // No additional vertices needed for FlatCap
@@ -230,7 +235,7 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
             if (i < endIndex - 1) {
 
                 QVector2D p3;
-                if (m_isClosed)
+                if (closed)
                     p3 = pathData[(i + 3) % pathData.count()];
                 else
                     p3 = pathData[(i + 2) % pathData.count()];
@@ -341,12 +346,12 @@ QVector<QVector2D> RiveQtPath::qpainterPathToVector2D(const QPainterPath &path)
     return pathData;
 }
 
-QVector<QVector2D> RiveQtPath::qpainterPathToOutlineVector2D(const QPainterPath &path)
+void RiveQtPath::qpainterPathToOutlineVector2D(const QPainterPath &path)
 {
     QVector<QVector2D> pathData;
 
     if (path.isEmpty()) {
-        return pathData;
+        return;
     }
 
     const QPointF &point = path.elementAt(0);
@@ -360,6 +365,9 @@ QVector<QVector2D> RiveQtPath::qpainterPathToOutlineVector2D(const QPainterPath 
 
         switch (element.type) {
         case QPainterPath::MoveToElement:
+            m_pathSegmentsOutlineData.append(pathData);
+            pathData.clear();
+            // intentional fallthrough
         case QPainterPath::LineToElement: {
             QPointF point = element;
             pathData.append(QVector2D(point.x(), point.y()));
@@ -386,11 +394,7 @@ QVector<QVector2D> RiveQtPath::qpainterPathToOutlineVector2D(const QPainterPath 
         }
     }
 
-    if (pathData.first() == pathData.last()) {
-        m_isClosed = true;
-    }
-
-    return pathData;
+    m_pathSegmentsOutlineData.append(pathData);
 }
 
 void RiveQtPath::generateVertices()
@@ -422,5 +426,5 @@ void RiveQtPath::generateOutlineVertices()
     }
 
     m_pathSegmentsOutlineData.clear();
-    m_pathSegmentsOutlineData.append(qpainterPathToOutlineVector2D(m_path));
+    qpainterPathToOutlineVector2D(m_path);
 }
