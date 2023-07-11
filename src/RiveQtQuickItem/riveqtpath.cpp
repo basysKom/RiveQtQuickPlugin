@@ -81,7 +81,7 @@ void RiveQtPath::fillRule(rive::FillRule value)
     }
 }
 
-void RiveQtPath::addRenderPath(RenderPath *path, const rive::Mat2D &m)
+void RiveQtPath::addRenderPath(RenderPath *path, const rive::Mat2D &transform)
 {
     if (!path) {
         qCDebug(rqqpRendering) << "Skip adding nullptr render path.";
@@ -89,15 +89,12 @@ void RiveQtPath::addRenderPath(RenderPath *path, const rive::Mat2D &m)
     }
 
     RiveQtPath *qtPath = static_cast<RiveQtPath *>(path);
-    QMatrix4x4 matrix(m[0], m[2], 0, m[4], m[1], m[3], 0, m[5], 0, 0, 1, 0, 0, 0, 0, 1);
 
-    QPainterPath p = RiveQtUtils::transformPathWithMatrix4x4(qtPath->toQPainterPath(), matrix);
+    QTransform qTransform(transform[0], transform[1], transform[2], transform[3], transform[4], transform[5]);
 
-    if (m_path.isEmpty()) {
-        m_path = p;
-    } else {
-        m_path.addPath(p);
-    }
+    QPainterPath qPath = qtPath->toQPainterPath() * qTransform;
+    m_path.addPath(qPath);
+
     m_pathSegmentOutlineDataDirty = true;
     m_pathSegmentDataDirty = true;
 
