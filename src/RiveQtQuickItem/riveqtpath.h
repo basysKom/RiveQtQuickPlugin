@@ -42,10 +42,10 @@ private:
     void generateVertices();
     void generateOutlineVertices();
 
-    QVector<QVector2D> qpainterPathToVector2D(const QPainterPath &path);
-    void qpainterPathToOutlineVector2D(const QPainterPath &path);
+    QVector<QVector2D> qpainterPathToVector2D(const QPainterPath &path) const;
+    void updatePathSegmentsOutlineData();
     QPointF cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2, const QPointF &endPoint,
-                        qreal t);
+                        qreal t) const;
 
     QPainterPath m_path;
     QVector<QVector<QVector2D>> m_pathSegmentsData;

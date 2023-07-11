@@ -18,5 +18,6 @@
         <file alias="pathfinder.riv">rive/pathfinder.riv</file>
         <file alias="rivebot-transform.riv">rive/rivebot-transform.riv</file>
         <file alias="simple-strokes.riv">rive/simple-strokes.riv</file>
+        <file alias="basyskom.riv">rive/basyskom.riv</file>
     </qresource>
 </RCC>
