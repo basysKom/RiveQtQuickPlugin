@@ -253,11 +253,10 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
             }
             if (i < endIndex - 1) {
 
-                QVector2D p3;
-                if (closed)
+                QVector2D p3 = pathData[(i + 2) % pathData.count()];
+
+                if (closed && (i + 2) == pathData.count())
                     p3 = pathData[(i + 3) % pathData.count()];
-                else
-                    p3 = pathData[(i + 2) % pathData.count()];
 
                 const auto diff2 = p3 - p2;
                 const auto normal2 = QVector2D(-diff2.y(), diff2.x()).normalized();
