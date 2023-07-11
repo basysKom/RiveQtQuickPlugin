@@ -706,7 +706,7 @@ int RiveQtQuickItem::currentStateMachineIndex() const
 
 void RiveQtQuickItem::setCurrentStateMachineIndex(const int newCurrentStateMachineIndex)
 {
-    qCDebug(rqqpItem) << Q_FUNC_INFO << QThread::currentThread() << m_currentStateMachineIndex << newCurrentStateMachineIndex;
+    qCDebug(rqqpItem) << Q_FUNC_INFO << newCurrentStateMachineIndex;
     if (m_currentStateMachineIndex == newCurrentStateMachineIndex) {
         return;
     }
