@@ -3,6 +3,8 @@
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
+#include <optional>
+
 #include <QVector2D>
 #include <QMatrix2x2>
 #include <QtMath>
@@ -106,7 +108,7 @@ void RiveQtPath::setQPainterPath(QPainterPath path)
     m_path = path;
 }
 
-QVector2D calculateIntersection(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3, const QVector2D &p4)
+std::optional<QVector2D> calculateIntersection(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3, const QVector2D &p4)
 {
     const float x1 = p1.x(), y1 = p1.y();
     const float x2 = p2.x(), y2 = p2.y();
@@ -117,12 +119,12 @@ QVector2D calculateIntersection(const QVector2D &p1, const QVector2D &p2, const 
 
     // If the lines are parallel or coincident, return an invalid point
     if (denominator == 0) {
-        return { std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::quiet_NaN() };
+        return {};
     }
 
     const float intersectX = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / denominator;
     const float intersectY = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / denominator;
-    return { intersectX, intersectY };
+    return QVector2D(intersectX, intersectY);
 }
 
 void RiveQtPath::setSegmentCount(const unsigned segmentCount)
@@ -299,16 +301,22 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
                     break;
                 }
                 case Qt::PenJoinStyle::MiterJoin: {
-                    if (turnLeft) {
-                        const auto pM = calculateIntersection(p1 - offset, p2 - offset, p3 - offset2, p2 - offset2);
-                        lineDataSegment.append(p2 - offset);
-                        lineDataSegment.append(pM);
-                        lineDataSegment.append(p2 - offset2);
-                    } else {
-                        const auto pM = calculateIntersection(p1 + offset, p2 + offset, p3 + offset2, p2 + offset2);
-                        lineDataSegment.append(p2 + offset);
-                        lineDataSegment.append(pM);
-                        lineDataSegment.append(p2 + offset2);
+                    if (!offset.isNull() && !offset2.isNull()) {
+                        if (turnLeft) {
+                            if (const auto pM = calculateIntersection(p1 - offset, p2 - offset, p3 - offset2, p2 - offset2);
+                                pM.has_value()) {
+                                lineDataSegment.append(p2 - offset);
+                                lineDataSegment.append(pM.value());
+                                lineDataSegment.append(p2 - offset2);
+                            }
+                        } else {
+                            if (const auto pM = calculateIntersection(p1 + offset, p2 + offset, p3 + offset2, p2 + offset2);
+                                pM.has_value()) {
+                                lineDataSegment.append(p2 + offset);
+                                lineDataSegment.append(pM.value());
+                                lineDataSegment.append(p2 + offset2);
+                            }
+                        }
                     }
                     // intended fallthrough
                 }
