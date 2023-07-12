@@ -26,9 +26,9 @@ RiveQtPath::RiveQtPath(const unsigned segmentCount)
 RiveQtPath::RiveQtPath(const RiveQtPath &other)
 {
     m_qPainterPath = other.m_qPainterPath;
-    m_pathSegmentsData = other.m_pathSegmentsData;
+    m_pathVertices = other.m_pathVertices;
     m_pathSegmentsOutlineData = other.m_pathSegmentsOutlineData;
-    m_pathOutlineData = other.m_pathOutlineData;
+    m_pathOutlineVertices = other.m_pathOutlineVertices;
     m_segmentCount = other.m_segmentCount;
 }
 
@@ -67,7 +67,7 @@ RiveQtPath::RiveQtPath(const rive::RawPath &rawPath, rive::FillRule fillRule, co
 
 void RiveQtPath::rewind()
 {
-    m_pathSegmentsData.clear();
+    m_pathVertices.clear();
     m_pathSegmentsOutlineData.clear();
     m_qPainterPath.clear();
     m_pathSegmentOutlineDataDirty = true;
@@ -149,22 +149,21 @@ QVector<QVector<QVector2D>> RiveQtPath::toVertices()
     if (m_pathSegmentDataDirty) {
         updatePathSegmentsData();
     }
-    return m_pathSegmentsData;
+    return m_pathVertices;
 }
 
 QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
 {
     if (m_pathSegmentOutlineDataDirty) {
         updatePathSegmentsOutlineData();
-        m_pathOutlineData.clear();
+        m_pathOutlineVertices.clear();
+    } else {
+        return m_pathOutlineVertices;
     }
 
+    // Early exit, nothing to do.
     if (m_pathSegmentsOutlineData.isEmpty()) {
-        return m_pathOutlineData;
-    }
-
-    if (!m_pathOutlineData.isEmpty()) {
-        return m_pathOutlineData;
+        return m_pathOutlineVertices;
     }
 
     const qreal lineWidth = pen.widthF();
@@ -350,12 +349,12 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
             }
         }
 
-        m_pathOutlineData.append(lineDataSegment);
+        m_pathOutlineVertices.append(lineDataSegment);
     }
 
     m_pathSegmentOutlineDataDirty = false;
 
-    return m_pathOutlineData;
+    return m_pathOutlineVertices;
 }
 
 QPointF RiveQtPath::cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2,
@@ -372,7 +371,7 @@ QPointF RiveQtPath::cubicBezier(const QPointF &startPoint, const QPointF &contro
     return point;
 }
 
-QVector2D cubicBezierTangent(QPointF p0, QPointF p1, QPointF p2, QPointF p3, float t)
+QVector2D cubicBezierTangent(const QPointF &p0, const QPointF &p1, const QPointF &p2, const QPointF &p3, const float t)
 {
     const auto r = 3.f * (1.f - t) * (1.f - t) * (p1 - p0) + 6.f * (1.f - t) * t * (p2 - p1) + 3.f * t * t * (p3 - p2);
     return QVector2D(r.x(), r.y());
@@ -447,7 +446,7 @@ void RiveQtPath::updatePathSegmentsOutlineData()
 
 void RiveQtPath::updatePathSegmentsData()
 {
-    m_pathSegmentsData.clear();
+    m_pathVertices.clear();
 
     if (m_qPainterPath.isEmpty()) {
         m_pathSegmentDataDirty = false;
@@ -472,6 +471,6 @@ void RiveQtPath::updatePathSegmentsData()
         pathData.append(QVector2D(x, y));
     }
 
-    m_pathSegmentsData.append(pathData);
+    m_pathVertices.append(pathData);
     m_pathSegmentDataDirty = false;
 }
