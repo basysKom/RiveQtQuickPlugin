@@ -50,10 +50,11 @@ private:
     void updatePathSegmentsOutlineData();
 
     QPainterPath m_qPainterPath;
-    QVector<QVector<QVector2D>> m_pathSegmentsData;
+    QVector<QVector<QVector2D>> m_pathVertices;
+    QVector<QVector<QVector2D>> m_pathOutlineVertices;
+
     QVector<QVector<QVector2D>> m_pathSegmentsOutlineData;
     QVector<QVector<PathDataPoint>> m_pathSegmentsOutlineDataEnhanced;
-    QVector<QVector<QVector2D>> m_pathOutlineData;
 
     bool m_pathSegmentDataDirty { true };
     bool m_pathSegmentOutlineDataDirty { true };
