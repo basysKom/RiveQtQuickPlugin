@@ -102,9 +102,6 @@ void RiveQtPath::addRenderPath(rive::RenderPath *path, const rive::Mat2D &transf
 
     m_pathSegmentOutlineDataDirty = true;
     m_pathSegmentDataDirty = true;
-
-    // calculate vertices directly when we add a path
-    updatePathSegmentsData();
 }
 
 void RiveQtPath::setQPainterPath(QPainterPath path)
@@ -126,8 +123,11 @@ std::optional<QVector2D> calculateIntersection(const QVector2D &p1, const QVecto
         return {};
     }
 
-    const float intersectX = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / denominator;
-    const float intersectY = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / denominator;
+    const float factor1 = (x1 * y2 - y1 * x2);
+    const float factor2 = (x3 * y4 - y3 * x4);
+
+    const float intersectX = (factor1 * (x3 - x4) - (x1 - x2) * factor2) / denominator;
+    const float intersectY = (factor1 * (y3 - y4) - (y1 - y2) * factor2) / denominator;
     return QVector2D(intersectX, intersectY);
 }
 
