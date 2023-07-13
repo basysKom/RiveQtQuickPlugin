@@ -1,4 +1,3 @@
-
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
@@ -14,7 +13,7 @@ int main(int argc, char *argv[])
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     // Force OpenGL
-//    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 #endif
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)

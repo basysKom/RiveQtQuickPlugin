@@ -21,6 +21,8 @@ set(PROJECT_SOURCES
    renderer/riveqtpainterrenderer.cpp
    renderer/riveqtfactory.h
    renderer/riveqtfactory.cpp
+   polygon_triangulate/polygon_triangulate.hpp
+   polygon_triangulate/polygon_triangulate.cpp
    datatypes.h
    riveqtquickitem.h
    riveqtquickitem.cpp
