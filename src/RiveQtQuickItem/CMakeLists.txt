@@ -95,6 +95,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt${QT_VERSION_MAJOR}::Qml
     Qt${QT_VERSION_MAJOR}::QuickPrivate
     rive_cpp
+    Clipper2
 )
 
 # Include necessary directories
@@ -104,7 +105,9 @@ elseif(${QT_VERSION_MAJOR} EQUAL 6)
     include_directories(${Qt6Gui_PRIVATE_INCLUDE_DIRS} ${Qt6Core_PRIVATE_INCLUDE_DIRS} "renderer")
 endif()
 
-include_directories(${Qt${QT_VERSION_MAJOR}Gui_PRIVATE_INCLUDE_DIRS})
+include_directories(
+    ${Qt${QT_VERSION_MAJOR}Gui_PRIVATE_INCLUDE_DIRS}
+)
 
 if (${QT_VERSION_MAJOR} EQUAL 6)
     find_package(Qt6 COMPONENTS ShaderTools)
@@ -160,26 +163,3 @@ elseif(${QT_VERSION_MAJOR} EQUAL 5)
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.qmltypes" "${QML_BINARY_DIR}/${PROJECT_NAME}/${PROJECT_NAME}.qmltypes"
     )
 endif()
-
-# Generating the qmltypes file for Qt5.
-# qmplugindump only works with release builds.
-#if (${QT_VERSION_MAJOR} EQUAL 5 AND CMAKE_BUILD_TYPE STREQUAL "Release")
-#    if (WIN32)
-#        cmake_path(SET qmlplugindump "${CMAKE_PREFIX_PATH}/bin/qmlplugindump.exe")
-#        add_custom_command(
-#            TARGET ${PROJECT_NAME} POST_BUILD
-#            COMMAND
-#                ${qmlplugindump} -output ${PROJECT_NAME}/RiveQtQuickPlugin.qmltypes RiveQtQuickPlugin 1.0 .
-#            WORKING_DIRECTORY
-#                ${QML_BINARY_DIR}
-#        )
-#    else()
-#        add_custom_command(
-#            TARGET ${PROJECT_NAME} POST_BUILD
-#            COMMAND
-#                qmlplugindump -output ${PROJECT_NAME}/RiveQtQuickPlugin.qmltypes RiveQtQuickPlugin 1.0 .
-#            WORKING_DIRECTORY
-#                ${QML_BINARY_DIR}
-#        )
-#    endif()
-#endif()

@@ -11,6 +11,7 @@
 
 #include <rive/renderer.hpp>
 #include <rive/math/raw_path.hpp>
+#include <clipper2/clipper.core.h>
 
 class RiveQtPath : public rive::RenderPath
 {
@@ -36,13 +37,13 @@ public:
     QVector<QVector<QVector2D>> toVertices();
     QVector<QVector<QVector2D>> toVerticesLine(const QPen &pen);
 
-private:
     struct PathDataPoint
     {
         QVector2D point;
         QVector2D tangent; // only used in cubic bezier
     };
 
+private:
     static QPointF cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2,
                                const QPointF &endPoint, qreal t);
 
@@ -51,6 +52,8 @@ private:
 
     QPainterPath m_qPainterPath;
     QVector<QVector<PathDataPoint>> m_pathSegmentsOutlineData;
+
+    Clipper2Lib::PathsD m_clipperPaths;
 
     QVector<QVector<QVector2D>> m_pathVertices;
     QVector<QVector<QVector2D>> m_pathOutlineVertices;

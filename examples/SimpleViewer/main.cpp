@@ -8,6 +8,8 @@
 #include <QQmlApplicationEngine>
 #include <QQuickWindow>
 
+#include <clipper2/clipper.h>
+
 int main(int argc, char *argv[])
 {
 

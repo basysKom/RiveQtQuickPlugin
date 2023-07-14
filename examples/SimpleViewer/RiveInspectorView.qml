@@ -107,7 +107,7 @@ Item {
                     currentArtboardIndex: 0
                     currentStateMachineIndex: -1
 
-                    renderQuality: RiveQtQuickItem.Medium
+                    renderQuality: RiveQtQuickItem.Low
                     fillMode: RiveQtQuickItem.PreserveAspectFit
 
                     Text {

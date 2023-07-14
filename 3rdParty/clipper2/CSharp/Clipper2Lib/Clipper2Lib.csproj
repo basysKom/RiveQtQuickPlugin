@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>8</LangVersion>
+    <Version>1.1.0</Version>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Authors>Angus Johnson</Authors>
+    <Description>Polygon Clipping and Offsetting Library</Description>
+    <Title>Clipper2</Title>
+    <PackageId>Clipper2</PackageId>
+    <PackageProjectUrl>http://www.angusj.com/clipper2/Docs/Overview.htm</PackageProjectUrl>
+    <Copyright>Copyright © 2010-2022</Copyright>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/AngusJohnson/Clipper2</RepositoryUrl>
+    <PackageReleaseNotes>Major revision to merging polygons in clipping solutions</PackageReleaseNotes>
+    <Platforms>AnyCPU;x86</Platforms>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="*.ico" />
+  </ItemGroup>
+
+</Project>

@@ -2,7 +2,6 @@
 SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 SPDX-FileCopyrightText: 2023 Jonas Kalinka <jonas.kalinka@basyskom.com>
 SPDX-FileCopyrightText: 2023 basysKom GmbH
-
 SPDX-License-Identifier: LGPL-3.0-or-later
 ]]
 
@@ -43,6 +42,11 @@ if(${RQQRP_DOWNLOAD_BUILD_DEPENDENCIES})
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/rive/cmake)
 endif()
 
+set(CLIPPER2_EXAMPLES false)
+set(CLIPPER2_TESTS false)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/clipper2/CPP)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/clipper2/CPP/Clipper2Lib/include)
+
 set(PLUGIN_SOURCE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/RiveQtQuickItem)
 
 add_subdirectory(${PLUGIN_SOURCE_DIR})
@@ -54,4 +58,3 @@ if(RQQRP_BUILD_EXAMPLES)
 
     add_subdirectory(examples)
 endif()
-

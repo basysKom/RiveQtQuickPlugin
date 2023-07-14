@@ -11,9 +11,24 @@
 
 #include <private/qtriangulator_p.h>
 
+#include <clipper2/clipper.h>
+#include <clipper2/clipper.offset.h>
+
+#include "polygon_triangulate/polygon_triangulate.hpp"
+
 #include "rqqplogging.h"
 #include "riveqtpath.h"
 #include "riveqtutils.h"
+
+Clipper2Lib::PathD toClipperPath(const QVector<RiveQtPath::PathDataPoint> &path)
+{
+    Clipper2Lib::PathD cp;
+    cp.reserve(path.size());
+    for (const auto &p : path) {
+        cp.push_back({ p.point.x(), p.point.y() });
+    }
+    return cp;
+}
 
 RiveQtPath::RiveQtPath(const unsigned segmentCount)
 {
@@ -169,6 +184,97 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
     const qreal lineWidth = pen.widthF();
     const Qt::PenJoinStyle &joinType = pen.joinStyle();
     const Qt::PenCapStyle &capStyle = pen.capStyle();
+
+    const auto &inflatedPaths =
+        Clipper2Lib::InflatePaths(m_clipperPaths, lineWidth / 2.0, Clipper2Lib::JoinType::Miter, Clipper2Lib::EndType::Butt, 1, 2.0, 2.0);
+
+    QVector<QVector2D> pathPoints;
+    QVector<QVector2D> pathVertices;
+
+    for (const auto &path : inflatedPaths) {
+        //        const auto &path = inflatedPaths.at(i);
+        if (path.size() < 3)
+            continue;
+
+        pathPoints.clear();
+        pathVertices.clear();
+        pathPoints.reserve(path.size());
+        int outputSize = 3 * (path.size() - 2);
+        pathVertices.reserve(outputSize);
+
+        double *X = new double[path.size()];
+        double *Y = new double[path.size()];
+
+        for (size_t i = 0; i < path.size(); ++i) {
+            const auto &p = path.at(i);
+            qDebug() << p.x << p.y;
+            if (i > 0 && p != path.at(i - 1)) {
+                pathPoints.append(QVector2D(p.x, p.y));
+                X[i] = p.x;
+                Y[i] = p.y;
+            }
+        }
+
+        int *triangles = polygon_triangulate(path.size(), X, Y);
+
+        qDebug() << "size" << pathPoints.size();
+
+        for (size_t i = 0; i < outputSize; ++i) {
+            qDebug() << triangles[i];
+            pathVertices.append(pathPoints.at(triangles[i] % pathPoints.size()));
+        }
+        delete triangles;
+        delete[] X;
+        delete[] Y;
+
+        m_pathOutlineVertices.append(pathVertices);
+    }
+
+    //    size_t pointCount { 0 };
+
+    //    for (const auto &path : inflatedPaths) {
+    //        pointCount += path.size();
+    //    }
+    //    for (const auto &path : inflatedPaths) {
+    //        for (int i = 0; i < path.size() / 2; ++i) {
+    //            const auto &p = path.at(i);
+    //            const auto &p2 = path.at(path.size() - i - 1);
+    //            points.push_back(p.x);
+    //            points.push_back(p.y);
+    //            points.push_back(p2.x);
+    //            points.push_back(p2.y);
+    //            qDebug() << p.x << "\t" << p.y;
+    //            qDebug() << p2.x << "\t" << p2.y;
+    //        }
+    //        if (path.size() % 2) {
+    //            points.resize(points.size() - 2);
+    //        }
+    //    }
+
+    //    QVectorPath outlinePath(&points[0], points.size());
+
+    //    const auto &triangles = qTriangulate(outlinePath);
+    //    int n int *polygon_triangulate();
+
+    //    QVector<QVector2D> pathData;
+    //    pathData.reserve(triangles.indices.size());
+    //    int index;
+    //    for (int i = 0; i < triangles.indices.size(); i++) {
+    //        if (triangles.indices.type() == QVertexIndexVector::UnsignedInt) {
+    //            index = static_cast<const quint32 *>(triangles.indices.data())[i];
+    //        } else {
+    //            index = static_cast<const quint16 *>(triangles.indices.data())[i];
+    //        }
+
+    //        const qreal x = triangles.vertices[2 * index];
+    //        const qreal y = triangles.vertices[2 * index + 1];
+
+    //        pathData.append(QVector2D(x, y));
+    //    }
+
+    //    m_pathOutlineVertices.append(pathData);
+
+#if false
 
     for (const auto &pathData : qAsConst(m_pathSegmentsOutlineData)) {
         if (pathData.size() <= 1) {
@@ -353,6 +459,7 @@ QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
 
         m_pathOutlineVertices.append(lineDataSegment);
     }
+#endif
 
     m_pathSegmentOutlineDataDirty = false;
 
@@ -388,42 +495,41 @@ void RiveQtPath::updatePathSegmentsOutlineData()
         return;
     }
 
-    QVector<PathDataPoint> pathDataEnhanced;
-    pathDataEnhanced.reserve(m_qPainterPath.elementCount());
+    QVector<PathDataPoint> pathData;
+    pathData.reserve(m_qPainterPath.elementCount());
 
     const QPointF &point = m_qPainterPath.elementAt(0);
     const QVector2D &centerPoint = QVector2D(point.x(), point.y());
 
     // Add the current point
-    pathDataEnhanced.append({ centerPoint, QVector2D() });
+    pathData.append({ centerPoint, {} });
 
     for (int i = 1; i < m_qPainterPath.elementCount(); ++i) {
         QPainterPath::Element element = m_qPainterPath.elementAt(i);
 
         switch (element.type) {
         case QPainterPath::MoveToElement:
-            m_pathSegmentsOutlineData.append(pathDataEnhanced);
-            pathDataEnhanced.clear();
-            pathDataEnhanced.append({ QVector2D(element.x, element.y), QVector2D() });
+            m_pathSegmentsOutlineData.append(pathData);
+            pathData.clear();
+            pathData.append({ QVector2D(element.x, element.y), QVector2D() });
             break;
 
         case QPainterPath::LineToElement:
-            pathDataEnhanced.append({ QVector2D(element.x, element.y), QVector2D() });
+            pathData.append({ QVector2D(element.x, element.y), QVector2D() });
             break;
 
         case QPainterPath::CurveToElement: {
-            const QPointF &startPoint = pathDataEnhanced.last().point.toPointF();
+            const QPointF &startPoint = pathData.last().point.toPointF();
             const QPointF &controlPoint1 = element;
             const QPointF &controlPoint2 = m_qPainterPath.elementAt(i + 1);
             const QPointF &endPoint = m_qPainterPath.elementAt(i + 2);
 
-            pathDataEnhanced.last().tangent = cubicBezierTangent(startPoint, controlPoint1, controlPoint2, endPoint, 0.f);
+            pathData.last().tangent = cubicBezierTangent(startPoint, controlPoint1, controlPoint2, endPoint, 0.f);
 
             for (int j = 1; j <= m_segmentCount; ++j) {
                 const qreal t = static_cast<qreal>(j) / m_segmentCount;
                 const QPointF &point = cubicBezier(startPoint, controlPoint1, controlPoint2, endPoint, t);
-                //                pathData.append(QVector2D(point.x(), point.y()));
-                pathDataEnhanced.append(
+                pathData.append(
                     { QVector2D(point.x(), point.y()), cubicBezierTangent(startPoint, controlPoint1, controlPoint2, endPoint, t) });
             }
 
@@ -435,7 +541,15 @@ void RiveQtPath::updatePathSegmentsOutlineData()
         }
     }
 
-    m_pathSegmentsOutlineData.append(pathDataEnhanced);
+    m_pathSegmentsOutlineData.append(pathData);
+
+    m_clipperPaths.clear();
+    m_clipperPaths.reserve(m_pathSegmentsOutlineData.size());
+
+    for (const auto &path : m_pathSegmentsOutlineData) {
+        m_clipperPaths.push_back(toClipperPath(path));
+    }
+
     m_pathSegmentOutlineDataDirty = false;
 }
 
