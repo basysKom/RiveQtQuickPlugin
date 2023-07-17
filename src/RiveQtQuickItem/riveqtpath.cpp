@@ -278,10 +278,6 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
             const QVector2D &p1 = pathData[i].point;
             const QVector2D &p2 = pathData[nextI].point; // if endIndex, take 0
 
-            qDebug() << p1;
-            if (i == 9 || i == 10 || i == 11)
-                qDebug() << pathData.at(i).tangent;
-
             QVector2D normal, normal2;
             const QVector2D diff = p2 - p1;
 
@@ -378,7 +374,7 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
                 default:
                     // this should never be the case, since we handle all rive types.
                     qCDebug(rqqpRendering) << "Unhandled path join type. Using rounded join. Type:" << joinType;
-                    // fallthrough intended
+                    Q_FALLTHROUGH();
                 case Qt::PenJoinStyle::RoundJoin: {
                     auto phi = acos(normal.x() * normal2.x() + normal.y() * normal2.y()) / m_segmentCount;
 
@@ -412,6 +408,7 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
                 case Qt::PenJoinStyle::MiterJoin: {
                     if (!offset.isNull() && !offset2.isNull()) {
                         if (turnLeft) {
+                            // calculate the intersection of the offset from p1 and p2
                             if (const auto pM = calculateIntersection(p1 - offset, p2 - offset, p3 - offset2, p2 - offset2);
                                 pM.has_value()) {
                                 lineDataSegment.append(p1 - offset);
@@ -427,7 +424,7 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
                             }
                         }
                     }
-                    // intended fallthrough
+                    Q_FALLTHROUGH();
                 }
                 case Qt::PenJoinStyle::BevelJoin:
                     if (turnLeft) {
