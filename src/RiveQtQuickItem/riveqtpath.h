@@ -41,6 +41,7 @@ private:
     {
         QVector2D point;
         QVector2D tangent; // only used in cubic bezier
+        int stepIndex;
     };
 
     static QPointF cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2,
