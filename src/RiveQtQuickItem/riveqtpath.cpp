@@ -206,22 +206,27 @@ void RiveQtPath::updatePathSegmentsOutlineData()
 
     const QPointF &point = m_qPainterPath.elementAt(0);
     const QVector2D &centerPoint = QVector2D(point.x(), point.y());
+    int currentStepIndex { 0 };
 
     // Add the current point
-    pathDataEnhanced.append({ centerPoint, QVector2D() });
+    pathDataEnhanced.append({ centerPoint, QVector2D(), currentStepIndex });
 
     for (int i = 1; i < m_qPainterPath.elementCount(); ++i) {
         QPainterPath::Element element = m_qPainterPath.elementAt(i);
 
         switch (element.type) {
         case QPainterPath::MoveToElement:
-            m_pathSegmentsOutlineData.append(pathDataEnhanced);
+            if (pathDataEnhanced.size() > 1)
+                m_pathSegmentsOutlineData.append(pathDataEnhanced);
             pathDataEnhanced.clear();
-            pathDataEnhanced.append({ QVector2D(element.x, element.y), QVector2D() });
+            currentStepIndex = 0;
+            pathDataEnhanced.append({ QVector2D(element.x, element.y), QVector2D(), currentStepIndex });
+            ++currentStepIndex;
             break;
 
         case QPainterPath::LineToElement:
-            pathDataEnhanced.append({ QVector2D(element.x, element.y), QVector2D() });
+            pathDataEnhanced.append({ QVector2D(element.x, element.y), QVector2D(), currentStepIndex });
+            ++currentStepIndex;
             break;
 
         case QPainterPath::CurveToElement: {
@@ -236,11 +241,12 @@ void RiveQtPath::updatePathSegmentsOutlineData()
                 const qreal t = static_cast<qreal>(j) / m_segmentCount;
                 const QPointF &point = cubicBezier(startPoint, controlPoint1, controlPoint2, endPoint, t);
                 //                pathData.append(QVector2D(point.x(), point.y()));
-                pathDataEnhanced.append(
-                    { QVector2D(point.x(), point.y()), cubicBezierTangent(startPoint, controlPoint1, controlPoint2, endPoint, t) });
+                pathDataEnhanced.append({ QVector2D(point.x(), point.y()),
+                                          cubicBezierTangent(startPoint, controlPoint1, controlPoint2, endPoint, t), currentStepIndex });
             }
 
             i += 2; // Skip the next two control points, as we already processed them.
+            ++currentStepIndex;
             break;
         }
         default:
@@ -277,6 +283,8 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
             int nextI = (i + 1) % (pathData.count());
             const QVector2D &p1 = pathData[i].point;
             const QVector2D &p2 = pathData[nextI].point; // if endIndex, take 0
+            const auto &t1 = pathData[i].tangent;
+            const auto &t2 = pathData[nextI].tangent;
 
             QVector2D normal, normal2;
             const QVector2D diff = p2 - p1;
@@ -359,11 +367,18 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
                 }
             }
             if (i < endIndex - 1) {
-                QVector2D p3 = pathData[(i + 2) % pathData.count()].point;
+                auto p3 = pathData[(i + 2) % pathData.count()].point;
+                auto t3 = pathData[(i + 2) % pathData.count()].tangent;
+                bool needsJoin = pathData[nextI].stepIndex != pathData[(i + 2) % pathData.count()].stepIndex;
 
                 if (closed && (i + 2) == pathData.count()) {
                     p3 = pathData[(i + 3) % pathData.count()].point;
+                    t3 = pathData[(i + 3) % pathData.count()].tangent;
+                    needsJoin = pathData[nextI].stepIndex != pathData[(i + 3) % pathData.count()].stepIndex;
                 }
+
+                if (!needsJoin)
+                    continue;
 
                 const auto &diff2 = p3 - p2;
                 const auto &normal2 = QVector2D(-diff2.y(), diff2.x()).normalized();
