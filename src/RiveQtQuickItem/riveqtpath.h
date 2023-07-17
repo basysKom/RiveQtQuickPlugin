@@ -48,6 +48,7 @@ private:
 
     void updatePathSegmentsData();
     void updatePathSegmentsOutlineData();
+    void updatePathOutlineVertices(const QPen &pen);
 
     QPainterPath m_qPainterPath;
     QVector<QVector<PathDataPoint>> m_pathSegmentsOutlineData;
