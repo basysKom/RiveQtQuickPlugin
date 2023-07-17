@@ -131,6 +131,24 @@ std::optional<QVector2D> calculateIntersection(const QVector2D &p1, const QVecto
     return QVector2D(intersectX, intersectY);
 }
 
+std::optional<QVector2D> calculateLineIntersection(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3, const QVector2D &p4)
+{
+    const float x1 = p1.x(), y1 = p1.y();
+    const float x2 = p2.x(), y2 = p2.y();
+    const float x3 = p3.x(), y3 = p3.y();
+    const float x4 = p4.x(), y4 = p4.y();
+
+    const float x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+    const float y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+
+    // Check if the intersection point lies within the line segments
+    if (x >= std::min(p1.x(), p2.x()) && x <= std::max(p1.x(), p2.x()) && y >= std::min(p1.y(), p2.y()) && y <= std::max(p1.y(), p2.y())
+        && x >= std::min(p3.x(), p4.x()) && x <= std::max(p3.x(), p4.x()) && y >= std::min(p3.y(), p4.y()) && y <= std::max(p3.y(), p4.y()))
+        return QVector2D(x, y);
+
+    return {};
+}
+
 void RiveQtPath::setSegmentCount(const unsigned segmentCount)
 {
     if (segmentCount == 0u) {
@@ -258,6 +276,156 @@ void RiveQtPath::updatePathSegmentsOutlineData()
     m_pathSegmentOutlineDataDirty = false;
 }
 
+void removeOverlappingTriangles(QVector<QVector2D> &triangles)
+{
+    Q_ASSERT(triangles.size() % 3 == 0);
+    Q_ASSERT(triangles.size() > 6);
+
+    using Point = QVector2D;
+
+    // Lambda function to calculate the orientation of three points
+    auto orientation = [](Point p1, Point p2, Point p3) {
+        double val = (p2.y() - p1.y()) * (p3.x() - p2.x()) - (p2.x() - p1.x()) * (p3.y() - p2.y());
+        if (val == 0)
+            return 0; // Collinear
+        else if (val > 0)
+            return 1; // Clockwise
+        else
+            return 2; // Counterclockwise
+    };
+
+    // Lambda function to check if a point lies within a triangle
+    auto isInsideTriangle = [&](Point p1, Point p2, Point p3, Point pt) {
+        int ori1 = orientation(p1, p2, pt);
+        int ori2 = orientation(p2, p3, pt);
+        int ori3 = orientation(p3, p1, pt);
+
+        return (ori1 == ori2 && ori2 == ori3);
+    };
+
+    // ChatGPT
+    // write a c++ function that checks, if two triangles given in points p1, p2, p3 and p4, p5, p6 overlap and returns bool that is true,
+    // if they overlap, false otherwise
+    auto doTrianglesOverlap = [&](Point p1, Point p2, Point p3, Point p4, Point p5, Point p6) {
+        // Check if any vertex of the second triangle lies inside the first triangle
+        if (isInsideTriangle(p1, p2, p3, p4) || isInsideTriangle(p1, p2, p3, p5) || isInsideTriangle(p1, p2, p3, p6))
+            return true;
+
+        // Check if any vertex of the first triangle lies inside the second triangle
+        if (isInsideTriangle(p4, p5, p6, p1) || isInsideTriangle(p4, p5, p6, p2) || isInsideTriangle(p4, p5, p6, p3))
+            return true;
+
+        return false;
+    };
+
+    auto addIntersectionPoints = [](QVector<QVector2D> &poly1, QVector<QVector2D> &poly2, const QVector<QVector2D> &tri1,
+                                    const QVector<QVector2D> &tri2) {
+        QVector<QVector2D> intersections;
+        for (int i = 0; i < tri1.size(); ++i) {
+            const auto &p1 = tri1.at(i);
+            const auto &p2 = tri1.at((i + 1) % tri1.size());
+            for (int j = 0; j < tri2.size(); ++j) {
+                const auto &p3 = tri2.at(j);
+                const auto &p4 = tri2.at((j + 1) % tri2.size());
+
+                if (const auto pInter = calculateLineIntersection(p1, p2, p3, p4); pInter.has_value()) {
+                    intersections.append(pInter.value());
+                }
+            }
+        }
+
+        Q_ASSERT(intersections.size() <= 2);
+
+        // At least one point is inside the other triangle and was removed
+        if (poly1.size() < 3) {
+            poly1 += intersections;
+        }
+        if (poly2.size() < 3) {
+            poly2 += intersections;
+        }
+    };
+
+    auto triangulate = [](const QVector<QVector2D> poly) {
+        QVector<QVector2D> triangles;
+
+        triangles.append(poly.at(0));
+        triangles.append(poly.at(1));
+        triangles.append(poly.at(2));
+
+        triangles.append(poly.at(0));
+        triangles.append(poly.at(2));
+        triangles.append(poly.at(3));
+
+        return triangles;
+    };
+
+    const auto &t = triangles;
+    QVector<QVector2D> newTriangles;
+
+    bool changes;
+    do {
+        changes = false;
+        for (size_t i = 0; i < triangles.size() - 6; i += 3) {
+            Point p1 = t.at(i), p2 = t.at(i + 1), p3 = t.at(i + 2);
+
+            for (size_t j = i + 3; j < triangles.size() - 3; j += 3) {
+                Point p4 = t.at(j), p5 = t.at(j + 1), p6 = t.at(j + 2);
+
+                if (!doTrianglesOverlap(p1, p2, p3, p4, p5, p6)) {
+                    //                newTriangles += { p1, p2, p3, p4, p5, p6 }; // copy the points.
+                    continue;
+                }
+                //                changes = true;
+
+                qDebug() << "Is overlapping" << i / 3 << j / 3 << t.at(i) << t.at(i + 1) << t.at(i + 2) << t.at(j) << t.at(j + 1)
+                         << t.at(j + 2);
+
+                QVector<QVector2D> tri1 { p1, p2, p3 };
+                QVector<QVector2D> tri2 { p4, p5, p6 };
+
+                QVector<QVector2D> poly1(tri1);
+                QVector<QVector2D> poly2(tri2);
+
+                poly1.erase(
+                    std::remove_if(poly1.begin(), poly1.end(),
+                                   [&tri2, &isInsideTriangle](auto &p) { return isInsideTriangle(tri2.at(0), tri2.at(1), tri2.at(2), p); }),
+                    poly1.end());
+                poly2.erase(
+                    std::remove_if(poly2.begin(), poly2.end(),
+                                   [&tri1, &isInsideTriangle](auto &p) { return isInsideTriangle(tri1.at(0), tri1.at(1), tri1.at(2), p); }),
+                    poly2.end());
+
+                // one triangle is inside the other
+                if (poly2.empty()) {
+                    newTriangles += poly1;
+                    continue;
+                }
+                if (poly1.empty()) {
+                    newTriangles += poly1;
+                    continue;
+                }
+
+                addIntersectionPoints(poly1, poly2, tri1, tri2);
+
+                if (poly1.size() == 4) {
+                    poly1 = triangulate(poly1);
+                } else if (!poly1.empty()) {
+                    poly1 = tri1;
+                }
+                if (poly2.size() == 4) {
+                    poly2 = triangulate(poly2);
+                } else if (!poly2.empty()) {
+                    poly2 = tri2;
+                }
+                newTriangles += poly1;
+                newTriangles += poly2;
+            }
+        }
+        //        if (changes)
+        triangles = newTriangles;
+    } while (changes);
+}
+
 void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
 {
     const qreal lineWidth = pen.widthF();
@@ -270,6 +438,15 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
         }
 
         QVector<QVector2D> lineDataSegment;
+
+        auto appendTriangle = [&lineDataSegment](const QVector2D &p1, const QVector2D &p2, const QVector2D &p3) {
+            if (p1 == p2 || p1 == p3 || p2 == p3) {
+                return;
+            }
+            lineDataSegment.append(p1);
+            lineDataSegment.append(p2);
+            lineDataSegment.append(p3);
+        };
 
         bool closed = false;
 
@@ -303,13 +480,8 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
             const QVector2D offset2 = normal2 * (lineWidth / 2.0);
 
             // add the line segment
-            lineDataSegment.append(p1 + offset);
-            lineDataSegment.append(p1 - offset);
-            lineDataSegment.append(p2 + offset2);
-
-            lineDataSegment.append(p2 + offset2);
-            lineDataSegment.append(p2 - offset2);
-            lineDataSegment.append(p1 - offset);
+            appendTriangle(p1 + offset, p1 - offset, p2 + offset2);
+            appendTriangle(p2 + offset2, p2 - offset2, p1 - offset);
 
             if (!closed && (i == 0 || i == endIndex - 1)) {
                 switch (capStyle) {
@@ -426,16 +598,12 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
                             // calculate the intersection of the offset from p1 and p2
                             if (const auto pM = calculateIntersection(p1 - offset, p2 - offset, p3 - offset2, p2 - offset2);
                                 pM.has_value()) {
-                                lineDataSegment.append(p1 - offset);
-                                lineDataSegment.append(pM.value());
-                                lineDataSegment.append(p2 - offset2);
+                                appendTriangle(p1 - offset, pM.value(), p2 - offset2);
                             }
                         } else {
                             if (const auto pM = calculateIntersection(p1 + offset, p2 + offset, p3 + offset2, p2 + offset2);
                                 pM.has_value()) {
-                                lineDataSegment.append(p1 + offset);
-                                lineDataSegment.append(pM.value());
-                                lineDataSegment.append(p2 + offset2);
+                                appendTriangle(p1 + offset, pM.value(), p2 + offset2);
                             }
                         }
                     }
@@ -443,18 +611,18 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
                 }
                 case Qt::PenJoinStyle::BevelJoin:
                     if (turnLeft) {
-                        lineDataSegment.append(p1 - offset);
-                        lineDataSegment.append(p2);
-                        lineDataSegment.append(p2 - offset2);
+                        appendTriangle(p1 - offset, p2, p2 - offset2);
                     } else {
-                        lineDataSegment.append(p1 + offset);
-                        lineDataSegment.append(p2);
-                        lineDataSegment.append(p2 + offset2);
+                        appendTriangle(p1 + offset, p2, p2 + offset2);
                     }
                     break;
                 }
             }
         }
+
+        qDebug() << lineDataSegment.size();
+        removeOverlappingTriangles(lineDataSegment);
+        qDebug() << lineDataSegment.size();
 
         m_pathOutlineVertices.append(lineDataSegment);
     }
