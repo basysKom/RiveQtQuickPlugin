@@ -62,32 +62,7 @@ elseif (${QT_VERSION_MAJOR} EQUAL 6)
     )
 endif()
 
-if (${QT_VERSION_MAJOR} EQUAL 5)
-    add_library(${PROJECT_NAME} SHARED ${QT5_PROJECT_SOURCES} ${PROJECT_SOURCES})
-elseif (${QT_VERSION_MAJOR} EQUAL 6)
-    qt_add_qml_module(
-        ${PROJECT_NAME}
-        URI
-            ${PROJECT_NAME}
-        VERSION
-            1.0
-        SHARED
-        PLUGIN_TARGET
-            ${PROJECT_NAME}
-        OUTPUT_DIRECTORY
-           ${CMAKE_BINARY_DIR}/binary/${PROJECT_NAME}
-        SOURCES
-            ${PROJECT_SOURCES}
-            ${QT6_PROJECT_SOURCES}
-    )
-endif()
-
-# Set compile definitions for debug configurations
-target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
-target_compile_definitions(${PROJECT_NAME} PRIVATE RIVEQTQUICKITEM_LIBRARY)
-
-# Link the plugin with required libraries
-target_link_libraries(${PROJECT_NAME} PRIVATE
+set(DEPENDENCIES
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::CorePrivate
     Qt${QT_VERSION_MAJOR}::Quick
@@ -99,15 +74,55 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     rive_cpp
 )
 
-# Include necessary directories
+# Set the binary output directory for the plugin
+set(QML_BINARY_DIR "${CMAKE_BINARY_DIR}/binary" CACHE PATH "Binary directory for QML plugins")
+
 if (${QT_VERSION_MAJOR} EQUAL 5)
-    include_directories(${Qt5Gui_PRIVATE_INCLUDE_DIRS} ${Qt5Core_PRIVATE_INCLUDE_DIRS} "renderer")
-elseif(${QT_VERSION_MAJOR} EQUAL 6)
-    include_directories(${Qt6Gui_PRIVATE_INCLUDE_DIRS} ${Qt6Core_PRIVATE_INCLUDE_DIRS} "renderer")
+    add_library(${PROJECT_NAME} SHARED ${PROJECT_SOURCES} ${QT5_PROJECT_SOURCES})
+elseif (${QT_VERSION_MAJOR} EQUAL 6)
+    qt_add_qml_module(
+        ${PROJECT_NAME}
+        URI
+            ${PROJECT_NAME}
+        VERSION
+            1.0
+        SHARED
+        PLUGIN_TARGET
+            ${PROJECT_NAME}
+        OUTPUT_DIRECTORY
+           ${QML_BINARY_DIR}/${PROJECT_NAME}
+        SOURCES
+            ${PROJECT_SOURCES}
+            ${QT6_PROJECT_SOURCES}
+    )
+#if(BUILD_TESTS)
+    qt_add_qml_module(
+        ${PROJECT_NAME}_TEST
+        URI
+            ${PROJECT_NAME}_TEST
+        VERSION
+            1.0
+        SHARED
+        OUTPUT_DIRECTORY
+           ${QML_BINARY_DIR}/${PROJECT_NAME}_TEST
+        SOURCES
+            ${PROJECT_SOURCES}
+            ${QT6_PROJECT_SOURCES}
+    )
+    target_link_libraries(${PROJECT_NAME}_TEST PUBLIC ${DEPENDENCIES})
 endif()
 
-include_directories(${Qt${QT_VERSION_MAJOR}Gui_PRIVATE_INCLUDE_DIRS})
+# Set compile definitions for debug configurations
+target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 
+# Link the plugin with required libraries
+target_link_libraries(${PROJECT_NAME} PRIVATE ${DEPENDENCIES})
+
+# Include necessary directories
+include_directories(${Qt${QT_VERSION_MAJOR}Gui_PRIVATE_INCLUDE_DIRS} ${Qt${QT_VERSION_MAJOR}Core_PRIVATE_INCLUDE_DIRS} "renderer")
+
+
+# Add shaders
 if (${QT_VERSION_MAJOR} EQUAL 6)
     find_package(Qt6 COMPONENTS ShaderTools)
     qt6_add_shaders(${PROJECT_NAME} "graph-shaders"
@@ -151,17 +166,6 @@ if (${QT_VERSION_MAJOR} EQUAL 6)
 endif()
 
 
-# Set the binary output directory for the plugin
-set(QML_BINARY_DIR "${CMAKE_BINARY_DIR}/binary/" CACHE PATH "Binary directory for QML plugins")
-
-# Copy the plugin and qmldir to the binary directory after building
-add_custom_command(
-    TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${QML_BINARY_DIR}/${PROJECT_NAME}"
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> "${QML_BINARY_DIR}/${PROJECT_NAME}"
-    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/qmldir" "${QML_BINARY_DIR}/${PROJECT_NAME}"
-    COMMENT "Copying plugin and qmldir to binary directory"
-)
 
 if (${QT_VERSION_MAJOR} EQUAL 6)
     add_custom_command(
@@ -170,10 +174,15 @@ if (${QT_VERSION_MAJOR} EQUAL 6)
         COMMAND ${CMAKE_COMMAND} -E copy "${QML_BINARY_DIR}/${PROJECT_NAME}/${PROJECT_NAME}.qmltypes" ${CMAKE_CURRENT_SOURCE_DIR}
     )
 elseif(${QT_VERSION_MAJOR} EQUAL 5)
+    # Copy the plugin and qmldir to the binary directory after building
     add_custom_command(
         TARGET ${PROJECT_NAME} POST_BUILD
-        # from source to binary dir
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${QML_BINARY_DIR}/${PROJECT_NAME}"
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> "${QML_BINARY_DIR}/${PROJECT_NAME}"
+        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/qmldir" "${QML_BINARY_DIR}/${PROJECT_NAME}"
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.qmltypes" "${QML_BINARY_DIR}/${PROJECT_NAME}/${PROJECT_NAME}.qmltypes"
+
+        COMMENT "Copying plugin and qmldir to binary directory"
     )
 endif()
 

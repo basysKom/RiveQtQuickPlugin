@@ -16,7 +16,8 @@ project(RiveQtQuickPlugin
 )
 
 option(RQQRP_BUILD_EXAMPLES "Build demo applications." ON)
-option(RQQRP_DOWNLOAD_BUILD_DEPENDENCIES "Downloads and Builds dependencies." ON)
+option(RQQRP_DOWNLOAD_BUILD_DEPENDENCIES "Downloads and builds dependencies." ON)
+option(RQQRP_BUILD_TESTS "Build unit tests." ON)
 
 # Set up Qt configuration and enable C++17
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -55,5 +56,9 @@ if(RQQRP_BUILD_EXAMPLES)
     set(PLUGIN_TARGET_PATH "${CMAKE_BINARY_DIR}/binary/${PROJECT_NAME}/")
 
     add_subdirectory(examples)
+endif()
+
+if(RQQRP_BUILD_TESTS)
+    add_subdirectory(tests)
 endif()
 
