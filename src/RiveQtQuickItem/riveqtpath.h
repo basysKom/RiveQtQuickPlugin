@@ -1,4 +1,5 @@
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
+// SPDX-FileCopyrightText: 2023 Jonas Kalinka <jonas.kalinka@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
@@ -11,6 +12,8 @@
 
 #include <rive/renderer.hpp>
 #include <rive/math/raw_path.hpp>
+
+class Test_PathTriangulation;
 
 class RiveQtPath : public rive::RenderPath
 {
@@ -44,6 +47,12 @@ private:
         int stepIndex;
     };
 
+    static bool doTrianglesOverlap(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3, const QVector2D &p4, const QVector2D &p5,
+                                   const QVector2D &p6);
+
+    static QVector<std::tuple<int, int>> findOverlappingTriangles(const QVector<QVector2D> &trianglePoints);
+    static QVector<QVector2D> splitTriangles(const QVector<QVector2D> &trianglePoints);
+
     static QPointF cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2,
                                const QPointF &endPoint, qreal t);
 
@@ -60,4 +69,6 @@ private:
     bool m_pathSegmentDataDirty { true };
     bool m_pathSegmentOutlineDataDirty { true };
     unsigned m_segmentCount { 10 };
+
+    friend Test_PathTriangulation;
 };
