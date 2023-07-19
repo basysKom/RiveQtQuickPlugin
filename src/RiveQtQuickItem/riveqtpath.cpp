@@ -110,46 +110,6 @@ void RiveQtPath::setQPainterPath(QPainterPath path)
     m_qPainterPath = path;
 }
 
-std::optional<QVector2D> calculateIntersection(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3, const QVector2D &p4)
-{
-    const float x1 = p1.x(), y1 = p1.y();
-    const float x2 = p2.x(), y2 = p2.y();
-    const float x3 = p3.x(), y3 = p3.y();
-    const float x4 = p4.x(), y4 = p4.y();
-
-    float denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
-
-    // If the lines are parallel or coincident, return an invalid point
-    if (abs(denominator) < 0.01f) {
-        return {};
-    }
-
-    const float factor1 = (x1 * y2 - y1 * x2);
-    const float factor2 = (x3 * y4 - y3 * x4);
-
-    const float intersectX = (factor1 * (x3 - x4) - (x1 - x2) * factor2) / denominator;
-    const float intersectY = (factor1 * (y3 - y4) - (y1 - y2) * factor2) / denominator;
-    return QVector2D(intersectX, intersectY);
-}
-
-std::optional<QVector2D> calculateLineIntersection(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3, const QVector2D &p4)
-{
-    const float x1 = p1.x(), y1 = p1.y();
-    const float x2 = p2.x(), y2 = p2.y();
-    const float x3 = p3.x(), y3 = p3.y();
-    const float x4 = p4.x(), y4 = p4.y();
-
-    const float x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
-    const float y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
-
-    // Check if the intersection point lies within the line segments
-    if (x >= std::min(p1.x(), p2.x()) && x <= std::max(p1.x(), p2.x()) && y >= std::min(p1.y(), p2.y()) && y <= std::max(p1.y(), p2.y())
-        && x >= std::min(p3.x(), p4.x()) && x <= std::max(p3.x(), p4.x()) && y >= std::min(p3.y(), p4.y()) && y <= std::max(p3.y(), p4.y()))
-        return QVector2D(x, y);
-
-    return {};
-}
-
 void RiveQtPath::setSegmentCount(const unsigned segmentCount)
 {
     if (segmentCount == 0u) {
@@ -277,62 +237,122 @@ void RiveQtPath::updatePathSegmentsOutlineData()
     m_pathSegmentOutlineDataDirty = false;
 }
 
-// ChatGPT
-// write a c++ function that checks, if two triangles given in points p1, p2, p3 and p4, p5, p6 overlap and returns bool that is true,
-// if they overlap, false otherwise
+std::optional<QVector2D> calculateIntersection(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3, const QVector2D &p4)
+{
+    const float x1 = p1.x(), y1 = p1.y();
+    const float x2 = p2.x(), y2 = p2.y();
+    const float x3 = p3.x(), y3 = p3.y();
+    const float x4 = p4.x(), y4 = p4.y();
+
+    float denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+
+    // If the lines are parallel or coincident, return an invalid point
+    if (abs(denominator) < 0.01f) {
+        return {};
+    }
+
+    const float factor1 = (x1 * y2 - y1 * x2);
+    const float factor2 = (x3 * y4 - y3 * x4);
+
+    const float intersectX = (factor1 * (x3 - x4) - (x1 - x2) * factor2) / denominator;
+    const float intersectY = (factor1 * (y3 - y4) - (y1 - y2) * factor2) / denominator;
+    return QVector2D(intersectX, intersectY);
+}
+
+std::optional<QVector2D> calculateLineIntersection(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3, const QVector2D &p4)
+{
+    const auto &intersection = calculateIntersection(p1, p2, p3, p4);
+
+    if (!intersection.has_value())
+        return {};
+
+    const auto x = intersection.value().x();
+    const auto y = intersection.value().y();
+
+    // Check if the intersection point lies within the line segments
+    //    if (x >= std::min(p1.x(), p2.x()) && x <= std::max(p1.x(), p2.x()) && y >= std::min(p1.y(), p2.y()) && y <= std::max(p1.y(),
+    //    p2.y())
+    //        && x >= std::min(p3.x(), p4.x()) && x <= std::max(p3.x(), p4.x()) && y >= std::min(p3.y(), p4.y()) && y <= std::max(p3.y(),
+    //        p4.y())) return QVector2D(x, y);
+    if (x > std::min(p1.x(), p2.x()) && x < std::max(p1.x(), p2.x()) && y > std::min(p1.y(), p2.y()) && y < std::max(p1.y(), p2.y())
+        && x > std::min(p3.x(), p4.x()) && x < std::max(p3.x(), p4.x()) && y > std::min(p3.y(), p4.y()) && y < std::max(p3.y(), p4.y()))
+        return QVector2D(x, y);
+    return {};
+}
+
+using TriPoint = QVector2D;
+
+inline double Det2D(TriPoint &p1, TriPoint &p2, TriPoint &p3)
+{
+    return +p1.x() * (p2.y() - p3.y()) + p2.x() * (p3.y() - p1.y()) + p3.x() * (p1.y() - p2.y());
+}
+
+void CheckTriWinding(TriPoint &p1, TriPoint &p2, TriPoint &p3, bool allowReversed)
+{
+    double detTri = Det2D(p1, p2, p3);
+    if (detTri < 0.0) {
+        if (allowReversed) {
+            TriPoint a = p3;
+            p3 = p2;
+            p2 = a;
+        } else
+            throw std::runtime_error("triangle has wrong winding direction");
+    }
+}
+
+bool BoundaryCollideChk(TriPoint &p1, TriPoint &p2, TriPoint &p3, double eps)
+{
+    return Det2D(p1, p2, p3) < eps;
+}
+
+bool BoundaryDoesntCollideChk(TriPoint &p1, TriPoint &p2, TriPoint &p3, double eps)
+{
+    return Det2D(p1, p2, p3) <= eps;
+}
+
 bool RiveQtPath::doTrianglesOverlap(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3, const QVector2D &p4, const QVector2D &p5,
                                     const QVector2D &p6)
 {
-    using Point = QVector2D;
+    // https://gist.github.com/TimSC/5ba18ae21c4459275f90
+    auto TriTri2D = [](TriPoint *t1, TriPoint *t2, double eps = 0.0, bool allowReversed = false, bool onBoundary = true) {
+        // Trangles must be expressed anti-clockwise
+        CheckTriWinding(t1[0], t1[1], t1[2], allowReversed);
+        CheckTriWinding(t2[0], t2[1], t2[2], allowReversed);
 
-    // Lambda function to calculate the orientation of three points
-    auto orientation = [](Point p1, Point p2, Point p3) {
-        double val = (p2.y() - p1.y()) * (p3.x() - p2.x()) - (p2.x() - p1.x()) * (p3.y() - p2.y());
-        if (val == 0)
-            return 0; // Collinear
-        else if (val > 0)
-            return 1; // Clockwise
-        else
-            return 2; // Counterclockwise
+        bool (*chkEdge)(TriPoint &, TriPoint &, TriPoint &, double) = NULL;
+        if (onBoundary) // Points on the boundary are considered as colliding
+            chkEdge = BoundaryCollideChk;
+        else // Points on the boundary are not considered as colliding
+            chkEdge = BoundaryDoesntCollideChk;
+
+        // For edge E of trangle 1,
+        for (int i = 0; i < 3; i++) {
+            int j = (i + 1) % 3;
+
+            // Check all points of trangle 2 lay on the external side of the edge E. If
+            // they do, the triangles do not collide.
+            if (chkEdge(t1[i], t1[j], t2[0], eps) && chkEdge(t1[i], t1[j], t2[1], eps) && chkEdge(t1[i], t1[j], t2[2], eps))
+                return false;
+        }
+
+        // For edge E of trangle 2,
+        for (int i = 0; i < 3; i++) {
+            int j = (i + 1) % 3;
+
+            // Check all points of trangle 1 lay on the external side of the edge E. If
+            // they do, the triangles do not collide.
+            if (chkEdge(t2[i], t2[j], t1[0], eps) && chkEdge(t2[i], t2[j], t1[1], eps) && chkEdge(t2[i], t2[j], t1[2], eps))
+                return false;
+        }
+
+        // The triangles collide
+        return true;
     };
 
-    // Lambda function to check if a point lies within a triangle
-    auto isInsideTriangle = [&](Point p1, Point p2, Point p3, Point pt) {
-        int ori1 = orientation(p1, p2, pt);
-        int ori2 = orientation(p2, p3, pt);
-        int ori3 = orientation(p3, p1, pt);
+    TriPoint a[3] = { p1, p2, p3 };
+    TriPoint b[3] = { p4, p5, p6 };
 
-        return (ori1 == ori2 && ori2 == ori3);
-    };
-
-    // Check if any vertex of the second triangle lies inside the first triangle
-    if (isInsideTriangle(p1, p2, p3, p4) || isInsideTriangle(p1, p2, p3, p5) || isInsideTriangle(p1, p2, p3, p6))
-        return true;
-
-    // Check if any vertex of the first triangle lies inside the second triangle
-    if (isInsideTriangle(p4, p5, p6, p1) || isInsideTriangle(p4, p5, p6, p2) || isInsideTriangle(p4, p5, p6, p3))
-        return true;
-
-    if (calculateLineIntersection(p1, p2, p4, p5).has_value())
-        return true;
-    if (calculateLineIntersection(p1, p3, p4, p5).has_value())
-        return true;
-    if (calculateLineIntersection(p2, p3, p4, p5).has_value())
-        return true;
-    if (calculateLineIntersection(p1, p2, p4, p6).has_value())
-        return true;
-    if (calculateLineIntersection(p1, p3, p4, p6).has_value())
-        return true;
-    if (calculateLineIntersection(p2, p3, p4, p6).has_value())
-        return true;
-    if (calculateLineIntersection(p1, p2, p5, p6).has_value())
-        return true;
-    if (calculateLineIntersection(p1, p3, p5, p6).has_value())
-        return true;
-    if (calculateLineIntersection(p2, p3, p5, p6).has_value())
-        return true;
-
-    return false;
+    return TriTri2D(a, b, 0.001, true, false);
 }
 
 QVector<std::tuple<int, int>> RiveQtPath::findOverlappingTriangles(const QVector<QVector2D> &trianglePoints)
