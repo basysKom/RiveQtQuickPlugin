@@ -83,15 +83,90 @@ private slots:
         }
     }
 
+    void test_splitTriangles_data()
+    {
+        QTest::addColumn<QVector<QVector2D>>("triangle");
+        QTest::addColumn<int>("size");
+
+        QVector2D t11(3, 3), t12(5, 3), t13(4, 4);
+        QTest::newRow("completely inside") << QVector<QVector2D> { t11, t12, t13 } << 3;
+
+        QVector2D t31(3, 3), t32(13, 3), t33(8, 10); // case 3 : shifted
+        QTest::newRow("shifted") << QVector<QVector2D> { t31, t32, t33 } << 3 * 3;
+
+        QVector2D t81(15, 15), t82(20, 25), t83(25, 15); // case 8 : not covered
+        QTest::newRow("not covered") << QVector<QVector2D> { t81, t82, t83 } << 2 * 3;
+
+        QVector<QVector2D> c9 = { { 1, 1 }, { 10, 1 }, { 5, 10 } };
+        QTest::newRow("case 9 : exactly covered") << c9 << 1 * 3;
+
+        QVector2D t41(5, 5), t42(6, 4), t43(10, 10); // case 4 : one edge inside
+        QTest::newRow("one edge inside") << QVector<QVector2D> { t41, t42, t43 } << 2 * 3;
+
+        QVector2D t51(3, 3), t52(7, 3), t53(5, 12); // case 5 : inside triangle covers one point
+        QTest::newRow("case 5 : inside triangle covers one point") << QVector<QVector2D> { t51, t52, t53 } << 3 * 3;
+
+        QVector<QVector2D> c10 = { { 10, 1 }, { 5, 10 }, { 15, 15 } };
+        QTest::newRow("case 10: share an edge, uncovered") << c10 << 2 * 3;
+
+        QVector<QVector2D> c11 = { { 5, 1 }, { 10, 1 }, { 5, 10 } };
+        QTest::newRow("case 11: share 2 edges and points, overlapping") << c11 << 6;
+
+        QVector<QVector2D> c12 = { { 5, 1 }, { 6, 1 }, { 5, 2 } };
+        QTest::newRow("case 12: share 1 edges, overlapping") << c12 << 3 * 3;
+
+        //        QVector2D t71(3, 0), t72(7, 0), t73(13, 5); // case 7 : one corner covered, all edges cut
+        //        QTest::newRow("case 7 : one corner covered, all edges cut") << QVector<QVector2D> { t71, t72, t73 } << true;
+
+        //        QVector2D t61(0, 2), t62(0, 5), t63(10, 5); // case 6 : only the area covers, no points covered
+        //        QTest::newRow("case 6 : only the area covers, no points covered") << QVector<QVector2D> { t61, t62, t63 } << 8*3;
+
+        //        QVector2D t21(5, 0), t22(10, 9), t23(1, 9);
+        //        QTest::newRow("case 2 : star configuration, no points covered") << QVector<QVector2D> { t21, t22, t23 } << 10 * 3;
+    }
+
     void test_splitTriangles()
     {
-        QVector<QVector2D> trianglePoints = { { 1, 1 }, { 10, 1 }, { 5, 10 }, { 5, 5 }, { 15, 5 }, { 10, 15 } };
-        const auto &result = RiveQtPath::splitTriangles(trianglePoints);
-        if (result.size() == 3) {
-            return;
-        }
-        QVERIFY(result.size() % 3 == 0);
-        QVERIFY(!RiveQtPath::doTrianglesOverlap(result.at(0), result.at(1), result.at(2), result.at(3), result.at(4), result.at(5)));
+        QFETCH(QVector<QVector2D>, triangle);
+        QFETCH(int, size);
+
+        QVector2D p1(1, 1), p2(10, 1), p3(5, 10);
+        QCOMPARE(RiveQtPath::splitTriangles({ p1, p2, p3, triangle[0], triangle[1], triangle[2] }).size(), size);
+        QCOMPARE(
+            RiveQtPath::findOverlappingTriangles(RiveQtPath::splitTriangles({ p1, p2, p3, triangle[0], triangle[1], triangle[2] })).size(),
+            0);
+    }
+
+    void test_convexHull_simpleCase()
+    {
+
+        QVector2D t11(1, 1), t12(10, 1), t13(5, 10);
+        QVector<QVector2D> t1 { t11, t12, t13 };
+
+        QVector2D t21(3, 3), t22(5, 3), t23(4, 4);
+        QVector<QVector2D> t2 { t21, t22, t23 };
+        QVector<QVector2D> result;
+        RiveQtPath::convexHull(t2, t1, 0, result);
+        for (int i = 0; i < result.size(); ++i)
+            QCOMPARE(result.at(i), t1.at(i));
+
+        result.clear();
+        RiveQtPath::convexHull(t1, t2, 0, result);
+        for (int i = 0; i < result.size(); ++i)
+            QCOMPARE(result.at(i), t1.at(i));
+    }
+
+    void test_convexHull_starConfiguration()
+    {
+        QVector2D t11(1, 1), t12(10, 1), t13(5, 10);
+        QVector<QVector2D> t1 { t11, t12, t13 };
+
+        QVector2D t21(5, 0), t22(10, 9), t23(1, 9);
+        QVector<QVector2D> t2 { t21, t22, t23 };
+
+        QVector<QVector2D> result;
+        RiveQtPath::convexHull(t1, t2, 0, result);
+        QCOMPARE(result.size(), 12);
     }
 };
 
