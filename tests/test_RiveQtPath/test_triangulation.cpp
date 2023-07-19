@@ -11,10 +11,25 @@ private slots:
     void test_doTrianglesOverlap()
     {
         QVector2D p1(1, 1), p2(10, 1), p3(5, 10);
-        QVector2D p4(5, 5), p5(15, 5), p6(10, 15);
-        QVERIFY(RiveQtPath::doTrianglesOverlap(p1, p2, p3, p4, p5, p6) == true);
-        QVector2D p7(15, 15), p8(20, 25), p9(25, 15);
-        QVERIFY(RiveQtPath::doTrianglesOverlap(p1, p2, p3, p7, p8, p9) == false);
+
+        QVector2D t11(3, 3), t12(5, 3), t13(4, 4); // case 1 : completely inside
+        QVector2D t21(5, 0), t22(10, 9), t23(1, 9); // case 2 : star configuration, no points covered
+        QVector2D t31(3, 3), t32(13, 3), t33(8, 10); // case 3 : shifted
+        QVector2D t41(5, 5), t42(6, 4), t43(10, 10); // case 4 : one edge inside
+        QVector2D t51(3, 3), t52(7, 3), t53(5, 12); // case 5 : inside triangle covers one point
+        QVector2D t61(0, 2), t62(0, 5), t63(10, 5); // case 6 : only the area covers, no points covered
+        QVector2D t71(3, 0), t72(7, 0), t73(13, 5); // case 7 : one corner covered, all edges cut
+
+        QVERIFY(RiveQtPath::doTrianglesOverlap(p1, p2, p3, t11, t12, t13) == true);
+        QVERIFY(RiveQtPath::doTrianglesOverlap(p1, p2, p3, t21, t22, t23) == true);
+        QVERIFY(RiveQtPath::doTrianglesOverlap(p1, p2, p3, t31, t32, t33) == true);
+        QVERIFY(RiveQtPath::doTrianglesOverlap(p1, p2, p3, t41, t42, t43) == true);
+        QVERIFY(RiveQtPath::doTrianglesOverlap(p1, p2, p3, t51, t52, t53) == true);
+        QVERIFY(RiveQtPath::doTrianglesOverlap(p1, p2, p3, t61, t62, t63) == true);
+        QVERIFY(RiveQtPath::doTrianglesOverlap(p1, p2, p3, t71, t72, t73) == true);
+
+        QVector2D t81(15, 15), t82(20, 25), t83(25, 15); // case 8 : not covered
+        QVERIFY(RiveQtPath::doTrianglesOverlap(p1, p2, p3, t81, t82, t83) == false);
     }
 
     void test_findOverlappingTriangles()

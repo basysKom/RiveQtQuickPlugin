@@ -313,6 +313,25 @@ bool RiveQtPath::doTrianglesOverlap(const QVector2D &p1, const QVector2D &p2, co
     if (isInsideTriangle(p4, p5, p6, p1) || isInsideTriangle(p4, p5, p6, p2) || isInsideTriangle(p4, p5, p6, p3))
         return true;
 
+    if (calculateLineIntersection(p1, p2, p4, p5).has_value())
+        return true;
+    if (calculateLineIntersection(p1, p3, p4, p5).has_value())
+        return true;
+    if (calculateLineIntersection(p2, p3, p4, p5).has_value())
+        return true;
+    if (calculateLineIntersection(p1, p2, p4, p6).has_value())
+        return true;
+    if (calculateLineIntersection(p1, p3, p4, p6).has_value())
+        return true;
+    if (calculateLineIntersection(p2, p3, p4, p6).has_value())
+        return true;
+    if (calculateLineIntersection(p1, p2, p5, p6).has_value())
+        return true;
+    if (calculateLineIntersection(p1, p3, p5, p6).has_value())
+        return true;
+    if (calculateLineIntersection(p2, p3, p5, p6).has_value())
+        return true;
+
     return false;
 }
 
@@ -360,7 +379,7 @@ QVector<QVector2D> RiveQtPath::splitTriangles(const QVector<QVector2D> &triangle
     };
 
     // Lambda function to check if a point lies within a triangle
-    auto isInsideTriangle = [&](Point p1, Point p2, Point p3, Point pt) {
+    auto isInsideTriangle = [&orientation](Point p1, Point p2, Point p3, Point pt) {
         int ori1 = orientation(p1, p2, pt);
         int ori2 = orientation(p2, p3, pt);
         int ori3 = orientation(p3, p1, pt);
