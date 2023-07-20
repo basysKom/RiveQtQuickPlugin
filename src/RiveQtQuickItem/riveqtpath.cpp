@@ -259,8 +259,21 @@ std::optional<QVector2D> calculateIntersection(const QVector2D &p1, const QVecto
     return QVector2D(intersectX, intersectY);
 }
 
-std::optional<QVector2D> calculateLineIntersection(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3, const QVector2D &p4)
+std::optional<QVector2D> RiveQtPath::calculateLineIntersection(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3,
+                                                               const QVector2D &p4)
 {
+    using Point = QVector2D;
+
+    auto areCollinear = [](const Point &p1, const Point &p2, const Point &p3) {
+        // Check if the three points are collinear using cross product
+        return std::abs((p2.x() - p1.x()) * (p3.y() - p1.y()) - (p2.y() - p1.y()) * (p3.x() - p1.x()))
+            < std::numeric_limits<float>::epsilon();
+    };
+
+    // Check if the lines are parallel or coincident (collinear)
+    if (areCollinear(p1, p2, p3) || areCollinear(p1, p2, p4) || areCollinear(p3, p4, p1) || areCollinear(p3, p4, p2))
+        return std::nullopt;
+
     const auto &intersection = calculateIntersection(p1, p2, p3, p4);
 
     if (!intersection.has_value())
@@ -273,9 +286,7 @@ std::optional<QVector2D> calculateLineIntersection(const QVector2D &p1, const QV
     if (x >= std::min(p1.x(), p2.x()) && x <= std::max(p1.x(), p2.x()) && y >= std::min(p1.y(), p2.y()) && y <= std::max(p1.y(), p2.y())
         && x >= std::min(p3.x(), p4.x()) && x <= std::max(p3.x(), p4.x()) && y >= std::min(p3.y(), p4.y()) && y <= std::max(p3.y(), p4.y()))
         return QVector2D(x, y);
-    //    if (x > std::min(p1.x(), p2.x()) && x < std::max(p1.x(), p2.x()) && y > std::min(p1.y(), p2.y()) && y < std::max(p1.y(), p2.y())
-    //        && x > std::min(p3.x(), p4.x()) && x < std::max(p3.x(), p4.x()) && y > std::min(p3.y(), p4.y()) && y < std::max(p3.y(),
-    //        p4.y())) return QVector2D(x, y);
+
     return {};
 }
 
@@ -400,7 +411,7 @@ bool checkPermutation(const std::array<QVector2D, 3> &points1, const std::array<
     return sorted_points1 == sorted_points2;
 }
 
-void RiveQtPath::convexHull(QVector<QVector2D> t1, QVector<QVector2D> t2, int i, QVector<QVector2D> &result)
+void RiveQtPath::concaveHull(const QVector<QVector2D> &t1, const QVector<QVector2D> &t2, QVector<QVector2D> &result, int i)
 {
     if (i >= 3)
         return;
@@ -430,13 +441,19 @@ void RiveQtPath::convexHull(QVector<QVector2D> t1, QVector<QVector2D> t2, int i,
         int ori2 = orientation(p2, p3, pt);
         int ori3 = orientation(p3, p1, pt);
 
+        if (!ori1 || !ori2 || !ori3)
+            return false;
+
         return (ori1 == ori2 && ori2 == ori3);
     };
+
+    Q_ASSERT(orientation(t1.at(0), t1.at(1), t1.at(2)) == 2);
+    Q_ASSERT(orientation(t2.at(0), t2.at(1), t2.at(2)) == 2);
 
     auto current = t1.at(i);
 
     if (isInsideTriangle(t2.at(0), t2.at(1), t2.at(2), current)) {
-        convexHull(t1, t2, i + 1, result);
+        concaveHull(t1, t2, result, i + 1);
         if (result.empty())
             result = t2;
         return;
@@ -452,8 +469,9 @@ void RiveQtPath::convexHull(QVector<QVector2D> t1, QVector<QVector2D> t2, int i,
     QVector<QVector2D> intersections;
     for (int j = 0; j < 3; ++j) {
         QVector2D p1 = t2.at(j), p2 = t2.at((j + 1) % 3);
-        if (auto inter = calculateLineIntersection(p1, p2, current, next); inter.has_value())
+        if (auto inter = calculateLineIntersection(p1, p2, current, next); inter.has_value()) {
             intersections.append(inter.value());
+        }
     }
 
     Q_ASSERT(intersections.size() <= 2);
@@ -477,7 +495,7 @@ void RiveQtPath::convexHull(QVector<QVector2D> t1, QVector<QVector2D> t2, int i,
             return;
         result.append(next);
     } else {
-        convexHull(t1, t2, i + 1, result);
+        concaveHull(t1, t2, result, i + 1);
         return;
     }
 
@@ -487,15 +505,11 @@ void RiveQtPath::convexHull(QVector<QVector2D> t1, QVector<QVector2D> t2, int i,
             continue;
         angles.append(angle(current, next, p));
     }
-    //    auto nextI = 0;
-    //    for (int i = 0; i < angles.size() - 1; ++i) {
-    //        if (angles.at(i) > angles.at(i + 1))
-    //            nextI = i + 1;
-    //    }
+
     auto minAngleIt = std::min_element(angles.begin(), angles.end()) - angles.begin();
     Q_ASSERT(minAngleIt < 3); // we can never end on an intersection
 
-    convexHull(t2, t1, minAngleIt, result);
+    concaveHull(t2, t1, result, minAngleIt);
     return;
 };
 
@@ -626,9 +640,9 @@ void removeOverlappingTriangles(QVector<QVector2D> &triangles)
                 const auto &p3 = tri2.at(j);
                 const auto &p4 = tri2.at((j + 1) % tri2.size());
 
-                if (const auto pInter = calculateLineIntersection(p1, p2, p3, p4); pInter.has_value()) {
-                    intersections.append(pInter.value());
-                }
+                //                if (const auto pInter = calculateLineIntersection(p1, p2, p3, p4); pInter.has_value()) {
+                //                    intersections.append(pInter.value());
+                //                }
             }
         }
 

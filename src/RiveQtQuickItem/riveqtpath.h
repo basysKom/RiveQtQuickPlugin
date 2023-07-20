@@ -52,7 +52,9 @@ private:
 
     static QVector<std::tuple<int, int>> findOverlappingTriangles(const QVector<QVector2D> &trianglePoints);
     static QVector<QVector2D> splitTriangles(const QVector<QVector2D> &trianglePoints);
-    static void convexHull(QVector<QVector2D> t1, QVector<QVector2D> t2, int i, QVector<QVector2D> &result);
+    static void concaveHull(const QVector<QVector2D> &t1, const QVector<QVector2D> &t2, QVector<QVector2D> &result, int i = 0);
+    static std::optional<QVector2D> calculateLineIntersection(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3,
+                                                              const QVector2D &p4);
 
     static QPointF cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2,
                                const QPointF &endPoint, qreal t);

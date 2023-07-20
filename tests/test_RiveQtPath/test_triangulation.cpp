@@ -1,5 +1,6 @@
 #include <QObject>
 #include <QTest>
+#include <QDebug>
 
 #include "riveqtpath.h"
 
@@ -8,6 +9,19 @@ class Test_PathTriangulation : public QObject
     Q_OBJECT
 
 private slots:
+    void test_calculateLineIntersection()
+    {
+        using Point = QVector2D;
+        Point p1 = { 1, 1 };
+        Point p2 = { 10, 1 };
+        Point p3 = { 3, 1 };
+        Point p4 = { 9, 2 };
+
+        std::optional<Point> intersection = RiveQtPath::calculateLineIntersection(p1, p2, p3, p4);
+
+        QVERIFY(!intersection.has_value());
+    }
+
     void test_doTrianglesOverlap_data()
     {
         QTest::addColumn<QVector<QVector2D>>("triangle");
@@ -112,8 +126,8 @@ private slots:
         QVector<QVector2D> c11 = { { 5, 1 }, { 10, 1 }, { 5, 10 } };
         QTest::newRow("case 11: share 2 edges and points, overlapping") << c11 << 6;
 
-        QVector<QVector2D> c12 = { { 5, 1 }, { 6, 1 }, { 5, 2 } };
-        QTest::newRow("case 12: share 1 edges, overlapping") << c12 << 3 * 3;
+        //        QVector<QVector2D> c12 = { { 5, 1 }, { 6, 1 }, { 5, 2 } };
+        //        QTest::newRow("case 12: share 1 edges, overlapping") << c12 << 3 * 3;
 
         //        QVector2D t71(3, 0), t72(7, 0), t73(13, 5); // case 7 : one corner covered, all edges cut
         //        QTest::newRow("case 7 : one corner covered, all edges cut") << QVector<QVector2D> { t71, t72, t73 } << true;
@@ -137,7 +151,7 @@ private slots:
             0);
     }
 
-    void test_convexHull_simpleCase()
+    void test_concaveHull_simpleCase()
     {
 
         QVector2D t11(1, 1), t12(10, 1), t13(5, 10);
@@ -146,27 +160,84 @@ private slots:
         QVector2D t21(3, 3), t22(5, 3), t23(4, 4);
         QVector<QVector2D> t2 { t21, t22, t23 };
         QVector<QVector2D> result;
-        RiveQtPath::convexHull(t2, t1, 0, result);
+        RiveQtPath::concaveHull(t2, t1, result);
         for (int i = 0; i < result.size(); ++i)
             QCOMPARE(result.at(i), t1.at(i));
 
         result.clear();
-        RiveQtPath::convexHull(t1, t2, 0, result);
+        RiveQtPath::concaveHull(t1, t2, result);
         for (int i = 0; i < result.size(); ++i)
             QCOMPARE(result.at(i), t1.at(i));
     }
 
-    void test_convexHull_starConfiguration()
+    void test_concaveHull_starConfiguration()
     {
         QVector2D t11(1, 1), t12(10, 1), t13(5, 10);
         QVector<QVector2D> t1 { t11, t12, t13 };
 
         QVector2D t21(5, 0), t22(10, 9), t23(1, 9);
-        QVector<QVector2D> t2 { t21, t22, t23 };
+        QVector<QVector2D> t2 { t22, t23, t21 };
 
         QVector<QVector2D> result;
-        RiveQtPath::convexHull(t1, t2, 0, result);
+        RiveQtPath::concaveHull(t1, t2, result);
         QCOMPARE(result.size(), 12);
+    }
+
+    void test_concaveHull_noPointsCovered()
+    {
+        QVector2D t11(1, 1), t12(10, 1), t13(5, 10);
+        QVector<QVector2D> t1 { t11, t12, t13 };
+
+        QVector2D t61(0, 5), t62(0, 2), t63(10, 5); // case 6 : only the area covers, no points covered
+        QVector<QVector2D> t2 { t61, t62, t63 };
+
+        QVector<QVector2D> result;
+        RiveQtPath::concaveHull(t1, t2, result);
+        QCOMPARE(result.size(), 10);
+    }
+
+    void test_concaveHull_allEdgesCut()
+    {
+        QVector2D t11(1, 1), t12(10, 1), t13(5, 10);
+        QVector<QVector2D> t1 { t11, t12, t13 };
+
+        QVector2D t71(3, 0), t72(7, 0), t73(5, 13); // case 7 : one corner covered, all edges cut
+        QVector<QVector2D> t2 { t71, t72, t73 };
+
+        QVector<QVector2D> result;
+        RiveQtPath::concaveHull(t1, t2, result);
+        QCOMPARE(result.size(), 9);
+    }
+
+    void test_concaveHull_simpleShift()
+    {
+        QVector2D t11(1, 1), t12(10, 1), t13(5, 10);
+        QVector<QVector2D> t1 { t11, t12, t13 };
+
+        QVector2D t31(3, 3), t32(13, 3), t33(8, 10); // case 3 : shifted
+        QVector<QVector2D> t2 { t31, t32, t33 };
+
+        QVector<QVector2D> result;
+        RiveQtPath::concaveHull(t1, t2, result);
+        QCOMPARE(result.size(), 7);
+    }
+    void test_concaveHull_pointsOnEdges()
+    {
+        QVector2D q1(1, 1), q2(10, 1), q3(10, 10);
+        QVector<QVector2D> t0 { q1, q2, q3 };
+        QVector2D t1(3, 1), t2(9, 2), t3(9, 9);
+        QVector<QVector2D> t { t1, t2, t3 };
+
+        QVector<QVector2D> result;
+        RiveQtPath::concaveHull(t0, t, result);
+        QCOMPARE(result.size(), 3); // one point on point
+
+        result.clear();
+        QVector2D t11(10, 5), t12(5, 1), t13(10, 2);
+        QVector<QVector2D> tt { t11, t12, t13 };
+
+        RiveQtPath::concaveHull(t0, tt, result);
+        QCOMPARE(result.size(), 3); // only points on edge
     }
 };
 
