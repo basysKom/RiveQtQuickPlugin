@@ -268,17 +268,50 @@ private slots:
 
         auto triangles = t0 + t2;
         QVERIFY(!RiveQtPath::findOverlappingTriangles(triangles).empty());
-        qDebug() << triangles;
 
         QVector<QVector2D> hull;
         RiveQtPath::concaveHull(t0, t2, hull);
-        qDebug() << hull;
         QCOMPARE(hull.size(), 6);
 
         RiveQtPath::removeOverlappingTriangles(triangles);
-
         QVERIFY(triangles.size() > 3);
         QVERIFY(RiveQtPath::findOverlappingTriangles(triangles).empty());
+    }
+
+    void test_removeOverlappingTriangles_simpleShiftTwice()
+    {
+        QVector2D q1(1, 1), q2(10, 1), q3(10, 10);
+        QVector<QVector2D> t0 { q1, q2, q3 };
+        QVector2D t21(9, 7), t22(13, 8), t23(9, 8);
+        QVector<QVector2D> t2 { t21, t22, t23 };
+        QVector2D t31(4, 3), t32(13, 3), t33(8, 7);
+        QVector<QVector2D> t3 { t31, t32, t33 };
+
+        auto triangles = t0 + t2 + t3;
+        QVERIFY(!RiveQtPath::findOverlappingTriangles(triangles).empty());
+
+        RiveQtPath::removeOverlappingTriangles(triangles);
+        QVERIFY(triangles.size() > 3);
+        QVERIFY(RiveQtPath::findOverlappingTriangles(triangles).empty());
+        qDebug() << triangles;
+    }
+
+    void test_removeOverlappingTriangles_simpleShiftNestedOverlap()
+    {
+        QVector2D q1(1, 1), q2(10, 1), q3(10, 10);
+        QVector<QVector2D> t0 { q1, q2, q3 };
+        QVector2D t21(9, 4), t22(13, 5), t23(9, 8);
+        QVector<QVector2D> t2 { t21, t22, t23 };
+        QVector2D t31(4, 3), t32(13, 3), t33(8, 7);
+        QVector<QVector2D> t3 { t31, t32, t33 };
+
+        auto triangles = t0 + t2 + t3;
+        QVERIFY(!RiveQtPath::findOverlappingTriangles(triangles).empty());
+
+        RiveQtPath::removeOverlappingTriangles(triangles);
+        QVERIFY(triangles.size() > 3);
+        QVERIFY(RiveQtPath::findOverlappingTriangles(triangles).empty());
+        qDebug() << triangles;
     }
 };
 
