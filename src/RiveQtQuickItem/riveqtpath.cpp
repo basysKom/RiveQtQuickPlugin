@@ -364,22 +364,23 @@ bool RiveQtPath::doTrianglesOverlap(const QVector2D &p1, const QVector2D &p2, co
     return TriTri2D(a, b, 0.001, false);
 }
 
-QVector<std::tuple<int, int>> RiveQtPath::findOverlappingTriangles(const QVector<QVector2D> &trianglePoints)
+QVector<std::pair<size_t, size_t>> RiveQtPath::findOverlappingTriangles(const QVector<QVector2D> &trianglePoints)
 {
-    if (trianglePoints.size() < 6)
+    if (trianglePoints.size() < 6) {
         return {};
+    }
 
     Q_ASSERT(!(trianglePoints.size() % 3));
 
     using Point = QVector2D;
     const auto &t = trianglePoints;
 
-    QVector<std::tuple<int, int>> result;
+    QVector<std::pair<size_t, size_t>> result;
 
-    for (size_t i = 0; i < trianglePoints.size() - 6; i += 3) {
+    for (size_t i = 0; i < trianglePoints.size() - 3; i += 3) {
         Point p1 = t.at(i), p2 = t.at(i + 1), p3 = t.at(i + 2);
 
-        for (size_t j = i + 3; j < trianglePoints.size() - 3; j += 3) {
+        for (size_t j = i + 3; j < trianglePoints.size(); j += 3) {
             Point p4 = t.at(j), p5 = t.at(j + 1), p6 = t.at(j + 2);
 
             if (!doTrianglesOverlap(p1, p2, p3, p4, p5, p6)) {
@@ -625,7 +626,73 @@ QVector<QVector2D> RiveQtPath::splitTriangles(const QVector<QVector2D> &triangle
     return poly1 + poly2;
 };
 
-void removeOverlappingTriangles(QVector<QVector2D> &triangles)
+void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
+{
+    const auto &overlappingTriangles = findOverlappingTriangles(triangles);
+
+    if (overlappingTriangles.empty())
+        return;
+
+    QVector<size_t> changedTriangles;
+
+    QVector<QVector2D> newTriangles;
+
+    for (const auto &pair : qAsConst(overlappingTriangles)) {
+        // do not touch triangles that are already touched
+        if (changedTriangles.contains(pair.first) || changedTriangles.contains(pair.second))
+            continue;
+
+        changedTriangles.append(pair.first);
+        changedTriangles.append(pair.second);
+        QVector<QVector2D> t1 { triangles.at(pair.first * 3), triangles.at(pair.first * 3 + 1), triangles.at(pair.first * 3 + 2) };
+        QVector<QVector2D> t2 { triangles.at(pair.second * 3), triangles.at(pair.second * 3 + 1), triangles.at(pair.second * 3 + 2) };
+        QVector<QVector2D> hull;
+        CheckTriWinding(t1[0], t1[1], t1[2]);
+        CheckTriWinding(t2[0], t2[1], t2[2]);
+        concaveHull(t1, t2, hull);
+        QVector<qreal> polygon;
+        for (const auto &p : hull) {
+            polygon.append(p.x());
+            polygon.append(p.y());
+        }
+        polygon.append(hull.at(0).x());
+        polygon.append(hull.at(0).y());
+        const auto &triangleList = qTriangulate(polygon.data(), polygon.size());
+
+        newTriangles.reserve(triangleList.indices.size());
+
+        int index;
+        for (int i = 0; i < triangleList.indices.size(); i++) {
+            if (triangleList.indices.type() == QVertexIndexVector::UnsignedInt) {
+                index = static_cast<const quint32 *>(triangleList.indices.data())[i];
+            } else {
+                index = static_cast<const quint16 *>(triangleList.indices.data())[i];
+            }
+
+            const qreal x = triangleList.vertices[2 * index];
+            const qreal y = triangleList.vertices[2 * index + 1];
+
+            newTriangles.append(QVector2D(x, y));
+        }
+    }
+
+    QVector<QVector2D> lessOverlappingTriangles;
+    lessOverlappingTriangles.reserve(triangles.size() + newTriangles.size());
+    lessOverlappingTriangles += newTriangles;
+    for (size_t i = 0; i < triangles.size(); i += 3) {
+        if (changedTriangles.contains(i / 3))
+            continue;
+        lessOverlappingTriangles.append(triangles.at(i));
+        lessOverlappingTriangles.append(triangles.at(i + 1));
+        lessOverlappingTriangles.append(triangles.at(i + 2));
+    }
+    triangles = lessOverlappingTriangles;
+    triangles.shrink_to_fit();
+    //    removeOverlappingTriangles(triangles);
+}
+
+#if false
+void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
 {
     Q_ASSERT(triangles.size() % 3 == 0);
     Q_ASSERT(triangles.size() > 6);
@@ -743,6 +810,7 @@ void removeOverlappingTriangles(QVector<QVector2D> &triangles)
     //        triangles = newTriangles;
     //    } while (changes);
 }
+#endif
 
 void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
 {
@@ -938,9 +1006,9 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
             }
         }
 
-        //        qDebug() << lineDataSegment.size();
-        //        removeOverlappingTriangles(lineDataSegment);
-        //        qDebug() << lineDataSegment.size();
+        qDebug() << lineDataSegment.size();
+        removeOverlappingTriangles(lineDataSegment);
+        qDebug() << lineDataSegment.size();
 
         m_pathOutlineVertices.append(lineDataSegment);
     }

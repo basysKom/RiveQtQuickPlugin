@@ -87,7 +87,7 @@ private slots:
     {
         QVector<QVector2D> trianglePoints = { { 1, 1 },   { 10, 1 },  { 5, 10 },  { 5, 5 },  { 15, 5 },
                                               { 10, 15 }, { 15, 15 }, { 20, 25 }, { 25, 15 } };
-        QVector<std::tuple<size_t, size_t>> expected { { 0, 1 } };
+        QVector<std::pair<size_t, size_t>> expected { { 0, 1 } };
         const auto &result = RiveQtPath::findOverlappingTriangles(trianglePoints);
 
         QVERIFY(RiveQtPath::findOverlappingTriangles(trianglePoints).size() == expected.size());
@@ -97,59 +97,59 @@ private slots:
         }
     }
 
-    void test_splitTriangles_data()
-    {
-        QTest::addColumn<QVector<QVector2D>>("triangle");
-        QTest::addColumn<int>("size");
+    //    void test_splitTriangles_data()
+    //    {
+    //        QTest::addColumn<QVector<QVector2D>>("triangle");
+    //        QTest::addColumn<int>("size");
 
-        QVector2D t11(3, 3), t12(5, 3), t13(4, 4);
-        QTest::newRow("completely inside") << QVector<QVector2D> { t11, t12, t13 } << 3;
+    //        QVector2D t11(3, 3), t12(5, 3), t13(4, 4);
+    //        QTest::newRow("completely inside") << QVector<QVector2D> { t11, t12, t13 } << 3;
 
-        QVector2D t31(3, 3), t32(13, 3), t33(8, 10); // case 3 : shifted
-        QTest::newRow("shifted") << QVector<QVector2D> { t31, t32, t33 } << 3 * 3;
+    //        QVector2D t31(3, 3), t32(13, 3), t33(8, 10); // case 3 : shifted
+    //        QTest::newRow("shifted") << QVector<QVector2D> { t31, t32, t33 } << 3 * 3;
 
-        QVector2D t81(15, 15), t82(20, 25), t83(25, 15); // case 8 : not covered
-        QTest::newRow("not covered") << QVector<QVector2D> { t81, t82, t83 } << 2 * 3;
+    //        QVector2D t81(15, 15), t82(20, 25), t83(25, 15); // case 8 : not covered
+    //        QTest::newRow("not covered") << QVector<QVector2D> { t81, t82, t83 } << 2 * 3;
 
-        QVector<QVector2D> c9 = { { 1, 1 }, { 10, 1 }, { 5, 10 } };
-        QTest::newRow("case 9 : exactly covered") << c9 << 1 * 3;
+    //        QVector<QVector2D> c9 = { { 1, 1 }, { 10, 1 }, { 5, 10 } };
+    //        QTest::newRow("case 9 : exactly covered") << c9 << 1 * 3;
 
-        QVector2D t41(5, 5), t42(6, 4), t43(10, 10); // case 4 : one edge inside
-        QTest::newRow("one edge inside") << QVector<QVector2D> { t41, t42, t43 } << 2 * 3;
+    //        QVector2D t41(5, 5), t42(6, 4), t43(10, 10); // case 4 : one edge inside
+    //        QTest::newRow("one edge inside") << QVector<QVector2D> { t41, t42, t43 } << 2 * 3;
 
-        QVector2D t51(3, 3), t52(7, 3), t53(5, 12); // case 5 : inside triangle covers one point
-        QTest::newRow("case 5 : inside triangle covers one point") << QVector<QVector2D> { t51, t52, t53 } << 3 * 3;
+    //        QVector2D t51(3, 3), t52(7, 3), t53(5, 12); // case 5 : inside triangle covers one point
+    //        QTest::newRow("case 5 : inside triangle covers one point") << QVector<QVector2D> { t51, t52, t53 } << 3 * 3;
 
-        QVector<QVector2D> c10 = { { 10, 1 }, { 5, 10 }, { 15, 15 } };
-        QTest::newRow("case 10: share an edge, uncovered") << c10 << 2 * 3;
+    //        QVector<QVector2D> c10 = { { 10, 1 }, { 5, 10 }, { 15, 15 } };
+    //        QTest::newRow("case 10: share an edge, uncovered") << c10 << 2 * 3;
 
-        QVector<QVector2D> c11 = { { 5, 1 }, { 10, 1 }, { 5, 10 } };
-        QTest::newRow("case 11: share 2 edges and points, overlapping") << c11 << 6;
+    //        QVector<QVector2D> c11 = { { 5, 1 }, { 10, 1 }, { 5, 10 } };
+    //        QTest::newRow("case 11: share 2 edges and points, overlapping") << c11 << 6;
 
-        //        QVector<QVector2D> c12 = { { 5, 1 }, { 6, 1 }, { 5, 2 } };
-        //        QTest::newRow("case 12: share 1 edges, overlapping") << c12 << 3 * 3;
+    //        //        QVector<QVector2D> c12 = { { 5, 1 }, { 6, 1 }, { 5, 2 } };
+    //        //        QTest::newRow("case 12: share 1 edges, overlapping") << c12 << 3 * 3;
 
-        //        QVector2D t71(3, 0), t72(7, 0), t73(13, 5); // case 7 : one corner covered, all edges cut
-        //        QTest::newRow("case 7 : one corner covered, all edges cut") << QVector<QVector2D> { t71, t72, t73 } << true;
+    //        //        QVector2D t71(3, 0), t72(7, 0), t73(13, 5); // case 7 : one corner covered, all edges cut
+    //        //        QTest::newRow("case 7 : one corner covered, all edges cut") << QVector<QVector2D> { t71, t72, t73 } << true;
 
-        //        QVector2D t61(0, 2), t62(0, 5), t63(10, 5); // case 6 : only the area covers, no points covered
-        //        QTest::newRow("case 6 : only the area covers, no points covered") << QVector<QVector2D> { t61, t62, t63 } << 8*3;
+    //        //        QVector2D t61(0, 2), t62(0, 5), t63(10, 5); // case 6 : only the area covers, no points covered
+    //        //        QTest::newRow("case 6 : only the area covers, no points covered") << QVector<QVector2D> { t61, t62, t63 } << 8*3;
 
-        //        QVector2D t21(5, 0), t22(10, 9), t23(1, 9);
-        //        QTest::newRow("case 2 : star configuration, no points covered") << QVector<QVector2D> { t21, t22, t23 } << 10 * 3;
-    }
+    //        //        QVector2D t21(5, 0), t22(10, 9), t23(1, 9);
+    //        //        QTest::newRow("case 2 : star configuration, no points covered") << QVector<QVector2D> { t21, t22, t23 } << 10 * 3;
+    //    }
 
-    void test_splitTriangles()
-    {
-        QFETCH(QVector<QVector2D>, triangle);
-        QFETCH(int, size);
+    //    void test_splitTriangles()
+    //    {
+    //        QFETCH(QVector<QVector2D>, triangle);
+    //        QFETCH(int, size);
 
-        QVector2D p1(1, 1), p2(10, 1), p3(5, 10);
-        QCOMPARE(RiveQtPath::splitTriangles({ p1, p2, p3, triangle[0], triangle[1], triangle[2] }).size(), size);
-        QCOMPARE(
-            RiveQtPath::findOverlappingTriangles(RiveQtPath::splitTriangles({ p1, p2, p3, triangle[0], triangle[1], triangle[2] })).size(),
-            0);
-    }
+    //        QVector2D p1(1, 1), p2(10, 1), p3(5, 10);
+    //        QCOMPARE(RiveQtPath::splitTriangles({ p1, p2, p3, triangle[0], triangle[1], triangle[2] }).size(), size);
+    //        QCOMPARE(
+    //            RiveQtPath::findOverlappingTriangles(RiveQtPath::splitTriangles({ p1, p2, p3, triangle[0], triangle[1], triangle[2]
+    //            })).size(), 0);
+    //    }
 
     void test_concaveHull_simpleCase()
     {
@@ -238,6 +238,47 @@ private slots:
 
         RiveQtPath::concaveHull(t0, tt, result);
         QCOMPARE(result.size(), 3); // only points on edge
+    }
+
+    void test_removeOverlappingTriangles()
+    {
+        QVector2D q1(1, 1), q2(10, 1), q3(10, 10);
+        QVector<QVector2D> t0 { q1, q2, q3 };
+        QVector2D t1(3, 1), t2(9, 2), t3(9, 9);
+        QVector<QVector2D> t { t1, t2, t3 };
+
+        QVERIFY(RiveQtPath::doTrianglesOverlap(q1, q2, q3, t1, t2, t3));
+
+        auto triangles = t0 + t;
+        QVERIFY(triangles.size() >= 6);
+        QVERIFY(!RiveQtPath::findOverlappingTriangles(triangles).empty());
+
+        RiveQtPath::removeOverlappingTriangles(triangles);
+
+        QVERIFY(!triangles.empty());
+        QVERIFY(RiveQtPath::findOverlappingTriangles(triangles).empty());
+    }
+
+    void test_removeOverlappingTriangles_simpleShift()
+    {
+        QVector2D q1(1, 1), q2(10, 1), q3(10, 10);
+        QVector<QVector2D> t0 { q1, q2, q3 };
+        QVector2D t31(4, 3), t32(13, 3), t33(8, 7); // case 3 : shifted
+        QVector<QVector2D> t2 { t31, t32, t33 };
+
+        auto triangles = t0 + t2;
+        QVERIFY(!RiveQtPath::findOverlappingTriangles(triangles).empty());
+        qDebug() << triangles;
+
+        QVector<QVector2D> hull;
+        RiveQtPath::concaveHull(t0, t2, hull);
+        qDebug() << hull;
+        QCOMPARE(hull.size(), 6);
+
+        RiveQtPath::removeOverlappingTriangles(triangles);
+
+        QVERIFY(triangles.size() > 3);
+        QVERIFY(RiveQtPath::findOverlappingTriangles(triangles).empty());
     }
 };
 
