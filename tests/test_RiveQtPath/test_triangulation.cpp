@@ -73,6 +73,26 @@ private slots:
         QCOMPARE(RiveQtPath::doTrianglesOverlap(p1, p2, p3, triangle[0], triangle[1], triangle[2]), result);
     }
 
+    void test_isInsidePolygon()
+    {
+        QVector<QVector2D> polygon = { QVector2D(0, 0), QVector2D(5, 0), QVector2D(5, 5), QVector2D(0, 5) };
+
+        // Test point inside the polygon
+        QVERIFY(RiveQtPath::isInsidePolygon(polygon, QVector2D(2, 3)));
+
+        // Test point outside the polygon
+        QVERIFY(!RiveQtPath::isInsidePolygon(polygon, QVector2D(6, 6)));
+
+        QVERIFY(!RiveQtPath::isInsidePolygon(polygon, QVector2D(2, 0)));
+
+        // Test point on the edge of the polygon (should return false)
+        QVERIFY(!RiveQtPath::isInsidePolygon(polygon, QVector2D(0, 0))); // Vertex of the polygon
+        QVERIFY(!RiveQtPath::isInsidePolygon(polygon, QVector2D(2.5, 0))); // On the bottom edge
+        QVERIFY(!RiveQtPath::isInsidePolygon(polygon, QVector2D(5, 2.5))); // On the right edge
+        QVERIFY(!RiveQtPath::isInsidePolygon(polygon, QVector2D(2.5, 5))); // On the top edge
+        QVERIFY(!RiveQtPath::isInsidePolygon(polygon, QVector2D(0, 2.5))); // On the left edge
+    }
+
     void test_doTrianglesOverlap_edgeOverlap()
     {
         QVector2D q1(1, 1), q2(10, 1), q3(10, 10);
@@ -221,6 +241,7 @@ private slots:
         RiveQtPath::concaveHull(t1, t2, result);
         QCOMPARE(result.size(), 7);
     }
+
     void test_concaveHull_pointsOnEdges()
     {
         QVector2D q1(1, 1), q2(10, 1), q3(10, 10);
@@ -238,6 +259,32 @@ private slots:
 
         RiveQtPath::concaveHull(t0, tt, result);
         QCOMPARE(result.size(), 3); // only points on edge
+    }
+
+    void test_concaveHull_polygonTest()
+    {
+        QVector2D t11(1, 1), t12(10, 1), t13(10, 10), t14(1, 10);
+        QVector<QVector2D> t1 { t11, t12, t13, t14 };
+
+        QVector2D t21(3, 3), t22(5, 6), t23(12, 4);
+        QVector<QVector2D> t2 { t21, t23, t22 };
+        QVector<QVector2D> result;
+        RiveQtPath::concaveHull(t1, t2, result);
+        qDebug() << result;
+        QCOMPARE(result.size(), 7);
+    }
+
+    void test_concaveHull_polygonTestInversed()
+    {
+        QVector2D t11(1, 1), t12(10, 1), t13(10, 10), t14(1, 10);
+        QVector<QVector2D> t1 { t11, t12, t13, t14 };
+
+        QVector2D t21(3, 3), t22(5, 6), t23(12, 4);
+        QVector<QVector2D> t2 { t21, t23, t22 };
+        QVector<QVector2D> result;
+        RiveQtPath::concaveHull(t2, t1, result);
+        qDebug() << result;
+        QCOMPARE(result.size(), 7);
     }
 
     void test_removeOverlappingTriangles()
@@ -280,6 +327,7 @@ private slots:
 
     void test_removeOverlappingTriangles_simpleShiftTwice()
     {
+        //        QSKIP("Does not work");
         QVector2D q1(1, 1), q2(10, 1), q3(10, 10);
         QVector<QVector2D> t0 { q1, q2, q3 };
         QVector2D t21(9, 7), t22(13, 8), t23(9, 8);
@@ -293,11 +341,12 @@ private slots:
         RiveQtPath::removeOverlappingTriangles(triangles);
         QVERIFY(triangles.size() > 3);
         QVERIFY(RiveQtPath::findOverlappingTriangles(triangles).empty());
-        qDebug() << triangles;
+        //        qDebug() << triangles;
     }
 
     void test_removeOverlappingTriangles_simpleShiftNestedOverlap()
     {
+        //        QSKIP("Does not work, yet.");
         QVector2D q1(1, 1), q2(10, 1), q3(10, 10);
         QVector<QVector2D> t0 { q1, q2, q3 };
         QVector2D t21(9, 4), t22(13, 5), t23(9, 8);
