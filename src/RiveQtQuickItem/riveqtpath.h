@@ -51,11 +51,12 @@ private:
                                    const QVector2D &p6);
 
     static QVector<std::pair<size_t, size_t>> findOverlappingTriangles(const QVector<QVector2D> &trianglePoints);
-    static QVector<QVector2D> splitTriangles(const QVector<QVector2D> &trianglePoints);
+    //    static QVector<QVector2D> splitTriangles(const QVector<QVector2D> &trianglePoints);
     static void concaveHull(const QVector<QVector2D> &t1, const QVector<QVector2D> &t2, QVector<QVector2D> &result, int i = 0);
     static std::optional<QVector2D> calculateLineIntersection(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3,
                                                               const QVector2D &p4);
     static void removeOverlappingTriangles(QVector<QVector2D> &triangles);
+    static bool isInsidePolygon(const QVector<QVector2D> &polygon, const QVector2D &p);
 
     static QPointF cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2,
                                const QPointF &endPoint, qreal t);
