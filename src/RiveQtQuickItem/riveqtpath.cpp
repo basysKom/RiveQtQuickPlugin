@@ -634,8 +634,11 @@ void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
         return;
 
     QVector<size_t> changedTriangles;
-
     QVector<QVector2D> newTriangles;
+
+    qDebug() << "run";
+    qDebug() << overlappingTriangles;
+    qDebug() << triangles;
 
     for (const auto &pair : qAsConst(overlappingTriangles)) {
         // do not touch triangles that are already touched
@@ -657,7 +660,8 @@ void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
         }
         polygon.append(hull.at(0).x());
         polygon.append(hull.at(0).y());
-        const auto &triangleList = qTriangulate(polygon.data(), polygon.size());
+        const auto &triangleList = qTriangulate(polygon.data(), polygon.size(),
+                                                QVectorPath::PolygonHint | QVectorPath::OddEvenFill | QVectorPath::NonConvexShapeMask);
 
         newTriangles.reserve(triangleList.indices.size());
 
@@ -688,7 +692,7 @@ void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
     }
     triangles = lessOverlappingTriangles;
     triangles.shrink_to_fit();
-    //    removeOverlappingTriangles(triangles);
+    removeOverlappingTriangles(triangles);
 }
 
 #if false
