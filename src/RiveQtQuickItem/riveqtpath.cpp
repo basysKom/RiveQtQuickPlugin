@@ -4,6 +4,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
+#include <array>
 #include <optional>
 #include <set>
 
@@ -308,6 +309,26 @@ void CheckTriWinding(TriPoint &p1, TriPoint &p2, TriPoint &p3)
     }
 }
 
+void FixWinding(TriPoint &p1, TriPoint &p2, TriPoint &p3)
+{ // Lambda function to calculate the orientation of three points
+    auto orientation = [](TriPoint p1, TriPoint p2, TriPoint p3) {
+        double val = (p2.y() - p1.y()) * (p3.x() - p2.x()) - (p2.x() - p1.x()) * (p3.y() - p2.y());
+        if (abs(val) < 0.001f)
+            return 0; // Collinear
+        else if (val > 0)
+            return 1; // Clockwise
+        else
+            return 2; // Counterclockwise
+    };
+    //    double detTri = Det2D(p1, p2, p3);
+
+    if (orientation(p1, p2, p3) == 1) {
+        TriPoint a = p3;
+        p3 = p2;
+        p2 = a;
+    }
+}
+
 bool CheckPolyWinding(QVector<QVector2D> points)
 {
     for (size_t i = 0; i < points.size() - 2; ++i) {
@@ -490,7 +511,7 @@ void RiveQtPath::concaveHull(const QVector<QVector2D> &t1, const QVector<QVector
         return;
     }
 
-    // add the closest intersection to the results and continue with the end point on the other polygon from the intersecting line.
+    // add the closest intersection to the current point and continue with the end point on the other polygon from the intersecting line.
     auto minDistSq = std::numeric_limits<float>::infinity();
     size_t indexMin = 0;
     for (size_t i = 0; i < intersections.size(); ++i) {
@@ -567,21 +588,29 @@ void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
     }
 
     for (const auto &cluster : clusters) {
-        QVector<QVector2D> result { triangles.at(*(cluster.begin()) * 3), triangles.at(*(cluster.begin()) * 3 + 1),
-                                    triangles.at(*(cluster.begin()) * 3 + 2) };
-        CheckTriWinding(result[0], result[1], result[2]);
+        const auto &indexFirstTriangle = cluster.front();
+        QVector<QVector2D> result { triangles.at(indexFirstTriangle * 3), triangles.at(indexFirstTriangle * 3 + 1),
+                                    triangles.at(indexFirstTriangle * 3 + 2) };
+        FixWinding(result[0], result[1], result[2]);
 
         for (auto it = cluster.begin(); it != cluster.end(); ++it) {
+            // we already processed the first, skip it
             if (it == cluster.begin())
                 continue;
 
-            const auto &val = *it;
-
+            // copy the last result, since we need an empty result vector
             const auto poly = result;
             result.clear();
 
-            QVector<QVector2D> triangle { triangles.at(val * 3), triangles.at(val * 3 + 1), triangles.at(val * 3 + 2) };
-            CheckTriWinding(triangle[0], triangle[1], triangle[2]);
+            const auto &currentIndex = *it;
+            QVector<QVector2D> triangle { triangles.at(currentIndex * 3), triangles.at(currentIndex * 3 + 1),
+                                          triangles.at(currentIndex * 3 + 2) };
+
+            qDebug() << "Tri before check" << triangle;
+            // we need a triangle in counter-clockwise orientation
+            FixWinding(triangle[0], triangle[1], triangle[2]);
+            qDebug() << "Tri after  check" << triangle;
+            qDebug() << "Poly: " << poly;
             concaveHull(poly, triangle, result);
         }
 
