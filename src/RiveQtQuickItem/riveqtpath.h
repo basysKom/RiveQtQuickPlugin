@@ -5,9 +5,12 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #pragma once
+#include <optional>
 
 #include <QPainterPath>
 #include <QMatrix4x4>
+#include <QVector2D>
+#include <QVector>
 #include <QPen>
 
 #include <rive/renderer.hpp>
@@ -51,8 +54,6 @@ private:
                                    const QVector2D &p6);
 
     static QVector<std::pair<size_t, size_t>> findOverlappingTriangles(const QVector<QVector2D> &trianglePoints);
-    //    static QVector<QVector2D> splitTriangles(const QVector<QVector2D> &trianglePoints);
-    //    static void concaveHull(const QVector<QVector2D> &t1, const QVector<QVector2D> &t2, QVector<QVector2D> &result, int i = 0);
     static void concaveHull(const QVector<QVector2D> &t1, const QVector<QVector2D> &t2, QVector<QVector2D> &result, const size_t i = 0);
 
     static std::optional<QVector2D> calculateLineIntersection(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3,

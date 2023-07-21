@@ -310,7 +310,7 @@ void CheckTriWinding(TriPoint &p1, TriPoint &p2, TriPoint &p3)
 
 bool CheckPolyWinding(QVector<QVector2D> points)
 {
-    for (size_t i = 0; i < points.size(); ++i) {
+    for (size_t i = 0; i < points.size() - 2; ++i) {
         if (Det2D(points.at(i), points.at(i + 1), points.at(i + 2)) < 0.0)
             return false;
     }
@@ -458,26 +458,6 @@ void RiveQtPath::concaveHull(const QVector<QVector2D> &t1, const QVector<QVector
 {
     using Point = QVector2D;
 
-    auto angle = [](Point p1, Point p2, Point p3) {
-        auto v1 = (p2 - p1).normalized();
-        auto v2 = (p3 - p2).normalized();
-        return v1.x() * v2.y() - v2.x() * v1.y();
-    };
-
-    // Lambda function to calculate the orientation of three points
-    auto orientation = [&](Point p1, Point p2, Point p3) {
-        double val = (p2.y() - p1.y()) * (p3.x() - p2.x()) - (p2.x() - p1.x()) * (p3.y() - p2.y());
-        if (abs(val) < 0.001f)
-            return 0; // Collinear
-        else if (val > 0)
-            return 1; // Clockwise
-        else
-            return 2; // Counterclockwise
-    };
-
-    Q_ASSERT(orientation(t1.at(0), t1.at(1), t1.at(2)) == 2);
-    Q_ASSERT(orientation(t2.at(0), t2.at(1), t2.at(2)) == 2);
-
     const auto &current = t1.at(i % t1.size());
 
     if (!result.empty() && std::abs(result.at(0).x() - current.x()) < 0.001f && std::abs(result.at(0).y() - current.y()) < 0.001f)
@@ -495,8 +475,7 @@ void RiveQtPath::concaveHull(const QVector<QVector2D> &t1, const QVector<QVector
 
     result.append(current);
 
-    auto next = t1.at((i + 1) % t1.size());
-
+    const auto &next = t1.at((i + 1) % t1.size());
     QVector<std::pair<size_t, QVector2D>> intersections;
     for (int j = 0; j < t2.size(); ++j) {
         QVector2D p1 = t2.at(j), p2 = t2.at((j + 1) % t2.size());
@@ -511,21 +490,22 @@ void RiveQtPath::concaveHull(const QVector<QVector2D> &t1, const QVector<QVector
         return;
     }
 
-    // add the closest intersection to the results and continue with the point on the other polygon from the intersecting line.
+    // add the closest intersection to the results and continue with the end point on the other polygon from the intersecting line.
     auto minDistSq = std::numeric_limits<float>::infinity();
-    size_t minI = 0;
+    size_t indexMin = 0;
     for (size_t i = 0; i < intersections.size(); ++i) {
         const auto diff = result.last() - intersections.at(i).second;
         const float distSq = diff.x() * diff.x() + diff.y() * diff.y();
         if (distSq < minDistSq) {
             minDistSq = distSq;
-            minI = i;
+            indexMin = i;
         }
     }
 
-    result.append(intersections.at(minI).second);
+    result.append(intersections.at(indexMin).second);
 
-    concaveHull(t2, t1, result, intersections.at(minI).first);
+    // Notice: t2 and t1 are switched
+    concaveHull(t2, t1, result, intersections.at(indexMin).first);
     return;
 };
 
@@ -586,13 +566,6 @@ void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
                                    overlappingTriangles.end());
     }
 
-    //    qDebug() << "Number of clustes:" << clusters.size();
-    //    for (const auto &c : clusters) {
-    //        qDebug() << "Cluster start";
-    //        for (const auto &i : c)
-    //            qDebug() << i;
-    //    }
-
     for (const auto &cluster : clusters) {
         QVector<QVector2D> result { triangles.at(*(cluster.begin()) * 3), triangles.at(*(cluster.begin()) * 3 + 1),
                                     triangles.at(*(cluster.begin()) * 3 + 2) };
@@ -620,9 +593,10 @@ void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
         // close the polygon
         polygon.append(result.at(0).x());
         polygon.append(result.at(0).y());
+        qDebug() << polygon;
 
-        const auto &triangleList = qTriangulate(polygon.data(), polygon.size(),
-                                                QVectorPath::PolygonHint | QVectorPath::OddEvenFill | QVectorPath::NonConvexShapeMask);
+        const auto &triangleList = qTriangulate(polygon.data(), polygon.size() / 2,
+                                                QVectorPath::PolygonHint | QVectorPath::WindingFill | QVectorPath::LinesShapeMask);
 
         QVector<QVector2D> newTriangles;
         newTriangles.reserve(triangleList.indices.size());
@@ -653,186 +627,8 @@ void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
 
     nonOverlappingTriangles.shrink_to_fit();
     triangles = std::move(nonOverlappingTriangles);
-
-    //    QVector<size_t> changedTriangles;
-    //    QVector<QVector2D> newTriangles;
-
-    //    for (const auto &pair : qAsConst(overlappingTriangles)) {
-    //        // do not touch triangles that are already touched
-    //        if (changedTriangles.contains(pair.first) || changedTriangles.contains(pair.second))
-    //            continue;
-
-    //        changedTriangles.append(pair.first);
-    //        changedTriangles.append(pair.second);
-    //        QVector<QVector2D> t1 { triangles.at(pair.first * 3), triangles.at(pair.first * 3 + 1), triangles.at(pair.first * 3 + 2) };
-    //        QVector<QVector2D> t2 { triangles.at(pair.second * 3), triangles.at(pair.second * 3 + 1), triangles.at(pair.second * 3 + 2) };
-    //        QVector<QVector2D> hull;
-    //        CheckTriWinding(t1[0], t1[1], t1[2]);
-    //        CheckTriWinding(t2[0], t2[1], t2[2]);
-    //        concaveHull(t1, t2, hull);
-    //        QVector<qreal> polygon;
-    //        for (const auto &p : hull) {
-    //            polygon.append(p.x());
-    //            polygon.append(p.y());
-    //        }
-    //        polygon.append(hull.at(0).x());
-    //        polygon.append(hull.at(0).y());
-    //        const auto &triangleList = qTriangulate(polygon.data(), polygon.size(),
-    //                                                QVectorPath::PolygonHint | QVectorPath::OddEvenFill |
-    //                                                QVectorPath::NonConvexShapeMask);
-
-    //        newTriangles.reserve(triangleList.indices.size());
-
-    //        int index;
-    //        for (int i = 0; i < triangleList.indices.size(); i++) {
-    //            if (triangleList.indices.type() == QVertexIndexVector::UnsignedInt) {
-    //                index = static_cast<const quint32 *>(triangleList.indices.data())[i];
-    //            } else {
-    //                index = static_cast<const quint16 *>(triangleList.indices.data())[i];
-    //            }
-
-    //            const qreal x = triangleList.vertices[2 * index];
-    //            const qreal y = triangleList.vertices[2 * index + 1];
-
-    //            newTriangles.append(QVector2D(x, y));
-    //        }
-    //    }
-
-    //    QVector<QVector2D> lessOverlappingTriangles;
-    //    lessOverlappingTriangles.reserve(triangles.size() + newTriangles.size());
-    //    lessOverlappingTriangles += newTriangles;
-    //    for (size_t i = 0; i < triangles.size(); i += 3) {
-    //        if (changedTriangles.contains(i / 3))
-    //            continue;
-    //        lessOverlappingTriangles.append(triangles.at(i));
-    //        lessOverlappingTriangles.append(triangles.at(i + 1));
-    //        lessOverlappingTriangles.append(triangles.at(i + 2));
-    //    }
-    //    triangles = lessOverlappingTriangles;
-    //    triangles.shrink_to_fit();
-    //    removeOverlappingTriangles(triangles);
+    qDebug() << "Triangles" << triangles << "Triangles End";
 }
-
-#if false
-void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
-{
-    Q_ASSERT(triangles.size() % 3 == 0);
-    Q_ASSERT(triangles.size() > 6);
-
-    auto addIntersectionPoints = [](QVector<QVector2D> &poly1, QVector<QVector2D> &poly2, const QVector<QVector2D> &tri1,
-                                    const QVector<QVector2D> &tri2) {
-        QVector<QVector2D> intersections;
-        for (int i = 0; i < tri1.size(); ++i) {
-            const auto &p1 = tri1.at(i);
-            const auto &p2 = tri1.at((i + 1) % tri1.size());
-            for (int j = 0; j < tri2.size(); ++j) {
-                const auto &p3 = tri2.at(j);
-                const auto &p4 = tri2.at((j + 1) % tri2.size());
-
-                //                if (const auto pInter = calculateLineIntersection(p1, p2, p3, p4); pInter.has_value()) {
-                //                    intersections.append(pInter.value());
-                //                }
-            }
-        }
-
-        if (intersections.size() > 2)
-            return;
-        // At least one point is inside the other triangle and was removed
-        if (poly1.size() < 3) {
-            poly1 += intersections;
-        }
-        if (poly2.size() < 3) {
-            poly2 += intersections;
-        }
-    };
-
-    auto triangulate = [](const QVector<QVector2D> poly) {
-        QVector<QVector2D> triangles;
-
-        triangles.append(poly.at(0));
-        triangles.append(poly.at(1));
-        triangles.append(poly.at(2));
-
-        triangles.append(poly.at(0));
-        triangles.append(poly.at(2));
-        triangles.append(poly.at(3));
-
-        return triangles;
-    };
-
-    const auto &t = triangles;
-    QVector<QVector2D> newTriangles;
-
-    //    bool changes;
-    //    do {
-    //        changes = false;
-    //        for (size_t i = 0; i < triangles.size() - 6; i += 3) {
-    //            Point p1 = t.at(i), p2 = t.at(i + 1), p3 = t.at(i + 2);
-
-    //            for (size_t j = i + 3; j < triangles.size() - 3; j += 3) {
-    //                Point p4 = t.at(j), p5 = t.at(j + 1), p6 = t.at(j + 2);
-
-    //                if (!doTrianglesOverlap(p1, p2, p3, p4, p5, p6)) {
-    //                    //                newTriangles += { p1, p2, p3, p4, p5, p6 }; // copy the points.
-    //                    continue;
-    //                }
-    //                //                changes = true;
-
-    //                qDebug() << "Is overlapping" << i / 3 << j / 3 << t.at(i) << t.at(i + 1) << t.at(i + 2) << t.at(j) << t.at(j +
-    //                1)
-    //                         << t.at(j + 2);
-
-    //                QVector<QVector2D> tri1 { p1, p2, p3 };
-    //                QVector<QVector2D> tri2 { p4, p5, p6 };
-
-    //                QVector<QVector2D> poly1(tri1);
-    //                QVector<QVector2D> poly2(tri2);
-
-    //                poly1.erase(
-    //                    std::remove_if(poly1.begin(), poly1.end(),
-    //                                   [&tri2, &isInsideTriangle](auto &p) { return isInsideTriangle(tri2.at(0), tri2.at(1),
-    //                                   tri2.at(2), p); }),
-    //                    poly1.end());
-    //                poly2.erase(
-    //                    std::remove_if(poly2.begin(), poly2.end(),
-    //                                   [&tri1, &isInsideTriangle](auto &p) { return isInsideTriangle(tri1.at(0), tri1.at(1),
-    //                                   tri1.at(2), p); }),
-    //                    poly2.end());
-
-    //                if (poly2.size() == 3 && poly1.size() == 3)
-    //                    continue;
-
-    //                // one triangle is inside the other
-    //                if (poly2.empty()) {
-    //                    newTriangles += poly1;
-    //                    continue;
-    //                }
-    //                if (poly1.empty()) {
-    //                    newTriangles += poly1;
-    //                    continue;
-    //                }
-
-    //                addIntersectionPoints(poly1, poly2, tri1, tri2);
-
-    //                if (poly1.size() == 4) {
-    //                    poly1 = triangulate(poly1);
-    //                } else if (!poly1.empty()) {
-    //                    poly1 = tri1;
-    //                }
-    //                if (poly2.size() == 4) {
-    //                    poly2 = triangulate(poly2);
-    //                } else if (!poly2.empty()) {
-    //                    poly2 = tri2;
-    //                }
-    //                newTriangles += poly1;
-    //                newTriangles += poly2;
-    //            }
-    //        }
-    //        //        if (changes)
-    //        triangles = newTriangles;
-    //    } while (changes);
-}
-#endif
 
 void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
 {
