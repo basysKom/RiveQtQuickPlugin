@@ -53,16 +53,14 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     connect(this, &RiveQtQuickItem::internalArtboardChanged, this, &RiveQtQuickItem::updateStateMachines, Qt::QueuedConnection);
     connect(this, &RiveQtQuickItem::loadFileAfterUnloading, this, &RiveQtQuickItem::loadRiveFile, Qt::QueuedConnection);
 
-    connect(this, &RiveQtQuickItem::internalStateMachineChanged, this, &RiveQtQuickItem::updateStateMachineInputMap, Qt::QueuedConnection);
-
     // do update the index only once we are set up and happy
     connect(this, &RiveQtQuickItem::stateMachineInterfaceChanged, this, &RiveQtQuickItem::currentStateMachineIndexChanged,
             Qt::QueuedConnection);
 
-    connect(this, &RiveQtQuickItem::xChanged, this, [this]() { qDebug() << "X:" << this->x(); });
-
     m_elapsedTimer.start();
     m_lastUpdateTime = m_elapsedTimer.elapsed();
+
+    m_stateMachineInterface = new RiveStateMachineInput(this);
 
     update();
 }
@@ -95,15 +93,6 @@ void RiveQtQuickItem::triggerAnimation(int id)
     emit currentAnimationIndexChanged();
 }
 
-void RiveQtQuickItem::updateStateMachineInputMap()
-{
-    // maybe its a bit maniac and insane to push raw instance pointers around.
-    // well what could go wrong. aka TODO: dont do this
-    m_stateMachineInputMap->deleteLater();
-    m_stateMachineInputMap = new RiveQtStateMachineInputMap(m_currentStateMachineInstance, this);
-    emit stateMachineInterfaceChanged();
-}
-
 void RiveQtQuickItem::updateInternalArtboard()
 {
     m_hasValidRenderNode = false;
@@ -133,6 +122,9 @@ void RiveQtQuickItem::updateInternalArtboard()
     if (!m_currentArtboardInstance) {
         qCDebug(rqqpItem) << "Artboard changed, but instance is null";
         m_currentStateMachineInstance = nullptr;
+        if (m_stateMachineInterface) {
+            m_stateMachineInterface->setStateMachineInstance(m_currentStateMachineInstance.get());
+        }
         m_animationInstance = nullptr;
         emit internalArtboardChanged();
         return;
@@ -161,6 +153,14 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
     // unload the file from the render thread to make sure its not accessed at time of unloading
     if (m_loadingStatus == Unloading && m_renderNode) {
+        qCDebug(rqqpItem) << "Unloading";
+        m_stateMachineInterface->disconnect();
+        m_stateMachineInterface->deleteLater();
+        m_stateMachineInterface = nullptr;
+        // we do not send emit stateMachineInterfaceChanged(); here because that would cause nullptr errors in qml
+        // as long as the object is referenced in qml it wont be deleted
+        // of course the calls to the stateMachineInterface wont do anything
+
         m_renderNode->updateArtboardInstance(std::weak_ptr<rive::ArtboardInstance>());
 
         // reset all
@@ -191,6 +191,9 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         if (!m_currentArtboardInstance) {
             qCDebug(rqqpItem) << "No artboard loaded.";
             m_currentStateMachineInstance = nullptr;
+            if (m_stateMachineInterface) {
+                m_stateMachineInterface->setStateMachineInstance(m_currentStateMachineInstance.get());
+            }
             emit internalStateMachineChanged();
             m_frameRate = 0;
             emit frameRateChanged();
@@ -208,11 +211,14 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
     if (m_scheduleStateMachineChange && m_currentArtboardInstance) {
         m_currentStateMachineInstance = m_currentArtboardInstance->stateMachineAt(m_currentStateMachineIndex);
+        if (m_stateMachineInterface) {
+            m_stateMachineInterface->setStateMachineInstance(m_currentStateMachineInstance.get());
+        }
         emit internalStateMachineChanged();
         m_scheduleStateMachineChange = false;
     }
 
-    if (m_stateMachineInputMap && m_stateMachineInputMap->hasDirtyStateMachine()) {
+    if (m_stateMachineInterface && m_stateMachineInterface->hasDirtyStateMachine()) {
         m_scheduleArtboardChange = true;
         m_scheduleStateMachineChange = true;
     }
@@ -265,6 +271,19 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     return m_renderNode;
 }
 
+void RiveQtQuickItem::componentComplete()
+{
+    QQuickItem::componentComplete();
+    // if we did not get an external interface, create one
+    // this is good for introspection of animations
+    // and usefull when building more generic views
+    //
+
+    connect(m_stateMachineInterface, &RiveStateMachineInput::riveInputsChanged, this,
+            &RiveQtQuickItem::stateMachineStringInterfaceChanged);
+    m_stateMachineInterface->initializeInternal();
+}
+
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 void RiveQtQuickItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
@@ -272,7 +291,6 @@ void RiveQtQuickItem::geometryChange(const QRectF &newGeometry, const QRectF &ol
 
     update();
     QQuickItem::geometryChange(newGeometry, oldGeometry);
-    qDebug() << "GEOMETRY geometryChange";
 }
 #else
 void RiveQtQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
@@ -351,6 +369,17 @@ int RiveQtQuickItem::currentAnimationIndex() const
     return m_currentAnimationIndex;
 }
 
+void RiveQtQuickItem::updateStateMachineValues()
+{
+    // this sync from rive to qml
+    // polling from there and update on diff to qml
+    // values may change during an animation
+    if (m_stateMachineInterface) {
+        m_stateMachineInterface->updateValues();
+    }
+    update();
+}
+
 void RiveQtQuickItem::loadRiveFile(const QString &source)
 {
     if (m_loadingStatus != Idle && m_loadingStatus != Unloading && m_loadingStatus != Loading) {
@@ -393,6 +422,8 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
     connect(currentWindow, &QQuickWindow::beforeFrameBegin, this, &RiveQtQuickItem::renderOffscreen,
             static_cast<Qt::ConnectionType>(Qt::DirectConnection | Qt::UniqueConnection));
 #endif
+    connect(currentWindow, &QQuickWindow::beforeSynchronizing, this, &RiveQtQuickItem::updateStateMachineValues,
+            static_cast<Qt::ConnectionType>(Qt::DirectConnection | Qt::UniqueConnection));
 
     QFile file(source);
 
@@ -441,6 +472,12 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
 
     m_scheduleArtboardChange = true;
     m_scheduleStateMachineChange = true;
+
+    if (!m_stateMachineInterface) {
+        m_stateMachineInterface = new RiveStateMachineInput(this);
+        m_stateMachineInterface->initializeInternal();
+        emit stateMachineInterfaceChanged();
+    }
 
     qCDebug(rqqpItem) << "Successfully imported Rive file.";
     m_loadingStatus = Loaded;
@@ -506,7 +543,6 @@ void RiveQtQuickItem::renderOffscreen()
     // its okay io call this since we are sure that the renderthread is not active when we get called
     if (m_renderNode && isVisible() && m_hasValidRenderNode) {
         if (m_geometryChanged) {
-            qDebug() << "GEOMETRY CHANGED";
             m_renderNode->setRect(QRectF(x(), y(), width(), height()));
             m_renderNode->setArtboardRect(artboardRect());
             m_geometryChanged = false;
@@ -725,14 +761,29 @@ void RiveQtQuickItem::setCurrentStateMachineIndex(const int newCurrentStateMachi
     emit currentStateMachineIndexChanged();
 
     m_scheduleStateMachineChange = true; // we have to do this in the render thread.
-    // emit stateMachineInterfaceChanged();
 
     update();
 }
 
-RiveQtStateMachineInputMap *RiveQtQuickItem::stateMachineInterface() const
+RiveStateMachineInput *RiveQtQuickItem::stateMachineInterface() const
 {
-    return m_stateMachineInputMap;
+    return m_stateMachineInterface;
+}
+
+void RiveQtQuickItem::setStateMachineInterface(RiveStateMachineInput *stateMachineInterface)
+{
+    if (m_stateMachineInterface != nullptr) {
+        m_stateMachineInterface->deleteLater();
+    }
+
+    m_stateMachineInterface = stateMachineInterface;
+    if (m_stateMachineInterface) {
+        QQmlEngine::setObjectOwnership(m_stateMachineInterface, QQmlEngine::CppOwnership);
+        m_stateMachineInterface->setStateMachineInstance(m_currentStateMachineInstance.get());
+        connect(m_stateMachineInterface, &RiveStateMachineInput::riveInputsChanged, this,
+                &RiveQtQuickItem::stateMachineStringInterfaceChanged);
+    }
+    emit stateMachineInterfaceChanged();
 }
 
 bool RiveQtQuickItem::interactive() const
