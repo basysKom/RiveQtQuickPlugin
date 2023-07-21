@@ -95,21 +95,23 @@ elseif (${QT_VERSION_MAJOR} EQUAL 6)
             ${PROJECT_SOURCES}
             ${QT6_PROJECT_SOURCES}
     )
-#if(BUILD_TESTS)
-    qt_add_qml_module(
-        ${PROJECT_NAME}_TEST
-        URI
+    # we cannot link a module/plugin lib. We need to build it as simple shared lib for the tests
+    if(RQQRP_BUILD_TESTS)
+        qt_add_qml_module(
             ${PROJECT_NAME}_TEST
-        VERSION
-            1.0
-        SHARED
-        OUTPUT_DIRECTORY
-           ${QML_BINARY_DIR}/${PROJECT_NAME}_TEST
-        SOURCES
-            ${PROJECT_SOURCES}
-            ${QT6_PROJECT_SOURCES}
-    )
-    target_link_libraries(${PROJECT_NAME}_TEST PUBLIC ${DEPENDENCIES})
+            URI
+                ${PROJECT_NAME}_TEST
+            VERSION
+                1.0
+            SHARED
+            OUTPUT_DIRECTORY
+               ${QML_BINARY_DIR}/${PROJECT_NAME}_TEST
+            SOURCES
+                ${PROJECT_SOURCES}
+                ${QT6_PROJECT_SOURCES}
+        )
+        target_link_libraries(${PROJECT_NAME}_TEST PUBLIC ${DEPENDENCIES})
+    endif()
 endif()
 
 # Set compile definitions for debug configurations
