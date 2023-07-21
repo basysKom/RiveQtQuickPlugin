@@ -246,10 +246,10 @@ std::optional<QVector2D> calculateIntersection(const QVector2D &p1, const QVecto
     const float x3 = p3.x(), y3 = p3.y();
     const float x4 = p4.x(), y4 = p4.y();
 
-    float denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+    const float denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
 
     // If the lines are parallel or coincident, return an invalid point
-    if (abs(denominator) < 0.01f) {
+    if (std::abs(denominator) < 0.001f) {
         return {};
     }
 
@@ -272,9 +272,9 @@ std::optional<QVector2D> RiveQtPath::calculateLineIntersection(const QVector2D &
             < std::numeric_limits<float>::epsilon();
     };
 
-    // Check if the lines are parallel or coincident (collinear)
+    // Check if the points are on one of the edges
     if (areCollinear(p1, p2, p3) || areCollinear(p1, p2, p4) || areCollinear(p3, p4, p1) || areCollinear(p3, p4, p2))
-        return std::nullopt;
+        return {};
 
     const auto &intersection = calculateIntersection(p1, p2, p3, p4);
 
@@ -294,6 +294,19 @@ std::optional<QVector2D> RiveQtPath::calculateLineIntersection(const QVector2D &
 
 using TriPoint = QVector2D;
 
+int RiveQtPath::orientation(const QVector<QVector2D> &points)
+{
+    QVector2D dir1 = points.at(1) - points.at(0), dir2 = points.at(2) - points.at(0);
+
+    float val = dir1.x() * dir2.y() - dir1.y() * dir2.x();
+    if (std::abs(val) < 0.001f)
+        return 0; // Collinear
+    else if (val < 0)
+        return 1; // Clockwise
+    else
+        return 2; // Counterclockwise
+};
+
 inline double Det2D(const TriPoint &p1, const TriPoint &p2, const TriPoint &p3)
 {
     return +p1.x() * (p2.y() - p3.y()) + p2.x() * (p3.y() - p1.y()) + p3.x() * (p1.y() - p2.y());
@@ -309,20 +322,10 @@ void CheckTriWinding(TriPoint &p1, TriPoint &p2, TriPoint &p3)
     }
 }
 
-void FixWinding(TriPoint &p1, TriPoint &p2, TriPoint &p3)
-{ // Lambda function to calculate the orientation of three points
-    auto orientation = [](TriPoint p1, TriPoint p2, TriPoint p3) {
-        double val = (p2.y() - p1.y()) * (p3.x() - p2.x()) - (p2.x() - p1.x()) * (p3.y() - p2.y());
-        if (abs(val) < 0.001f)
-            return 0; // Collinear
-        else if (val > 0)
-            return 1; // Clockwise
-        else
-            return 2; // Counterclockwise
-    };
-    //    double detTri = Det2D(p1, p2, p3);
-
-    if (orientation(p1, p2, p3) == 1) {
+void RiveQtPath::FixWinding(QVector2D &p1, QVector2D &p2, QVector2D &p3)
+{
+    QVector<QVector2D> p { p1, p2, p3 };
+    if (orientation(p) == 1) {
         TriPoint a = p3;
         p3 = p2;
         p2 = a;
@@ -558,6 +561,7 @@ private:
 
 void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
 {
+    //    qDebug() << "triangles list" << triangles << "triangles list end";
     auto overlappingTriangles = findOverlappingTriangles(triangles);
 
     if (overlappingTriangles.empty())
@@ -587,11 +591,18 @@ void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
                                    overlappingTriangles.end());
     }
 
+    //    for (auto c : clusters) {
+    //        qDebug() << "Cluster start";
+    //        for (auto e : c)
+    //            qDebug() << e;
+    //    }
+
     for (const auto &cluster : clusters) {
         const auto &indexFirstTriangle = cluster.front();
         QVector<QVector2D> result { triangles.at(indexFirstTriangle * 3), triangles.at(indexFirstTriangle * 3 + 1),
                                     triangles.at(indexFirstTriangle * 3 + 2) };
         FixWinding(result[0], result[1], result[2]);
+        Q_ASSERT(orientation(result) == 2);
 
         for (auto it = cluster.begin(); it != cluster.end(); ++it) {
             // we already processed the first, skip it
@@ -606,12 +617,25 @@ void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
             QVector<QVector2D> triangle { triangles.at(currentIndex * 3), triangles.at(currentIndex * 3 + 1),
                                           triangles.at(currentIndex * 3 + 2) };
 
-            qDebug() << "Tri before check" << triangle;
+            //    double detTri = Det2D(p1, p2, p3);
+            //            qDebug() << "Tri before check" << triangle;
             // we need a triangle in counter-clockwise orientation
             FixWinding(triangle[0], triangle[1], triangle[2]);
-            qDebug() << "Tri after  check" << triangle;
-            qDebug() << "Poly: " << poly;
+            //            qDebug() << "Tri after check " << triangle;
+            //            qDebug() << "Poly:           " << poly;
+
+            Q_ASSERT(orientation(poly) == 2);
+            Q_ASSERT(orientation(triangle) == 2);
+
+            Q_ASSERT(result.empty());
+
             concaveHull(poly, triangle, result);
+
+            qDebug() << "Result size" << result.size();
+
+            Q_ASSERT(result.size() >= 3);
+            if (result.size() >= 3)
+                Q_ASSERT(orientation(result) == 2);
         }
 
         QVector<qreal> polygon;
@@ -828,6 +852,11 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
                 case Qt::PenJoinStyle::MiterJoin: {
                     if (!offset.isNull() && !offset2.isNull()) {
                         if (turnLeft) {
+                            // FIXME:
+                            // The Miter Join is calculated from the point difference, which is wrong in case of a bezier curve.
+                            // We need to offset the direction at the last point and then calculate the intersection of that line with the
+                            // other point's direction offset...
+
                             // calculate the intersection of the offset from p1 and p2
                             if (const auto pM = calculateIntersection(p1 - offset, p2 - offset, p3 - offset2, p2 - offset2);
                                 pM.has_value()) {

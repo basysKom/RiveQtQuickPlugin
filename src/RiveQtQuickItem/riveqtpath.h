@@ -64,6 +64,9 @@ private:
     static QPointF cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2,
                                const QPointF &endPoint, qreal t);
 
+    static int orientation(const QVector<QVector2D> &points);
+    static void FixWinding(QVector2D &p1, QVector2D &p2, QVector2D &p3);
+
     void updatePathSegmentsData();
     void updatePathSegmentsOutlineData();
     void updatePathOutlineVertices(const QPen &pen);

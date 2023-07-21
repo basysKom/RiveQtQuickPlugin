@@ -22,6 +22,15 @@ private slots:
         QVERIFY(!intersection.has_value());
     }
 
+    void test_orientation()
+    {
+        QList<QVector2D> a { QVector2D(21.882, -31.38), QVector2D(21.44, -11.78), QVector2D(89.4851, -11.78) };
+        QCOMPARE(RiveQtPath::orientation(a), 1);
+
+        QList<QVector2D> a2 { QVector2D(21.882, -31.38), QVector2D(89.4851, -11.78), QVector2D(21.882, -11.78) };
+        QCOMPARE(RiveQtPath::orientation(a2), 2);
+    }
+
     void test_doTrianglesOverlap_data()
     {
         QTest::addColumn<QVector<QVector2D>>("triangle");
@@ -350,6 +359,85 @@ private slots:
         QVERIFY(triangles.size() > 3);
         QVERIFY(RiveQtPath::findOverlappingTriangles(triangles).empty());
         //        qDebug() << triangles;
+    }
+
+    void test_removeOverlappingTriangles_simpleShiftClockwiseTriangle()
+    {
+        QVector2D q1(1, 1), q2(10, 1), q3(10, 10);
+        QVector<QVector2D> t0 { q1, q2, q3 };
+        QVector2D t21(9, 4), t22(13, 5), t23(9, 8);
+        QVector<QVector2D> t2 { t21, t23, t22 };
+
+        auto triangles = t0 + t2;
+        QVERIFY(!RiveQtPath::findOverlappingTriangles(triangles).empty());
+
+        RiveQtPath::removeOverlappingTriangles(triangles);
+        QVERIFY(triangles.size() > 3);
+        QVERIFY(RiveQtPath::findOverlappingTriangles(triangles).empty());
+    }
+
+    void test_concaveHull_crash()
+    {
+        QVector<QVector2D> a { QVector2D(21.882, -31.38), QVector2D(89.4851, -11.78), QVector2D(21.882, -11.78) };
+        QVector<QVector2D> b { QVector2D(31.682, -21.58), QVector2D(12.082, -21.58), QVector2D(31.682, -22.8706) };
+
+        // this does nothing here
+        RiveQtPath::FixWinding(a[0], a[1], a[2]);
+        RiveQtPath::FixWinding(b[0], b[1], b[2]);
+
+        QVector<QVector2D> result;
+        RiveQtPath::concaveHull(a, b, result);
+        qDebug() << result;
+        // FIXME: for some reason the intersections are not found.
+        QCOMPARE(result.size(), 6);
+    }
+
+    void test_removeOverlappingTriangles_clockwiseTriangle()
+    {
+        QVector<QVector2D> t0 {
+            QVector2D(31.682, -21.58),    QVector2D(12.082, -21.58),    QVector2D(31.682, -22.8706),  QVector2D(31.682, -22.8706),
+            QVector2D(12.082, -22.8706),  QVector2D(12.082, -21.58),    QVector2D(31.682, -22.8706),  QVector2D(12.082, -22.8706),
+            QVector2D(31.682, -26.4665),  QVector2D(31.682, -26.4665),  QVector2D(12.082, -26.4665),  QVector2D(12.082, -22.8706),
+            QVector2D(31.682, -26.4665),  QVector2D(12.082, -26.4665),  QVector2D(31.682, -31.9536),  QVector2D(31.682, -31.9536),
+            QVector2D(12.082, -31.9536),  QVector2D(12.082, -26.4665),  QVector2D(31.682, -31.9536),  QVector2D(12.082, -31.9536),
+            QVector2D(31.682, -38.9179),  QVector2D(31.682, -38.9179),  QVector2D(12.082, -38.9179),  QVector2D(12.082, -31.9536),
+            QVector2D(31.682, -38.9179),  QVector2D(12.082, -38.9179),  QVector2D(31.682, -46.9453),  QVector2D(31.682, -46.9453),
+            QVector2D(12.082, -46.9453),  QVector2D(12.082, -38.9179),  QVector2D(31.682, -46.9453),  QVector2D(12.082, -46.9453),
+            QVector2D(31.682, -55.6217),  QVector2D(31.682, -55.6217),  QVector2D(12.082, -55.6217),  QVector2D(12.082, -46.9453),
+            QVector2D(31.682, -55.6217),  QVector2D(12.082, -55.6217),  QVector2D(31.682, -64.5331),  QVector2D(31.682, -64.5331),
+            QVector2D(12.082, -64.5331),  QVector2D(12.082, -55.6217),  QVector2D(31.682, -64.5331),  QVector2D(12.082, -64.5331),
+            QVector2D(31.682, -73.2655),  QVector2D(31.682, -73.2655),  QVector2D(12.082, -73.2655),  QVector2D(12.082, -64.5331),
+            QVector2D(31.682, -73.2655),  QVector2D(12.082, -73.2655),  QVector2D(31.6819, -81.4048), QVector2D(31.6819, -81.4048),
+            QVector2D(12.0819, -81.4048), QVector2D(12.082, -73.2655),  QVector2D(31.6819, -81.4048), QVector2D(12.0819, -81.4048),
+            QVector2D(21.8819, -78.7369), QVector2D(21.8819, -78.7369), QVector2D(21.8819, -98.3369), QVector2D(12.0819, -81.4048),
+            QVector2D(12.0819, -81.4048), QVector2D(12.0819, -99.4121), QVector2D(22.8984, -98.2841), QVector2D(12.0819, -81.4048),
+            QVector2D(21.8819, -88.5369), QVector2D(22.8984, -98.2841), QVector2D(21.8819, -78.7369), QVector2D(21.8819, -98.3369),
+            QVector2D(37.7199, -77.0986), QVector2D(37.7199, -77.0986), QVector2D(41.9992, -96.2257), QVector2D(21.8819, -98.3369),
+            QVector2D(37.7199, -77.0986), QVector2D(41.9992, -96.2257), QVector2D(49.9446, -72.8096), QVector2D(49.9446, -72.8096),
+            QVector2D(58.7162, -90.3372), QVector2D(41.9992, -96.2257), QVector2D(49.9446, -72.8096), QVector2D(58.7162, -90.3372),
+            QVector2D(59.3215, -66.6127), QVector2D(59.3215, -66.6127), QVector2D(72.0283, -81.5358), QVector2D(58.7162, -90.3372),
+            QVector2D(59.3215, -66.6127), QVector2D(72.0283, -81.5358), QVector2D(66.4803, -59.0259), QVector2D(66.4803, -59.0259),
+            QVector2D(82.0662, -70.9103), QVector2D(72.0283, -81.5358), QVector2D(66.4803, -59.0259), QVector2D(82.0662, -70.9103),
+            QVector2D(71.7943, -50.569),  QVector2D(71.7943, -50.569),  QVector2D(89.2168, -59.5479), QVector2D(82.0662, -70.9103),
+            QVector2D(71.7943, -50.569),  QVector2D(89.2168, -59.5479), QVector2D(75.504, -41.9065),  QVector2D(75.504, -41.9065),
+            QVector2D(94.0002, -48.3912), QVector2D(89.2168, -59.5479), QVector2D(75.504, -41.9065),  QVector2D(94.0002, -48.3912),
+            QVector2D(77.8486, -33.8196), QVector2D(77.8486, -33.8196), QVector2D(96.9377, -38.2657), QVector2D(94.0002, -48.3912),
+            QVector2D(77.8486, -33.8196), QVector2D(96.9377, -38.2657), QVector2D(79.1097, -27.1406), QVector2D(79.1097, -27.1406),
+            QVector2D(98.5079, -29.9464), QVector2D(96.9377, -38.2657), QVector2D(79.1097, -27.1406), QVector2D(98.5079, -29.9464),
+            QVector2D(79.6076, -22.7122), QVector2D(79.6076, -22.7122), QVector2D(99.1512, -24.1974), QVector2D(98.5079, -29.9464),
+            QVector2D(79.6076, -22.7122), QVector2D(99.1512, -24.1974), QVector2D(79.7133, -20.8374), QVector2D(79.7133, -20.8374),
+            QVector2D(99.2569, -22.3226), QVector2D(99.1512, -24.1974), QVector2D(99.1512, -24.1974), QVector2D(99.8512, -11.78),
+            QVector2D(89.4851, -11.78),   QVector2D(99.1512, -24.1974), QVector2D(89.4851, -21.58),   QVector2D(89.4851, -11.78),
+            QVector2D(89.4851, -31.38),   QVector2D(89.4851, -11.78),   QVector2D(21.882, -31.38),    QVector2D(21.882, -31.38),
+            QVector2D(21.882, -11.78),    QVector2D(89.4851, -11.78),   QVector2D(89.4851, -11.78),   QVector2D(12.082, -11.78),
+            QVector2D(12.082, -21.58),    QVector2D(89.4851, -11.78),   QVector2D(21.882, -21.58),    QVector2D(12.082, -21.58)
+        };
+
+        auto triangles = t0;
+
+        RiveQtPath::removeOverlappingTriangles(triangles);
+        QVERIFY(triangles.size() > 3);
+        QVERIFY(RiveQtPath::findOverlappingTriangles(triangles).empty());
     }
 };
 
