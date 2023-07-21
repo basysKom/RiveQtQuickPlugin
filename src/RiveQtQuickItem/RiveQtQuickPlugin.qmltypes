@@ -99,9 +99,9 @@ Module {
             type: "RiveQtStateMachineInputMap"
             isPointer: true
             read: "stateMachineInterface"
+            write: "setStateMachineInterface"
             notify: "stateMachineInterfaceChanged"
             index: 9
-            isReadonly: true
         }
         Property {
             name: "renderQuality"
@@ -143,13 +143,58 @@ Module {
         Signal { name: "internalArtboardChanged" }
         Signal { name: "internalStateMachineChanged" }
         Signal { name: "stateMachineInterfaceChanged" }
+        Signal { name: "stateMachineStringInterfaceChanged" }
         Signal { name: "renderQualityChanged" }
         Signal { name: "fillModeChanged" }
         Signal { name: "frameRateChanged" }
-        Method { name: "updateStateMachineInputMap" }
         Method {
             name: "triggerAnimation"
             Parameter { name: "id"; type: "int" }
+        }
+    }
+    Component {
+        file: "riveqtstatemachineinputmap.h"
+        name: "RiveQtStateMachineInputMap"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        interfaces: ["QQmlParserStatus"]
+        exports: ["RiveQtQuickPlugin/RiveStateMachineInput 1.0"]
+        exportMetaObjectRevisions: [256]
+        Enum {
+            name: "RivePropertyType"
+            values: ["RiveNumber", "RiveBoolean", "RiveTrigger"]
+        }
+        Property {
+            name: "riveInputs"
+            type: "QVariantList"
+            read: "riveInputs"
+            notify: "riveInputsChanged"
+            index: 0
+            isReadonly: true
+        }
+        Signal { name: "riveInputsChanged" }
+        Method { name: "updateValues" }
+        Method { name: "activateTrigger" }
+        Method { name: "handlePropertyChanged" }
+        Method {
+            name: "setRiveProperty"
+            Parameter { name: "propertyName"; type: "QString" }
+            Parameter { name: "value"; type: "QVariant" }
+        }
+        Method {
+            name: "getRiveProperty"
+            type: "QVariant"
+            Parameter { name: "propertyName"; type: "QString" }
+        }
+        Method {
+            name: "callTrigger"
+            Parameter { name: "triggerName"; type: "QString" }
+        }
+        Method {
+            name: "listenTo"
+            type: "QObject"
+            isPointer: true
+            Parameter { name: "name"; type: "QString" }
         }
     }
 }

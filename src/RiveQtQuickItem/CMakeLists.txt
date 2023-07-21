@@ -11,33 +11,33 @@ cmake_minimum_required(VERSION 3.16)
 message("Build Type: ${CMAKE_BUILD_TYPE}")
 
 set(PROJECT_SOURCES
-   renderer/riveqtopenglrenderer.h
-   renderer/riveqtopenglrenderer.cpp
-   renderer/riveqtutils.h
-   renderer/riveqtutils.cpp
-   renderer/riveqtfont.h
-   renderer/riveqtfont.cpp
-   renderer/riveqtpainterrenderer.h
-   renderer/riveqtpainterrenderer.cpp
-   renderer/riveqtfactory.h
-   renderer/riveqtfactory.cpp
-   datatypes.h
-   riveqtquickitem.h
-   riveqtquickitem.cpp
-   riveqtstatemachineinputmap.h
-   riveqtstatemachineinputmap.cpp
-   riveqsgopenglrendernode.h
-   riveqsgopenglrendernode.cpp
-   riveqsgsoftwarerendernode.h
-   riveqsgsoftwarerendernode.cpp
-   riveqsgrendernode.h
-   riveqsgrendernode.cpp
-   riveqtpath.cpp
-   riveqtpath.h
-   rqqplogging.h
-   rqqplogging.cpp
-   qmldir
-   shader.qrc
+    renderer/riveqtopenglrenderer.h
+    renderer/riveqtopenglrenderer.cpp
+    renderer/riveqtutils.h
+    renderer/riveqtutils.cpp
+    renderer/riveqtfont.h
+    renderer/riveqtfont.cpp
+    renderer/riveqtpainterrenderer.h
+    renderer/riveqtpainterrenderer.cpp
+    renderer/riveqtfactory.h
+    renderer/riveqtfactory.cpp
+    datatypes.h
+    riveqtquickitem.h
+    riveqtquickitem.cpp
+    rivestatemachineinput.h
+    rivestatemachineinput.cpp
+    riveqsgopenglrendernode.h
+    riveqsgopenglrendernode.cpp
+    riveqsgsoftwarerendernode.h
+    riveqsgsoftwarerendernode.cpp
+    riveqsgrendernode.h
+    riveqsgrendernode.cpp
+    riveqtpath.cpp
+    riveqtpath.h
+    rqqplogging.h
+    rqqplogging.cpp
+    qmldir
+    shader.qrc
 )
 
 if (${QT_VERSION_MAJOR} EQUAL 5)

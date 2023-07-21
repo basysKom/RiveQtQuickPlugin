@@ -74,13 +74,59 @@ Item {
         }
 
         ControlPanel {
-            title: "Triggers"
+            id: dynamicProperties
+            title: "Properties"
 
-            model: riveItem.stateMachineInterface ? riveItem.stateMachineInterface.triggers : 0
-            visible: model !== undefined ? model.length > 0 : false
-            onClicked: modelData => {
-                           riveItem.stateMachineInterface.activateTrigger(modelData)
-                       }
+            model: riveItem.stateMachineInterface.riveInputs
+            visible: riveItem.stateMachineInterface.riveInputs.length > 0
+
+            delegate: Button {
+                id: buttonDelegate
+
+                width: dynamicProperties.width
+
+                flat: true
+                padding: 2
+
+                checkable: false
+
+                text: {
+                    if (modelData.type == RiveStateMachineInput.RiveTrigger) {
+                        return modelData.text
+                    }
+
+                    if (modelData.type == RiveStateMachineInput.RiveBoolean
+                            || modelData.type == RiveStateMachineInput.RiveNumber) {
+                        return modelData.text + ": "+riveItem.stateMachineInterface.listenTo(modelData.text).value
+                    }
+                    return modelData.text + " " + modelData.type
+                }
+
+                onClicked: {
+                    if (modelData.type == RiveStateMachineInput.RiveTrigger) {
+                        riveItem.stateMachineInterface.callTrigger(modelData.text)
+                    }
+                    if (modelData.type == RiveStateMachineInput.RiveBoolean) {
+                        riveItem.stateMachineInterface.setRiveProperty(modelData.text,
+                                                                       !riveItem.stateMachineInterface.listenTo(modelData.text).value)
+                    }
+                }
+
+                Slider {
+                    id: slider
+
+                    visible: modelData.type == RiveStateMachineInput.RiveNumber
+
+                    anchors.fill: parent
+
+                    from: 1
+                    value: visible ? riveItem.stateMachineInterface.listenTo(modelData.text).value : 0
+                    to: 100
+                    stepSize: 1
+
+                    onValueChanged: riveItem.stateMachineInterface.setRiveProperty(modelData.text, value)
+                }
+            }
 
             Layout.fillHeight: true
             Layout.minimumWidth: 200
@@ -109,6 +155,10 @@ Item {
 
                     renderQuality: RiveQtQuickItem.Medium
                     fillMode: RiveQtQuickItem.PreserveAspectFit
+
+                    onStateMachineStringInterfaceChanged: {
+                        dynamicProperties.model = riveItem.stateMachineInterface.riveInputs
+                    }
 
                     Text {
                         anchors {

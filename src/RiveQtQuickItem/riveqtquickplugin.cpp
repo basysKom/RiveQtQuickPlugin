@@ -7,13 +7,14 @@
 #include <QtQml>
 
 #include "riveqtquickitem.h"
-#include "riveqtstatemachineinputmap.h"
+#include "rivestatemachineinput.h"
 #include "datatypes.h"
 #include "riveqtquickplugin.h"
 
 void RiveQtQuickPlugin::registerTypes(const char *uri)
 {
     qmlRegisterType<RiveQtQuickItem>("RiveQtQuickPlugin", 1, 0, "RiveQtQuickItem");
+    qmlRegisterType<RiveStateMachineInput>("RiveQtQuickPlugin", 1, 0, "RiveStateMachineInput");
 
     qRegisterMetaType<RiveRenderSettings>("RiveRenderSettings");
 
@@ -25,5 +26,6 @@ void RiveQtQuickPlugin::registerTypes(const char *uri)
 
     qRegisterMetaType<StateMachineInfo>("StateMachineInfo");
     qRegisterMetaType<QVector<StateMachineInfo>>("QVector<StateMachineInfo>");
-    qRegisterMetaType<RiveQtStateMachineInputMap *>("RiveQtStateMachineInputMap*");
+    qRegisterMetaType<RiveStateMachineInput *>("RiveStateMachineInput*");
+    qRegisterMetaType<RiveStateMachineInput::RivePropertyType>("RiveStateMachineInput::RivePropertyType");
 }

@@ -12,6 +12,7 @@ Rectangle {
     signal clicked(var modelData)
 
     property alias model: buttonRepeater.model
+    property alias delegate: buttonRepeater.delegate
     property alias title: title.text
     property int highlightedIndex: -1
 
