@@ -284,39 +284,64 @@ std::optional<QVector2D> RiveQtPath::calculateLineIntersection(const QVector2D &
     const auto x = intersection.value().x();
     const auto y = intersection.value().y();
 
+    // Fuzzy comparison function to check if two floating-point values are approximately equal
+    auto fuzzyCompare = [](float a, float b) {
+        const float epsilon = 1e-4;
+        return std::fabs(a - b) < epsilon;
+    };
+
+    // Fuzzy comparison function to check if a value is within a range
+    auto fuzzyInRange = [](float value, float minVal, float maxVal) {
+        const float epsilon = 1e-4;
+        return value >= (minVal - epsilon) && value <= (maxVal + epsilon);
+    };
+
+    auto fuzzyComparePoints = [&fuzzyInRange](float x, float y, const QVector2D &p1, const QVector2D &p2, const QVector2D &p3,
+                                              const QVector2D &p4) {
+        return (fuzzyInRange(x, std::min(p1.x(), p2.x()), std::max(p1.x(), p2.x()))
+                && fuzzyInRange(y, std::min(p1.y(), p2.y()), std::max(p1.y(), p2.y()))
+                && fuzzyInRange(x, std::min(p3.x(), p4.x()), std::max(p3.x(), p4.x()))
+                && fuzzyInRange(y, std::min(p3.y(), p4.y()), std::max(p3.y(), p4.y())));
+    };
     // Check if the intersection point lies within the line segments
-    if (x >= std::min(p1.x(), p2.x()) && x <= std::max(p1.x(), p2.x()) && y >= std::min(p1.y(), p2.y()) && y <= std::max(p1.y(), p2.y())
-        && x >= std::min(p3.x(), p4.x()) && x <= std::max(p3.x(), p4.x()) && y >= std::min(p3.y(), p4.y()) && y <= std::max(p3.y(), p4.y()))
+    if (fuzzyComparePoints(x, y, p1, p2, p3, p4))
         return QVector2D(x, y);
 
     return {};
 }
 
-using TriPoint = QVector2D;
+float crossProduct(const QVector2D &a, const QVector2D &b)
+{
+    return (a.x() * b.y()) - (a.y() * b.x());
+}
 
 int RiveQtPath::orientation(const QVector<QVector2D> &points)
 {
-    QVector2D dir1 = points.at(1) - points.at(0), dir2 = points.at(2) - points.at(0);
+    float ori { 0.f };
 
-    float val = dir1.x() * dir2.y() - dir1.y() * dir2.x();
-    if (std::abs(val) < 0.001f)
+    for (int i = 0; i < points.size(); i++) {
+        int nextIdx = (i + 1) % points.size();
+        ori += crossProduct(points[i], points[nextIdx]);
+    }
+
+    if (std::abs(ori) < 0.001f)
         return 0; // Collinear
-    else if (val < 0)
+    else if (ori < 0)
         return 1; // Clockwise
     else
         return 2; // Counterclockwise
 };
 
-inline double Det2D(const TriPoint &p1, const TriPoint &p2, const TriPoint &p3)
+inline double Det2D(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3)
 {
     return +p1.x() * (p2.y() - p3.y()) + p2.x() * (p3.y() - p1.y()) + p3.x() * (p1.y() - p2.y());
 }
 
-void CheckTriWinding(TriPoint &p1, TriPoint &p2, TriPoint &p3)
+void CheckTriWinding(QVector2D &p1, QVector2D &p2, QVector2D &p3)
 {
     double detTri = Det2D(p1, p2, p3);
     if (detTri < 0.0) {
-        TriPoint a = p3;
+        QVector2D a = p3;
         p3 = p2;
         p2 = a;
     }
@@ -326,40 +351,31 @@ void RiveQtPath::FixWinding(QVector2D &p1, QVector2D &p2, QVector2D &p3)
 {
     QVector<QVector2D> p { p1, p2, p3 };
     if (orientation(p) == 1) {
-        TriPoint a = p3;
+        QVector2D a = p3;
         p3 = p2;
         p2 = a;
     }
 }
 
-bool CheckPolyWinding(QVector<QVector2D> points)
-{
-    for (size_t i = 0; i < points.size() - 2; ++i) {
-        if (Det2D(points.at(i), points.at(i + 1), points.at(i + 2)) < 0.0)
-            return false;
-    }
-    return true;
-}
-
-bool BoundaryCollideChk(TriPoint &p1, TriPoint &p2, TriPoint &p3, double eps)
+bool BoundaryCollideChk(QVector2D &p1, QVector2D &p2, QVector2D &p3, double eps)
 {
     return Det2D(p1, p2, p3) < eps;
 }
 
-bool BoundaryDoesntCollideChk(TriPoint &p1, TriPoint &p2, TriPoint &p3, double eps)
+bool BoundaryDoesntCollideChk(QVector2D &p1, QVector2D &p2, QVector2D &p3, double eps)
 {
     return Det2D(p1, p2, p3) <= eps;
 }
 
 // Adapted from
 // https://gist.github.com/TimSC/5ba18ae21c4459275f90
-bool TriTri2D(TriPoint *t1, TriPoint *t2, double eps = 0.0, bool onBoundary = true)
+bool TriTri2D(QVector2D *t1, QVector2D *t2, double eps = 0.0, bool onBoundary = true)
 {
     // Trangles must be expressed anti-clockwise
     CheckTriWinding(t1[0], t1[1], t1[2]);
     CheckTriWinding(t2[0], t2[1], t2[2]);
 
-    bool (*chkEdge)(TriPoint &, TriPoint &, TriPoint &, double) = nullptr;
+    bool (*chkEdge)(QVector2D &, QVector2D &, QVector2D &, double) = nullptr;
     if (onBoundary) // Points on the boundary are considered as colliding
         chkEdge = BoundaryCollideChk;
     else // Points on the boundary are not considered as colliding
@@ -392,8 +408,8 @@ bool TriTri2D(TriPoint *t1, TriPoint *t2, double eps = 0.0, bool onBoundary = tr
 bool RiveQtPath::doTrianglesOverlap(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3, const QVector2D &p4, const QVector2D &p5,
                                     const QVector2D &p6)
 {
-    TriPoint a[3] = { p1, p2, p3 };
-    TriPoint b[3] = { p4, p5, p6 };
+    QVector2D a[3] = { p1, p2, p3 };
+    QVector2D b[3] = { p4, p5, p6 };
 
     return TriTri2D(a, b, 0.001, false);
 }
@@ -446,11 +462,6 @@ bool checkPermutation(const std::array<QVector2D, 3> &points1, const std::array<
     return sorted_points1 == sorted_points2;
 }
 
-float crossProduct(const QVector2D &v1, const QVector2D &v2)
-{
-    return v1.x() * v2.y() - v1.y() * v2.x();
-}
-
 // Function to check if a point is inside a polygon
 bool RiveQtPath::isInsidePolygon(const QVector<QVector2D> &polygon, const QVector2D &p)
 {
@@ -501,6 +512,7 @@ void RiveQtPath::concaveHull(const QVector<QVector2D> &t1, const QVector<QVector
 
     const auto &next = t1.at((i + 1) % t1.size());
     QVector<std::pair<size_t, QVector2D>> intersections;
+
     for (int j = 0; j < t2.size(); ++j) {
         QVector2D p1 = t2.at(j), p2 = t2.at((j + 1) % t2.size());
         if (auto inter = calculateLineIntersection(p1, p2, current, next); inter.has_value()) {
@@ -591,18 +603,16 @@ void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
                                    overlappingTriangles.end());
     }
 
-    //    for (auto c : clusters) {
-    //        qDebug() << "Cluster start";
-    //        for (auto e : c)
-    //            qDebug() << e;
-    //    }
-
     for (const auto &cluster : clusters) {
         const auto &indexFirstTriangle = cluster.front();
         QVector<QVector2D> result { triangles.at(indexFirstTriangle * 3), triangles.at(indexFirstTriangle * 3 + 1),
                                     triangles.at(indexFirstTriangle * 3 + 2) };
         FixWinding(result[0], result[1], result[2]);
         Q_ASSERT(orientation(result) == 2);
+
+        qDebug() << "Cluster begin";
+        for (auto item : cluster)
+            qDebug() << item;
 
         for (auto it = cluster.begin(); it != cluster.end(); ++it) {
             // we already processed the first, skip it
@@ -617,12 +627,13 @@ void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
             QVector<QVector2D> triangle { triangles.at(currentIndex * 3), triangles.at(currentIndex * 3 + 1),
                                           triangles.at(currentIndex * 3 + 2) };
 
-            //    double detTri = Det2D(p1, p2, p3);
-            //            qDebug() << "Tri before check" << triangle;
             // we need a triangle in counter-clockwise orientation
             FixWinding(triangle[0], triangle[1], triangle[2]);
-            //            qDebug() << "Tri after check " << triangle;
-            //            qDebug() << "Poly:           " << poly;
+
+            qDebug() << "----------------------";
+
+            qDebug() << "Poly" << poly;
+            qDebug() << "Tria" << triangle;
 
             Q_ASSERT(orientation(poly) == 2);
             Q_ASSERT(orientation(triangle) == 2);
@@ -634,8 +645,11 @@ void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
             qDebug() << "Result size" << result.size();
 
             Q_ASSERT(result.size() >= 3);
-            if (result.size() >= 3)
+            if (result.size() >= 3) {
+                qDebug() << result;
                 Q_ASSERT(orientation(result) == 2);
+            }
+            qDebug() << "=========================";
         }
 
         QVector<qreal> polygon;
@@ -683,6 +697,11 @@ void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
     qDebug() << "Triangles" << triangles << "Triangles End";
 }
 
+QVector2D normalOf(const QVector2D &v)
+{
+    return QVector2D(-v.y(), v.x()).normalized();
+}
+
 void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
 {
     const qreal lineWidth = pen.widthF();
@@ -724,14 +743,14 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
             const QVector2D diff = p2 - p1;
 
             if (pathData.at(i).tangent.isNull()) {
-                normal = QVector2D(-diff.y(), diff.x()).normalized();
+                normal = normalOf(diff);
             } else {
-                normal = QVector2D(-pathData.at(i).tangent.y(), pathData.at(i).tangent.x()).normalized();
+                normal = normalOf(pathData.at(i).tangent);
             }
-            if (pathData.at(nextI).tangent.isNull()) {
+            if (t2.isNull()) {
                 normal2 = normal;
             } else {
-                normal2 = QVector2D(-pathData.at(nextI).tangent.y(), pathData.at(nextI).tangent.x()).normalized();
+                normal2 = normalOf(t2);
             }
             const QVector2D offset = normal * (lineWidth / 2.0);
             const QVector2D offset2 = normal2 * (lineWidth / 2.0);
@@ -810,9 +829,9 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
                     continue;
 
                 const auto &diff2 = p3 - p2;
-                const auto &normal2 = QVector2D(-diff2.y(), diff2.x()).normalized();
+                const auto &normal2 = normalOf(diff2);
                 const auto &offset2 = normal2 * lineWidth / 2.0;
-                const bool turnLeft = normal.x() * normal2.y() - normal.y() * normal2.x() > 0;
+                const bool turnLeft = crossProduct(diff, diff2) > 0;
 
                 switch (joinType) {
                 default:
@@ -852,10 +871,11 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
                 case Qt::PenJoinStyle::MiterJoin: {
                     if (!offset.isNull() && !offset2.isNull()) {
                         if (turnLeft) {
+
                             // FIXME:
                             // The Miter Join is calculated from the point difference, which is wrong in case of a bezier curve.
-                            // We need to offset the direction at the last point and then calculate the intersection of that line with the
-                            // other point's direction offset...
+                            // We need to offset the direction at the last point and then calculate the intersection of that line with
+                            // the other point's direction offset...
 
                             // calculate the intersection of the offset from p1 and p2
                             if (const auto pM = calculateIntersection(p1 - offset, p2 - offset, p3 - offset2, p2 - offset2);
@@ -883,7 +903,7 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
         }
 
         qDebug() << lineDataSegment.size();
-        removeOverlappingTriangles(lineDataSegment);
+        //        removeOverlappingTriangles(lineDataSegment);
         qDebug() << lineDataSegment.size();
 
         m_pathOutlineVertices.append(lineDataSegment);
