@@ -24,6 +24,7 @@
 class RiveQtQuickItem;
 class TextureTargetNode;
 class RiveQtRhiRenderer;
+class PostprocessingSMAA;
 
 class RiveQSGRHIRenderNode : public RiveQSGRenderNode
 {
@@ -33,6 +34,7 @@ public:
 
     void setRect(const QRectF &bounds) override;
     void setFillMode(const RiveRenderSettings::FillMode mode) { m_fillMode = mode; }
+    void setPostprocessingMode(const RiveRenderSettings::PostprocessingMode postprocessingMode);
 
     void renderOffscreen() override;
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -62,9 +64,12 @@ protected:
     QVector<QRhiResource *> m_cleanupList;
 
     RiveQtRhiRenderer *m_renderer { nullptr };
+    // ToDo: make std::shared_ptr
     QRhiTexture *m_displayBuffer { nullptr };
     QRhiTextureRenderTarget *m_cleanUpTextureTarget { nullptr };
 
     bool m_verticesDirty = true;
     RiveRenderSettings::FillMode m_fillMode;
+
+    PostprocessingSMAA* m_postprocessing;
 };

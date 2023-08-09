@@ -75,6 +75,13 @@ public:
     };
     Q_ENUM(FillMode)
 
+    enum PostprocessingMode
+    {
+        None = 0x0,
+        SMAA = 0x01
+    };
+    Q_ENUM(PostprocessingMode)
+
     RenderQuality renderQuality { Medium };
     QSGRendererInterface::GraphicsApi graphicsApi { QSGRendererInterface::GraphicsApi::Software };
     FillMode fillMode { PreserveAspectFit };

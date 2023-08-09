@@ -14,5 +14,11 @@
         <file>shaders/qt6/finalDraw.vert</file>
         <file>shaders/qt6/blendRiveTextureNode.frag</file>
         <file>shaders/qt6/blendRiveTextureNode.vert</file>
+        <file>shaders/qt6/edges-luma.frag</file>
+        <file>shaders/qt6/edges.vert</file>
+        <file>shaders/qt6/smaa-weights.frag</file>
+        <file>shaders/qt6/smaa-weights.vert</file>
+        <file>shaders/qt6/smaa-blend.frag</file>
+        <file>shaders/qt6/smaa-blend.vert</file>
     </qresource>
 </RCC>
