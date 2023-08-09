@@ -13,6 +13,8 @@
 #include "riveqtquickitem.h"
 #include "renderer/riveqtrhirenderer.h"
 
+#include "rhi/postprocessingsmaa.h"
+
 RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance,
                                            const QRectF &geometry)
     : RiveQSGRenderNode(window, artboardInstance, geometry)
@@ -39,11 +41,19 @@ RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(QQuickWindow *window, std::weak_ptr<r
     m_renderer = new RiveQtRhiRenderer(window);
     m_renderer->updateViewPort(m_rect, m_displayBuffer);
     m_renderer->setRiveRect({ m_topLeftRivePosition, m_riveSize });
+
+    setPostprocessingMode(RiveRenderSettings::SMAA);
 }
 
 RiveQSGRHIRenderNode::~RiveQSGRHIRenderNode()
 {
     delete m_renderer;
+
+    if (m_postprocessing) {
+        m_postprocessing->cleanup();
+        delete m_postprocessing;
+        m_postprocessing = nullptr;
+    }
 
     releaseResources();
 }
@@ -95,6 +105,21 @@ void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
     markDirty(QSGNode::DirtyGeometry);
 }
 
+void  RiveQSGRHIRenderNode::setPostprocessingMode(const RiveRenderSettings::PostprocessingMode postprocessingMode)
+{
+    if (postprocessingMode == RiveRenderSettings::None) {
+        if (m_postprocessing) {
+            m_postprocessing->cleanup();
+            delete m_postprocessing;
+            m_postprocessing = nullptr;
+        }
+    } else { // if (postprocessingMode == RiveRenderSettings::SMAA) {
+        if (!m_postprocessing) {
+            m_postprocessing = new PostprocessingSMAA(); 
+        } 
+    } 
+}
+
 void RiveQSGRHIRenderNode::renderOffscreen()
 {
     if (!m_displayBuffer || m_rect.width() == 0 || m_rect.height() == 0)
@@ -141,6 +166,7 @@ void RiveQSGRHIRenderNode::render(const RenderState *state)
     commandBuffer->setVertexInput(0, 2, vertexBindings);
 
     commandBuffer->draw(m_vertices.count());
+
 }
 
 void RiveQSGRHIRenderNode::releaseResources()
@@ -181,6 +207,8 @@ void RiveQSGRHIRenderNode::prepare()
     Q_ASSERT(swapChain);
     Q_ASSERT(rhi);
 
+    QRhiCommandBuffer *commandBuffer = swapChain->currentFrameCommandBuffer();
+
     if (!m_displayBuffer) {
         m_displayBuffer = rhi->newTexture(QRhiTexture::RGBA8, QSize(m_rect.width(), m_rect.height()), 1,
                                           QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource);
@@ -191,6 +219,12 @@ void RiveQSGRHIRenderNode::prepare()
             m_renderer->updateViewPort(m_rect, m_displayBuffer);
             m_renderer->setRiveRect({ m_topLeftRivePosition, m_riveSize });
         }
+
+        if (m_postprocessing) {
+            // ToDo: m_display_buffer should be std::shared_ptr
+            m_postprocessing->initializePostprocessingPipeline(rhi, commandBuffer, QSize(m_rect.width(), m_rect.height()), m_displayBuffer);
+        }
+
     }
 
     if (m_artboardInstance.expired()) {
@@ -330,11 +364,20 @@ void RiveQSGRHIRenderNode::prepare()
 
     if (!m_resourceBindings) {
         m_resourceBindings = rhi->newShaderResourceBindings();
-        m_resourceBindings->setBindings({
-            QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
-                                                     m_uniformBuffer),
-            QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_displayBuffer, m_sampler),
-        });
+        if (m_postprocessing) {
+            QRhiTexture *postprocessedBuffer = m_postprocessing->getTarget();
+            m_resourceBindings->setBindings({
+                QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
+                                                        m_uniformBuffer),
+                QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, postprocessedBuffer, m_sampler),
+            });
+        } else {
+            m_resourceBindings->setBindings({
+                QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
+                                                        m_uniformBuffer),
+                QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_displayBuffer, m_sampler),
+            });
+        }
 
         m_resourceBindings->create();
         m_cleanupList.append(m_resourceBindings);
@@ -399,5 +442,10 @@ void RiveQSGRHIRenderNode::prepare()
     resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 80, 4, &top);
     resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 84, 4, &bottom);
 
-    swapChain->currentFrameCommandBuffer()->resourceUpdate(resourceUpdates);
+    commandBuffer->resourceUpdate(resourceUpdates);
+
+    // postprocess display buffer
+    if (m_postprocessing) {
+        m_postprocessing->postprocess(rhi, commandBuffer);
+    }
 }

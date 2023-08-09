@@ -51,6 +51,10 @@ elseif (${QT_VERSION_MAJOR} EQUAL 6)
         #qt6
         rhi/texturetargetnode.h
         rhi/texturetargetnode.cpp
+        rhi/postprocessingsmaa.h
+        rhi/postprocessingsmaa.cpp
+        rhi/textures/AreaTex.h
+        rhi/textures/SearchTex.h
         riveqsgrhirendernode.h
         riveqsgrhirendernode.cpp
         renderer/riveqtrhirenderer.h
@@ -119,6 +123,13 @@ if (${QT_VERSION_MAJOR} EQUAL 6)
             "shaders/qt6/finalDraw.vert"
             "shaders/qt6/blendRiveTextureNode.frag"
             "shaders/qt6/blendRiveTextureNode.vert"
+            # smaa postprocessing
+            "shaders/qt6/edges-luma.frag"
+            "shaders/qt6/edges.vert"
+            "shaders/qt6/smaa-weights.frag"
+            "shaders/qt6/smaa-weights.vert"
+            "shaders/qt6/smaa-blend.frag"
+            "shaders/qt6/smaa-blend.vert"
       )
 
     set(APP_RESOURCES
@@ -129,6 +140,13 @@ if (${QT_VERSION_MAJOR} EQUAL 6)
         "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/finalDraw.frag.qsb"
         "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/blendRiveTextureNode.vert.qsb"
         "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/blendRiveTextureNode.frag.qsb"
+        # smaa postprocessing
+        "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/edges-luma.frag.qsb"
+        "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/edges.vert.qsb"
+        "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/smaa-weights.frag.qsb"
+        "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/smaa-weights.vert.qsb"
+        "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/smaa-blend.frag.qsb"
+        "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/smaa-blend.vert.qsb"
     )
 endif()
 
