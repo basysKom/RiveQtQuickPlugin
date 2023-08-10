@@ -332,6 +332,16 @@ int RiveQtPath::orientation(const QVector<QVector2D> &points)
         return 2; // Counterclockwise
 };
 
+void RiveQtPath::FixWinding(QVector2D &p1, QVector2D &p2, QVector2D &p3)
+{
+    QVector<QVector2D> p { p1, p2, p3 };
+    if (orientation(p) == 1) {
+        QVector2D a = p3;
+        p3 = p2;
+        p2 = a;
+    }
+}
+
 inline double Det2D(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3)
 {
     return +p1.x() * (p2.y() - p3.y()) + p2.x() * (p3.y() - p1.y()) + p3.x() * (p1.y() - p2.y());
@@ -341,16 +351,6 @@ void CheckTriWinding(QVector2D &p1, QVector2D &p2, QVector2D &p3)
 {
     double detTri = Det2D(p1, p2, p3);
     if (detTri < 0.0) {
-        QVector2D a = p3;
-        p3 = p2;
-        p2 = a;
-    }
-}
-
-void RiveQtPath::FixWinding(QVector2D &p1, QVector2D &p2, QVector2D &p3)
-{
-    QVector<QVector2D> p { p1, p2, p3 };
-    if (orientation(p) == 1) {
         QVector2D a = p3;
         p3 = p2;
         p2 = a;
@@ -491,6 +491,7 @@ bool RiveQtPath::isInsidePolygon(const QVector<QVector2D> &polygon, const QVecto
 
 void RiveQtPath::concaveHull(const QVector<QVector2D> &t1, const QVector<QVector2D> &t2, QVector<QVector2D> &result, const size_t i)
 {
+    qDebug() << "Result" << result << "END";
     using Point = QVector2D;
 
     const auto &current = t1.at(i % t1.size());
@@ -538,6 +539,10 @@ void RiveQtPath::concaveHull(const QVector<QVector2D> &t1, const QVector<QVector
         }
     }
 
+    if (result.contains(intersections.at(indexMin).second)) {
+        //
+        return;
+    }
     result.append(intersections.at(indexMin).second);
 
     // Notice: t2 and t1 are switched
@@ -653,6 +658,7 @@ void RiveQtPath::removeOverlappingTriangles(QVector<QVector2D> &triangles)
         }
 
         QVector<qreal> polygon;
+        polygon.reserve(result.size() * 2);
         for (const auto &p : result) {
             polygon.append(p.x());
             polygon.append(p.y());
@@ -903,7 +909,7 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
         }
 
         qDebug() << lineDataSegment.size();
-        //        removeOverlappingTriangles(lineDataSegment);
+        removeOverlappingTriangles(lineDataSegment);
         qDebug() << lineDataSegment.size();
 
         m_pathOutlineVertices.append(lineDataSegment);
