@@ -78,9 +78,8 @@ layout(location = 2) in vec4 vOffset[3];
 layout(location = 0) out vec4 fragColor;
 
 layout(std140, binding = 0) uniform buf {
-    mat4 mvp;
-    int flip;
     vec2 resolution;
+    int flip;
 } ubuf;
 
 layout(binding = 1) uniform sampler2D edgesTex;

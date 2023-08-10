@@ -39,9 +39,8 @@ layout(location = 0) out vec2 v_texcoord;
 layout(location = 1) out vec4 vOffset[3];
 
 layout(std140, binding = 0) uniform buf {
-    mat4 mvp;
-    int flip;
     vec2 resolution;
+    int flip;
 } ubuf;
 
 out gl_PerVertex { vec4 gl_Position; };
@@ -57,5 +56,5 @@ void main() {
   vOffset[1] = mad(SMAA_RT_METRICS.xyxy, vec4(1.0, 0.0, 0.0, 1.0), v_texcoord.xyxy);
   vOffset[2] = mad(SMAA_RT_METRICS.xyxy, vec4(-2.0, 0.0, 0.0, -2.0), v_texcoord.xyxy);
 
-  gl_Position = ubuf.mvp * position;
+  gl_Position = position;
 }

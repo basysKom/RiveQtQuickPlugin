@@ -28,10 +28,8 @@ static quint16 indexData[] =
     0, 1, 2, 0, 2, 3
 };
 
-// mat4x4 (16 * 4) + flip (4)
-const int UBUFSZ = 68;
-// mat4x4 (16 * 4) + flip (4) + alignment (4) + resolution (2 * 4)
-const int UBUFSZ_WITH_RES = 80;
+// resolution (2 * 4) + flip (4) 
+const int UBUFSIZE = 12;
 
 QShader getShader(const QString &name)
 {
@@ -134,7 +132,7 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
     m_releasePool << m_common.quadIndexBuffer;
     m_common.quadIndexBuffer->create();
 
-    m_common.quadUbuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, UBUFSZ_WITH_RES);
+    m_common.quadUbuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, UBUFSIZE);
     m_releasePool << m_common.quadUbuffer;
     m_common.quadUbuffer->create();
 
@@ -175,7 +173,7 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
     m_releasePool << m_edgesPass.edgesResourceBindings;
     m_edgesPass.edgesResourceBindings->setBindings({
         QRhiShaderResourceBinding::uniformBuffer(
-            0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, m_common.quadUbuffer, 0, UBUFSZ_WITH_RES
+            0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, m_common.quadUbuffer, 0, UBUFSIZE
         ),
         QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_frameTexture, m_frameSampler)
     });
@@ -250,7 +248,7 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
     m_releasePool << m_weightsPass.weightsResourceBindings;
     m_weightsPass.weightsResourceBindings->setBindings({
         QRhiShaderResourceBinding::uniformBuffer(
-            0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, m_common.quadUbuffer, 0, UBUFSZ_WITH_RES
+            0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, m_common.quadUbuffer, 0, UBUFSIZE
         ),
         QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_edgesPass.edgesTexture, m_edgesPass.edgesSampler),
         QRhiShaderResourceBinding::sampledTexture(2, QRhiShaderResourceBinding::FragmentStage, m_lookup.areaTexture, m_lookup.areaSampler),
@@ -283,7 +281,7 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
     m_releasePool << m_blendPass.blendResourceBindings;
     m_blendPass.blendResourceBindings->setBindings({
         QRhiShaderResourceBinding::uniformBuffer(
-            0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, m_common.quadUbuffer, 0, UBUFSZ_WITH_RES
+            0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, m_common.quadUbuffer, 0, UBUFSIZE
         ),
         QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_frameTexture, m_frameSampler),
         QRhiShaderResourceBinding::sampledTexture(2, QRhiShaderResourceBinding::FragmentStage, m_weightsPass.weightsTexture, m_weightsPass.weightsSampler)
@@ -298,20 +296,17 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
     m_blendPass.blendPipeline->setRenderPassDescriptor(m_blendPass.blendRenderPassDescriptor);
     m_blendPass.blendPipeline->create();
 
-    QMatrix4x4 onscreenMvp; // identity mat
-    resourceUpdates->updateDynamicBuffer(m_common.quadUbuffer, 0, 64, onscreenMvp.constData());
-
-    qint32 flip = rhi->isYUpInFramebuffer() ? 1 : 0;
-    resourceUpdates->updateDynamicBuffer(m_common.quadUbuffer, 64, 4, &flip);
-
     // set resolution
     float resolution[] = { static_cast<float>(m_targetSize.width()),
                             static_cast<float>(m_targetSize.height()) };
-    resourceUpdates->updateDynamicBuffer(m_common.quadUbuffer, 72, 8, &resolution);
+    resourceUpdates->updateDynamicBuffer(m_common.quadUbuffer, 0, 8, &resolution);
+
+
+    qint32 flip = rhi->isYUpInFramebuffer() ? 1 : 0;
+    resourceUpdates->updateDynamicBuffer(m_common.quadUbuffer, 8, 4, &flip);
+
     commandBuffer->resourceUpdate(resourceUpdates);
-
     m_target = m_blendPass.blendTexture;
-
     m_isInitialized = true;
     
 }
