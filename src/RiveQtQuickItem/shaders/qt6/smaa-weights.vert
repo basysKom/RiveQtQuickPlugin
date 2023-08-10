@@ -48,9 +48,8 @@ layout(location = 1) out vec2 vPixCoord;
 layout(location = 2) out vec4 vOffset[3];
 
 layout(std140, binding = 0) uniform buf {
-    mat4 mvp;
-    int flip;
     vec2 resolution;
+    int flip;
 } ubuf;
 
 void main() {
@@ -73,5 +72,5 @@ void main() {
     vec4(vOffset[0].xz, vOffset[1].yw)
   );
 
-  gl_Position = ubuf.mvp * position;
+  gl_Position = position;
 }
