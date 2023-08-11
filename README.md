@@ -78,10 +78,8 @@ RiveQtQuickItem {
 
     fileSource: "YOUR_RIVE_FILE"
 
-    onStateMachineInterfaceChanged: {
-        // This object provides a list of all possible properties of the file.
-        // These properties can be used in bindings and updated through bindings!
-        console.log(Object.keys(riveItem.stateMachineInterface))
+    stateMachineInterface: RiveStateMachineInput {
+        property real level: slider.value
     }
 }
 
