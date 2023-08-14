@@ -293,6 +293,26 @@ class RiveQtQuickItem : public QQuickItem
     Q_PROPERTY(RiveRenderSettings::RenderQuality renderQuality READ renderQuality WRITE setRenderQuality NOTIFY renderQualityChanged)
 
     /**
+     * \property RiveQtQuickItem::postprocessingMode
+     *
+     * \brief Represents the postprocessing
+     *
+     * The property defines whether the RiveQtQuickItem should be postprocessed
+     *
+     * The possible modes are:
+     * - \em None: No postprocessing is done
+     * - \em SMAA: An antialiasing step is executed using the SMAA (Subpixel Morphological Antialiasing) algorithm
+     *
+     * \par Example:
+     * \code
+     * RiveQtQuickItem {
+     *     postprocessingMode: RiveRenderSettings.SMAA // do antialiasing using SMAA
+     * }
+     * \endcode
+     */
+    Q_PROPERTY(RiveRenderSettings::PostprocessingMode postprocessingMode READ postprocessingMode WRITE setPostprocessingMode NOTIFY postprocessingModeChanged)
+
+    /**
      * \property RiveQtQuickItem::fillMode
      *
      * \brief Represents the fill mode setting.
@@ -377,6 +397,13 @@ public:
     bool interactive() const;
     void setInteractive(bool newInteractive);
 
+    RiveRenderSettings::PostprocessingMode postprocessingMode() const { return m_renderSettings.postprocessingMode; }
+    void setPostprocessingMode(const RiveRenderSettings::PostprocessingMode mode)
+    {
+        m_renderSettings.postprocessingMode = mode;
+        emit postprocessingModeChanged();
+    }
+
     RiveRenderSettings::RenderQuality renderQuality() const { return m_renderSettings.renderQuality; }
     void setRenderQuality(const RiveRenderSettings::RenderQuality quality)
     {
@@ -414,6 +441,7 @@ signals:
     void stateMachineStringInterfaceChanged();
 
     void renderQualityChanged();
+    void postprocessingModeChanged();
     void fillModeChanged();
 
     void frameRateChanged();

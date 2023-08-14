@@ -29,6 +29,7 @@ RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr
     case QSGRendererInterface::GraphicsApi::Direct3D11Rhi: {
         auto node = new RiveQSGRHIRenderNode(window, artboardInstance, geometry);
         node->setFillMode(m_renderSettings.fillMode);
+        node->setPostprocessingMode(m_renderSettings.postprocessingMode);
         return node;
     }
 #else
