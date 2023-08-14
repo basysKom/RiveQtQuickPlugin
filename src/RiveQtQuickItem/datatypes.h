@@ -55,6 +55,7 @@ struct RiveRenderSettings
     Q_GADGET
 
     Q_PROPERTY(RenderQuality renderQuality MEMBER renderQuality)
+    Q_PROPERTY(PostprocessingMode postprocessingMode MEMBER postprocessingMode)
     Q_PROPERTY(QSGRendererInterface::GraphicsApi graphicsApi MEMBER graphicsApi)
     Q_PROPERTY(FillMode fillMode MEMBER fillMode)
 
@@ -83,6 +84,7 @@ public:
     Q_ENUM(PostprocessingMode)
 
     RenderQuality renderQuality { Medium };
+    PostprocessingMode postprocessingMode { None };
     QSGRendererInterface::GraphicsApi graphicsApi { QSGRendererInterface::GraphicsApi::Software };
     FillMode fillMode { PreserveAspectFit };
 };
