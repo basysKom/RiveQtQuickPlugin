@@ -71,5 +71,5 @@ protected:
     bool m_verticesDirty = true;
     RiveRenderSettings::FillMode m_fillMode;
 
-    PostprocessingSMAA* m_postprocessing;
+    PostprocessingSMAA* m_postprocessing { nullptr };
 };
