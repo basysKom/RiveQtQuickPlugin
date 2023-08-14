@@ -166,7 +166,6 @@ void RiveQSGRHIRenderNode::render(const RenderState *state)
     commandBuffer->setVertexInput(0, 2, vertexBindings);
 
     commandBuffer->draw(m_vertices.count());
-
 }
 
 void RiveQSGRHIRenderNode::releaseResources()

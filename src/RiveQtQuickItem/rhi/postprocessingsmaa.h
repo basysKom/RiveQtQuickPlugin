@@ -35,10 +35,10 @@ private:
     QVector<QRhiResource *> m_releasePool;
 
     // not owned by us (ToDo: should be a weak pointer)
-    QRhiTexture* m_frameTexture;
+    QRhiTexture* m_frameTexture { nullptr };
 
     // owned by us
-    QRhiSampler* m_frameSampler;
+    QRhiSampler* m_frameSampler { nullptr };
     struct {
         QVector<QRhiShaderStage> edgePass;
         QVector<QRhiShaderStage> weightsPass;
