@@ -1,0 +1,42 @@
+name: Generate Doxygen
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y doxygen python3-pip
+        sudo pip3 install pygments
+
+    - name: Setup QML highlighting script
+      run: |
+        echo "#!/bin/sh" > pygmentize_qml.sh
+        echo "pygmentize -l qml -f html -O full,style=default -o $2 $1" >> pygmentize_qml.sh
+        chmod +x pygmentize_qml.sh
+
+    - name: Setup C++ highlighting script
+      run: |
+        echo "#!/bin/sh" > pygmentize_cpp.sh
+        echo "pygmentize -l cpp -f html -O full,style=default -o $2 $1" >> pygmentize_cpp.sh
+        chmod +x pygmentize_cpp.sh
+
+    - name: Generate documentation
+      run: |
+        doxygen Doxyfile
+
+    - name: Deploy documentation to gh-pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./doc
