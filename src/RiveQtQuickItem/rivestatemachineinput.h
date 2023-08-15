@@ -15,7 +15,7 @@
 #endif
 
 /**
- * \file RiveStateMachineInputMap.h
+ * \class RiveStateMachineInput
  * \brief Interface for binding QML properties to Rive's state machine.
  *
  * The `RiveStateMachineInput` bridges QML and Rive's state machine. This utility
@@ -90,6 +90,7 @@
  *         }
  *     }
  * }
+ *
  * RiveQtQuickItem {
  *     id: riveItem
  *     currentArtboardIndex: 0
