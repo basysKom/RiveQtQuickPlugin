@@ -42,12 +42,12 @@ jobs:
 
     - name: Apply Doxygen Awesome CSS (Sidebar only)
       run: |
-        mv ./doxygen-awesome.css ./doc/html/
-        mv ./doxygen-awesome-sidebar-only.css ./doc/html/
+        mv ./doxygen-awesome.css ./doc/
+        mv ./doxygen-awesome-sidebar-only.css ./doc/
         sed -i 's|</head>|<link rel="stylesheet" type="text/css" href="doxygen-awesome.css"/><link rel="stylesheet" type="text/css" href="doxygen-awesome-sidebar-only.css"/></head>|' ./doc/html/*.html
         
     - name: Deploy documentation to gh-pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.DOXYGEN }}
-        publish_dir: ./doc/html
+        publish_dir: ./doc
