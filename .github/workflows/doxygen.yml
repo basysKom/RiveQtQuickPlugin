@@ -18,6 +18,10 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y doxygen python3-pip
         sudo pip3 install pygments
+        
+    - name: Download Doxygen Awesome CSS (Sidebar only)
+      run: |
+        wget https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v1.5.0/doxygen-awesome-sidebar-only.css -O ./doxygen-awesome-sidebar-only.css
 
     - name: Setup QML highlighting script
       run: |
@@ -35,6 +39,11 @@ jobs:
       run: |
         doxygen Doxyfile
 
+    - name: Apply Doxygen Awesome CSS (Sidebar only)
+      run: |
+        mv ./doxygen-awesome-sidebar-only.css ./doc/html/
+        sed -i 's|</head>|<link rel="stylesheet" type="text/css" href="doxygen-awesome-sidebar-only.css"/></head>|' ./doc/html/*.html
+        
     - name: Deploy documentation to gh-pages
       uses: peaceiris/actions-gh-pages@v3
       with:
