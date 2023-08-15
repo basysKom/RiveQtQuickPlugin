@@ -21,7 +21,7 @@ jobs:
         
     - name: Download Doxygen Awesome CSS (Sidebar only)
       run: |
-        wget https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v1.5.0/doxygen-awesome-sidebar-only.css -O ./doxygen-awesome.css
+        wget https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v1.5.0/doxygen-awesome.css -O ./doxygen-awesome.css
         wget https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v1.5.0/doxygen-awesome-sidebar-only.css -O ./doxygen-awesome-sidebar-only.css
 
     - name: Setup QML highlighting script
@@ -44,7 +44,6 @@ jobs:
       run: |
         mv ./doxygen-awesome.css ./doc/
         mv ./doxygen-awesome-sidebar-only.css ./doc/
-        sed -i 's|</head>|<link rel="stylesheet" type="text/css" href="doxygen-awesome.css"/><link rel="stylesheet" type="text/css" href="doxygen-awesome-sidebar-only.css"/></head>|' ./doc/*.html
         
     - name: Deploy documentation to gh-pages
       uses: peaceiris/actions-gh-pages@v3
