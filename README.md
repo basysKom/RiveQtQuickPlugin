@@ -10,6 +10,8 @@
 RiveQtQuickPlugin is a Qt/QtQuick renderer that enables the integration of Rive animations in QtQuick / QML. 
 For more information on Rive, visit [https://www.rive.app](https://www.rive.app).
 
+The QML API Documentation can be found here: https://basyskom.github.io/RiveQtQuickPlugin/index.html
+
 This plugin allows you to display Rive animations, interact with them, and bind data to and from the animations in your Qt Quick applications.
 
 https://user-images.githubusercontent.com/1797537/233192955-7360403b-b51b-422a-8770-20d504c130c0.mp4
