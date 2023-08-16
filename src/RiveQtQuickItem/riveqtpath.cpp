@@ -4,6 +4,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
+#define USE_QPAINTERPATH_STROKER
+
 #include <array>
 #include <optional>
 #include <set>
@@ -710,6 +712,35 @@ QVector2D normalOf(const QVector2D &v)
 
 void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
 {
+#if defined(USE_QPAINTERPATH_STROKER)
+   // qDebug() << "BKRE:::: INPUT: " << m_qPainterPath;
+    QPainterPathStroker painterPathStroker(pen);
+    painterPathStroker.setCurveThreshold(0.01);
+    QPainterPath strokedPath = painterPathStroker.createStroke(m_qPainterPath);
+    //qDebug() << "BKRE:::: STROKED: "  << strokedPath;
+
+
+    QTriangleSet triangles = qTriangulate(strokedPath);
+
+    QVector<QVector2D> pathData;
+    pathData.reserve(triangles.indices.size());
+    int index;
+    for (int i = 0; i < triangles.indices.size(); i++) {
+        if (triangles.indices.type() == QVertexIndexVector::UnsignedInt) {
+            index = static_cast<const quint32 *>(triangles.indices.data())[i];
+        } else {
+            index = static_cast<const quint16 *>(triangles.indices.data())[i];
+        }
+
+        const qreal x = triangles.vertices[2 * index];
+        const qreal y = triangles.vertices[2 * index + 1];
+
+        pathData.append(QVector2D(x, y));
+    }
+
+    m_pathOutlineVertices.append(pathData);
+#else
+
     const qreal lineWidth = pen.widthF();
     const Qt::PenJoinStyle &joinType = pen.joinStyle();
     const Qt::PenCapStyle &capStyle = pen.capStyle();
@@ -909,11 +940,12 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
         }
 
         qDebug() << lineDataSegment.size();
-        removeOverlappingTriangles(lineDataSegment);
+       // removeOverlappingTriangles(lineDataSegment);
         qDebug() << lineDataSegment.size();
 
         m_pathOutlineVertices.append(lineDataSegment);
     }
+#endif
 }
 
 void RiveQtPath::updatePathSegmentsData()

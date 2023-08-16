@@ -532,6 +532,7 @@ void RiveQtQuickItem::updateStateMachines()
         if (stateMachine) {
             StateMachineInfo info;
             info.id = i;
+            qDebug() << "SDTATE MACHINE NAME" << stateMachine->name();
             info.name = QString::fromStdString(stateMachine->name());
 
             qCDebug(rqqpInspection) << "StateMachineInfo" << i << "found.\tName:" << info.name;
