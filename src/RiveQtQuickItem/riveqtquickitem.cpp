@@ -142,6 +142,9 @@ void RiveQtQuickItem::updateInternalArtboard()
 
 QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
+    if (m_loadingGuard) {
+        return oldNode;
+    }
     static QElapsedTimer et;
     QQuickWindow *currentWindow = window();
 
@@ -154,6 +157,7 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     // unload the file from the render thread to make sure its not accessed at time of unloading
     if (m_loadingStatus == Unloading && m_renderNode) {
         qCDebug(rqqpItem) << "Unloading";
+        m_loadingGuard = true;
         m_stateMachineInterface->disconnect();
         m_stateMachineInterface->deleteLater();
         m_stateMachineInterface = nullptr;
@@ -481,6 +485,7 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
 
     qCDebug(rqqpItem) << "Successfully imported Rive file.";
     m_loadingStatus = Loaded;
+    m_loadingGuard = false;
     emit loadingStatusChanged();
 }
 

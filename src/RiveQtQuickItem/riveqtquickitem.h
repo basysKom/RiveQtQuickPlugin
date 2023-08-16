@@ -522,4 +522,6 @@ private:
 
     RiveQSGRenderNode *m_renderNode { nullptr };
     void updateStateMachineValues();
+
+    bool m_loadingGuard {false};
 };
