@@ -4,7 +4,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-//#define USE_QPAINTERPATH_STROKER
+#define USE_QPAINTERPATH_STROKER
 
 #include <array>
 #include <optional>
@@ -35,6 +35,7 @@ RiveQtPath::RiveQtPath(const RiveQtPath &other)
     m_pathSegmentsOutlineData = other.m_pathSegmentsOutlineData;
     m_pathOutlineVertices = other.m_pathOutlineVertices;
     m_segmentCount = other.m_segmentCount;
+    m_lod = other.m_lod;
 }
 
 RiveQtPath::RiveQtPath(const rive::RawPath &rawPath, rive::FillRule fillRule, const unsigned segmentCount)
@@ -93,6 +94,7 @@ void RiveQtPath::fillRule(rive::FillRule value)
 
 void RiveQtPath::addRenderPath(rive::RenderPath *path, const rive::Mat2D &transform)
 {
+
     if (!path) {
         qCDebug(rqqpRendering) << "Skip adding nullptr render path.";
         return;
@@ -124,6 +126,16 @@ void RiveQtPath::setSegmentCount(const unsigned segmentCount)
         m_segmentCount = 100u;
     } else {
         m_segmentCount = segmentCount;
+    }
+}
+
+void RiveQtPath::setLevelOfDetail(const unsigned lod)
+{
+    if (lod == 0u) {
+        qCDebug(rqqpRendering) << "Level of detail cannot be 0. Using 1 instead.";
+        m_lod = 1u;
+    } else {
+        m_lod = lod;
     }
 }
 
@@ -735,14 +747,10 @@ QVector2D normalOf(const QVector2D &v)
 void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
 {
 #if defined(USE_QPAINTERPATH_STROKER)
-   // qDebug() << "BKRE:::: INPUT: " << m_qPainterPath;
     QPainterPathStroker painterPathStroker(pen);
-    painterPathStroker.setCurveThreshold(0.01);
+    painterPathStroker.setCurveThreshold(0.1);
     QPainterPath strokedPath = painterPathStroker.createStroke(m_qPainterPath);
-    //qDebug() << "BKRE:::: STROKED: "  << strokedPath;
-
-
-    QTriangleSet triangles = qTriangulate(strokedPath);
+    QTriangleSet triangles = qTriangulate(strokedPath, QTransform(), m_lod);
 
     QVector<QVector2D> pathData;
     pathData.reserve(triangles.indices.size());
@@ -962,7 +970,7 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
         }
 
         qDebug() << lineDataSegment.size();
-        removeOverlappingTriangles(lineDataSegment);
+        //removeOverlappingTriangles(lineDataSegment);
         qDebug() << lineDataSegment.size();
 
         m_pathOutlineVertices.append(lineDataSegment);
@@ -979,7 +987,7 @@ void RiveQtPath::updatePathSegmentsData()
         return;
     }
 
-    QTriangleSet triangles = qTriangulate(m_qPainterPath);
+    QTriangleSet triangles = qTriangulate(m_qPainterPath, QTransform(), m_lod);
 
     QVector<QVector2D> pathData;
     pathData.reserve(triangles.indices.size());
@@ -997,6 +1005,6 @@ void RiveQtPath::updatePathSegmentsData()
         pathData.append(QVector2D(x, y));
     }
 
-   // m_pathVertices.append(pathData);
+    m_pathVertices.append(pathData);
     m_pathSegmentDataDirty = false;
 }

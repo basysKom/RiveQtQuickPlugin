@@ -38,6 +38,7 @@ public:
     QPainterPath toQPainterPaths(const QMatrix4x4 &t);
 
     void setSegmentCount(const unsigned segmentCount);
+    void setLevelOfDetail(const unsigned lod);
 
     QVector<QVector<QVector2D>> toVertices();
     QVector<QVector<QVector2D>> toVerticesLine(const QPen &pen);
@@ -82,6 +83,7 @@ private:
     bool m_pathSegmentDataDirty { true };
     bool m_pathSegmentOutlineDataDirty { true };
     unsigned m_segmentCount { 10 };
+    unsigned m_lod { 1 };
 
     friend Test_PathTriangulation;
 };

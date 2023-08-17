@@ -53,6 +53,7 @@ public:
 
 private:
     unsigned segmentCount();
+    unsigned levelOfDetail();
 
     RiveQtRenderType renderType();
 

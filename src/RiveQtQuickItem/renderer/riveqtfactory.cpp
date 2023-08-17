@@ -91,7 +91,11 @@ std::unique_ptr<rive::RenderPath> RiveQtFactory::makeRenderPath(rive::RawPath &r
 #else
     case RiveQtRenderType::QOpenGLRenderer:
 #endif
-        return std::make_unique<RiveQtPath>(rawPath, fillRule, segmentCount());
+    {
+        std::unique_ptr<RiveQtPath> riveQtPath = std::make_unique<RiveQtPath>(rawPath, fillRule, segmentCount());
+        riveQtPath->setLevelOfDetail(levelOfDetail());
+        return riveQtPath;
+    }
     case RiveQtRenderType::None:
     default:
         return std::make_unique<RiveQtPainterPath>(rawPath, fillRule); // TODO Add Empty Path
@@ -108,7 +112,11 @@ std::unique_ptr<rive::RenderPath> RiveQtFactory::makeEmptyRenderPath()
 #else
     case RiveQtRenderType::QOpenGLRenderer:
 #endif
-        return std::make_unique<RiveQtPath>(segmentCount());
+    {
+        std::unique_ptr<RiveQtPath> riveQtPath = std::make_unique<RiveQtPath>(segmentCount());
+        riveQtPath->setLevelOfDetail(levelOfDetail());
+        return riveQtPath;
+    }
     case RiveQtRenderType::None:
     default:
         return std::make_unique<RiveQtPainterPath>(); // TODO Add Empty Path
@@ -161,6 +169,19 @@ unsigned int RiveQtFactory::segmentCount()
 
     case RiveRenderSettings::High:
         return 15;
+    }
+}
+
+unsigned int RiveQtFactory::levelOfDetail()
+{
+    switch (m_renderSettings.renderQuality) {
+    case RiveRenderSettings::Low:
+        return 1;
+    default:
+    case RiveRenderSettings::Medium:
+        return 5;
+    case RiveRenderSettings::High:
+        return 10;
     }
 }
 
