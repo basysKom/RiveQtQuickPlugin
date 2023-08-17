@@ -4,7 +4,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#define USE_QPAINTERPATH_STROKER
+//#define USE_QPAINTERPATH_STROKER
 
 #include <array>
 #include <optional>
@@ -491,8 +491,30 @@ bool RiveQtPath::isInsidePolygon(const QVector<QVector2D> &polygon, const QVecto
     return intersectCount % 2 == 1;
 }
 
-void RiveQtPath::concaveHull(const QVector<QVector2D> &t1, const QVector<QVector2D> &t2, QVector<QVector2D> &result, const size_t i)
+
+void RiveQtPath::maybeAdd(const QVector2D &item, QVector<QVector2D> &result)
 {
+    if (!result.length()) {
+        result.append(item);
+        return;
+    }
+
+    auto same_as_item = [item](QVector2D &element) { return qFuzzyCompare(item.x(), element.x()) && qFuzzyCompare(item.y(), element.y()); };
+    // append, if item is not in list
+    if (std::find_if(result.begin(), result.end(), same_as_item) == result.end()) {
+        result.append(item);
+    }
+
+}
+
+
+void RiveQtPath::concaveHull(const QVector<QVector2D> &t1, const QVector<QVector2D> &t2, QVector<QVector2D> &result, const size_t i, const size_t counter)
+{
+
+    if (counter > t1.length() * t2.length()) {
+        return;
+    }
+
     qDebug() << "Result" << result << "END";
     using Point = QVector2D;
 
@@ -506,12 +528,12 @@ void RiveQtPath::concaveHull(const QVector<QVector2D> &t1, const QVector<QVector
             // t1 is completely covered by t2
             result = t2;
         else
-            concaveHull(t1, t2, result, i + 1);
+            concaveHull(t1, t2, result, i + 1, counter + 1);
 
         return;
     }
 
-    result.append(current);
+    maybeAdd(current, result);
 
     const auto &next = t1.at((i + 1) % t1.size());
     QVector<std::pair<size_t, QVector2D>> intersections;
@@ -525,7 +547,7 @@ void RiveQtPath::concaveHull(const QVector<QVector2D> &t1, const QVector<QVector
 
     // continue with the next point in the current polygon, if there is no intersection
     if (intersections.empty()) {
-        concaveHull(t1, t2, result, i + 1);
+        concaveHull(t1, t2, result, i + 1, counter + 1);
         return;
     }
 
@@ -545,10 +567,10 @@ void RiveQtPath::concaveHull(const QVector<QVector2D> &t1, const QVector<QVector
         //
         return;
     }
-    result.append(intersections.at(indexMin).second);
+    maybeAdd(intersections.at(indexMin).second, result);
 
     // Notice: t2 and t1 are switched
-    concaveHull(t2, t1, result, intersections.at(indexMin).first);
+    concaveHull(t2, t1, result, intersections.at(indexMin).first, counter + 1);
     return;
 };
 
@@ -940,7 +962,7 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
         }
 
         qDebug() << lineDataSegment.size();
-       // removeOverlappingTriangles(lineDataSegment);
+        removeOverlappingTriangles(lineDataSegment);
         qDebug() << lineDataSegment.size();
 
         m_pathOutlineVertices.append(lineDataSegment);
@@ -975,6 +997,6 @@ void RiveQtPath::updatePathSegmentsData()
         pathData.append(QVector2D(x, y));
     }
 
-    m_pathVertices.append(pathData);
+   // m_pathVertices.append(pathData);
     m_pathSegmentDataDirty = false;
 }
