@@ -3,6 +3,7 @@
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
+
 #include <optional>
 
 #include <QVector2D>
@@ -15,10 +16,9 @@
 #include "riveqtpath.h"
 #include "riveqtutils.h"
 
-RiveQtPath::RiveQtPath(const unsigned segmentCount)
+RiveQtPath::RiveQtPath()
 {
     m_qPainterPath.setFillRule(Qt::FillRule::WindingFill);
-    setSegmentCount(segmentCount);
     m_pathSegmentOutlineDataDirty = true;
     m_pathSegmentDataDirty = true;
 }
@@ -27,16 +27,20 @@ RiveQtPath::RiveQtPath(const RiveQtPath &other)
 {
     m_qPainterPath = other.m_qPainterPath;
     m_pathVertices = other.m_pathVertices;
+
+#if !defined(USE_QPAINTERPATH_STROKER)
     m_pathSegmentsOutlineData = other.m_pathSegmentsOutlineData;
-    m_pathOutlineVertices = other.m_pathOutlineVertices;
     m_segmentCount = other.m_segmentCount;
+#endif
+
+    m_pathOutlineVertices = other.m_pathOutlineVertices;
+    m_lod = other.m_lod;
 }
 
-RiveQtPath::RiveQtPath(const rive::RawPath &rawPath, rive::FillRule fillRule, const unsigned segmentCount)
+RiveQtPath::RiveQtPath(const rive::RawPath &rawPath, rive::FillRule fillRule)
 {
     m_qPainterPath.clear();
     m_qPainterPath.setFillRule(RiveQtUtils::riveFillRuleToQt(fillRule));
-    setSegmentCount(segmentCount);
 
     for (const auto &[verb, pts] : rawPath) {
         switch (verb) {
@@ -68,7 +72,11 @@ RiveQtPath::RiveQtPath(const rive::RawPath &rawPath, rive::FillRule fillRule, co
 void RiveQtPath::rewind()
 {
     m_pathVertices.clear();
+
+#if !defined(USE_QPAINTERPATH_STROKER)
     m_pathSegmentsOutlineData.clear();
+#endif
+
     m_qPainterPath.clear();
     m_pathSegmentOutlineDataDirty = true;
     m_pathSegmentDataDirty = true;
@@ -109,6 +117,46 @@ void RiveQtPath::setQPainterPath(QPainterPath path)
     m_qPainterPath = path;
 }
 
+void RiveQtPath::setLevelOfDetail(const unsigned lod)
+{
+    if (lod == 0u) {
+        qCDebug(rqqpRendering) << "Level of detail cannot be 0. Using 1 instead.";
+        m_lod = 1u;
+    } else {
+        m_lod = lod;
+    }
+}
+
+QVector<QVector<QVector2D>> RiveQtPath::toVertices()
+{
+    if (m_pathSegmentDataDirty) {
+        updatePathSegmentsData();
+    }
+    return m_pathVertices;
+}
+
+QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
+{
+    if (!m_pathSegmentOutlineDataDirty) {
+        return m_pathOutlineVertices;
+    }
+
+#if !defined(USE_QPAINTERPATH_STROKER)
+    updatePathSegmentsOutlineData();
+    m_pathOutlineVertices.clear();
+    // Early exit, nothing to do.
+    if (m_pathSegmentsOutlineData.isEmpty()) {
+        return m_pathOutlineVertices;
+    }
+#endif
+
+    updatePathOutlineVertices(pen);
+    m_pathSegmentOutlineDataDirty = false;
+
+    return m_pathOutlineVertices;
+}
+
+#if !defined(USE_QPAINTERPATH_STROKER)
 std::optional<QVector2D> calculateIntersection(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3, const QVector2D &p4)
 {
     const float x1 = p1.x(), y1 = p1.y();
@@ -131,46 +179,6 @@ std::optional<QVector2D> calculateIntersection(const QVector2D &p1, const QVecto
     return QVector2D(intersectX, intersectY);
 }
 
-void RiveQtPath::setSegmentCount(const unsigned segmentCount)
-{
-    if (segmentCount == 0u) {
-        qCDebug(rqqpRendering) << "Segment count cannot be 0. Using 1 instead.";
-        m_segmentCount = 1u;
-    } else if (segmentCount > 100u) {
-        qCDebug(rqqpRendering) << "Segment count is limited to 100 to avoid exceedingly long rendertime.";
-        m_segmentCount = 100u;
-    } else {
-        m_segmentCount = segmentCount;
-    }
-}
-
-QVector<QVector<QVector2D>> RiveQtPath::toVertices()
-{
-    if (m_pathSegmentDataDirty) {
-        updatePathSegmentsData();
-    }
-    return m_pathVertices;
-}
-
-QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
-{
-    if (!m_pathSegmentOutlineDataDirty) {
-        return m_pathOutlineVertices;
-    }
-
-    updatePathSegmentsOutlineData();
-    m_pathOutlineVertices.clear();
-
-    // Early exit, nothing to do.
-    if (m_pathSegmentsOutlineData.isEmpty()) {
-        return m_pathOutlineVertices;
-    }
-
-    updatePathOutlineVertices(pen);
-    m_pathSegmentOutlineDataDirty = false;
-
-    return m_pathOutlineVertices;
-}
 
 QPointF RiveQtPath::cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2,
                                 const QPointF &endPoint, qreal t)
@@ -257,9 +265,37 @@ void RiveQtPath::updatePathSegmentsOutlineData()
     m_pathSegmentsOutlineData.append(pathDataEnhanced);
     m_pathSegmentOutlineDataDirty = false;
 }
+#endif
 
 void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
 {
+
+#if defined(USE_QPAINTERPATH_STROKER)
+    m_pathOutlineVertices.clear();
+    QPainterPathStroker painterPathStroker(pen);
+    painterPathStroker.setCurveThreshold(0.1);
+    QPainterPath strokedPath = painterPathStroker.createStroke(m_qPainterPath);
+    QTriangleSet triangles = qTriangulate(strokedPath, QTransform(), m_lod);
+
+    QVector<QVector2D> pathData;
+    pathData.reserve(triangles.indices.size());
+    int index;
+    for (int i = 0; i < triangles.indices.size(); i++) {
+        if (triangles.indices.type() == QVertexIndexVector::UnsignedInt) {
+            index = static_cast<const quint32 *>(triangles.indices.data())[i];
+        } else {
+            index = static_cast<const quint16 *>(triangles.indices.data())[i];
+        }
+
+        const qreal x = triangles.vertices[2 * index];
+        const qreal y = triangles.vertices[2 * index + 1];
+
+        pathData.append(QVector2D(x, y));
+    }
+
+    m_pathOutlineVertices.append(pathData);
+#else
+
     const qreal lineWidth = pen.widthF();
     const Qt::PenJoinStyle &joinType = pen.joinStyle();
     const Qt::PenCapStyle &capStyle = pen.capStyle();
@@ -458,6 +494,7 @@ void RiveQtPath::updatePathOutlineVertices(const QPen &pen)
 
         m_pathOutlineVertices.append(lineDataSegment);
     }
+#endif
 }
 
 void RiveQtPath::updatePathSegmentsData()
@@ -469,7 +506,7 @@ void RiveQtPath::updatePathSegmentsData()
         return;
     }
 
-    QTriangleSet triangles = qTriangulate(m_qPainterPath);
+    QTriangleSet triangles = qTriangulate(m_qPainterPath, QTransform(), m_lod);
 
     QVector<QVector2D> pathData;
     pathData.reserve(triangles.indices.size());
