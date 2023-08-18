@@ -119,7 +119,6 @@ private:
     QRhiTexture *m_internalDisplayBufferTexture { nullptr };
     QRhiTexture *m_qImageTexture { nullptr };
     QRhiTexture *m_blendSrc { nullptr };
-    QRhiTexture *m_blendDest { nullptr };
 
     QRhiResourceUpdateBatch *m_resourceUpdates { nullptr };
     QRhiResourceUpdateBatch *m_blendResourceUpdates { nullptr };

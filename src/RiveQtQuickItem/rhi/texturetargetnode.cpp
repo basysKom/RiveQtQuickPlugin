@@ -194,13 +194,6 @@ void TextureTargetNode::recycle()
             delete m_blendSrc;
             m_blendSrc = nullptr;
         }
-
-        if (m_blendDest) {
-            m_cleanupList.removeAll(m_blendDest);
-            m_blendDest->destroy();
-            delete m_blendDest;
-            m_blendDest = nullptr;
-        }
     }
 
     if (m_qImageTexture) {
@@ -265,7 +258,6 @@ void TextureTargetNode::releaseResources()
     m_internalDisplayBufferTexture = nullptr;
 
     m_blendSrc = nullptr;
-    m_blendDest = nullptr;
 
     m_blendVertexBuffer = nullptr;
     m_blendTexCoordBuffer = nullptr;
@@ -354,7 +346,7 @@ void TextureTargetNode::prepareRender()
         } else {
             if (!m_internalDisplayBufferTexture) {
                 m_internalDisplayBufferTexture = rhi->newTexture(QRhiTexture::RGBA8, QSize(m_bounds.width(), m_bounds.height()), 1,
-                                                                 QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource);
+                                                                 QRhiTexture::RenderTarget);
                 m_internalDisplayBufferTexture->create();
                 m_cleanupList.append(m_internalDisplayBufferTexture);
             }
@@ -655,17 +647,6 @@ void TextureTargetNode::renderBlend(QRhiCommandBuffer *cb)
         }
         m_blendResourceUpdates->copyTexture(m_blendSrc, m_displayBuffer);
 
-        if (!m_blendDest) {
-            m_blendDest = rhi->newTexture(QRhiTexture::RGBA8, QSize(m_bounds.width(), m_bounds.height()), 1,
-                                          QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource);
-            m_blendDest->create();
-            m_cleanupList.append(m_blendDest);
-        }
-
-        if (m_blendDest && m_internalDisplayBufferTexture) {
-            m_blendResourceUpdates->copyTexture(m_blendDest, m_internalDisplayBufferTexture);
-        }
-
         if (!m_blendTextureRenderTarget) {
             QRhiColorAttachment colorAttachment(m_displayBuffer);
 
@@ -726,7 +707,7 @@ void TextureTargetNode::renderBlend(QRhiCommandBuffer *cb)
                 QRhiShaderResourceBinding::uniformBuffer(
                     0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, m_blendUniformBuffer),
                 QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_blendSrc, m_blendSampler),
-                QRhiShaderResourceBinding::sampledTexture(2, QRhiShaderResourceBinding::FragmentStage, m_blendDest, m_blendSampler),
+                QRhiShaderResourceBinding::sampledTexture(2, QRhiShaderResourceBinding::FragmentStage, m_internalDisplayBufferTexture, m_blendSampler),
             });
 
             m_blendResourceBindings->create();
