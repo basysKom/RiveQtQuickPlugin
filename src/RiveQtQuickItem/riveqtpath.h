@@ -5,6 +5,8 @@
 
 #pragma once
 
+#define USE_QPAINTERPATH_STROKER
+
 #include <QPainterPath>
 #include <QMatrix4x4>
 #include <QPen>
@@ -15,9 +17,9 @@
 class RiveQtPath : public rive::RenderPath
 {
 public:
-    RiveQtPath(const unsigned segmentCount);
+    RiveQtPath();
     RiveQtPath(const RiveQtPath &other);
-    RiveQtPath(const rive::RawPath &rawPath, rive::FillRule fillRule, const unsigned segmentCount);
+    RiveQtPath(const rive::RawPath &rawPath, rive::FillRule fillRule);
 
     void rewind() override;
     void moveTo(float x, float y) override { m_qPainterPath.moveTo(x, y); }
@@ -31,12 +33,14 @@ public:
     QPainterPath toQPainterPath() const { return m_qPainterPath; }
     QPainterPath toQPainterPaths(const QMatrix4x4 &t);
 
-    void setSegmentCount(const unsigned segmentCount);
+    void setLevelOfDetail(const unsigned lod);
 
     QVector<QVector<QVector2D>> toVertices();
     QVector<QVector<QVector2D>> toVerticesLine(const QPen &pen);
 
 private:
+
+#if !defined(USE_QPAINTERPATH_STROKER)
     struct PathDataPoint
     {
         QVector2D point;
@@ -47,17 +51,22 @@ private:
     static QPointF cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2,
                                const QPointF &endPoint, qreal t);
 
-    void updatePathSegmentsData();
     void updatePathSegmentsOutlineData();
+    unsigned m_segmentCount { 10 };
+    QVector<QVector<PathDataPoint>> m_pathSegmentsOutlineData;
+#endif
+
+
+    void updatePathSegmentsData();
     void updatePathOutlineVertices(const QPen &pen);
 
     QPainterPath m_qPainterPath;
-    QVector<QVector<PathDataPoint>> m_pathSegmentsOutlineData;
 
     QVector<QVector<QVector2D>> m_pathVertices;
     QVector<QVector<QVector2D>> m_pathOutlineVertices;
 
     bool m_pathSegmentDataDirty { true };
     bool m_pathSegmentOutlineDataDirty { true };
-    unsigned m_segmentCount { 10 };
+    unsigned m_lod { 1 };
+
 };

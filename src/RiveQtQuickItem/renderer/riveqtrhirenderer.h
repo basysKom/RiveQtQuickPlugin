@@ -27,7 +27,7 @@ struct RhiRenderState
 {
     QMatrix4x4 transform;
     float opacity { 1.0 };
-    RiveQtPath clipPath { 10u };
+    RiveQtPath clipPath { };
     QVector<QVector<QVector2D>> clippingGeometry;
     QVector<TextureTargetNode *> stackNodes;
 };

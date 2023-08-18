@@ -52,7 +52,7 @@ public:
     rive::rcp<rive::Font> decodeFont(rive::Span<const uint8_t> span) override;
 
 private:
-    unsigned segmentCount();
+    unsigned levelOfDetail();
 
     RiveQtRenderType renderType();
 

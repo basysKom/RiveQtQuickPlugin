@@ -72,7 +72,7 @@ ApplicationWindow {
 
                     Repeater {
                         id: buttonRepeater
-                        model: ["cannonball-man.riv", "rivebot-transform.riv", "simple-strokes.riv", "pathfinder.riv", "glow-grid.riv", "sith-de-mayo.riv", "electrified-button.riv", "joystick.riv", "naridon-oni-fan-art.riv", "nested-artboards-demo.riv", "travel-icons-pack.riv", "Clear"]
+                        model: ["basyskom.riv", "cannonball-man.riv", "rivebot-transform.riv", "simple-strokes.riv", "pathfinder.riv", "glow-grid.riv", "sith-de-mayo.riv", "electrified-button.riv", "joystick.riv", "naridon-oni-fan-art.riv", "nested-artboards-demo.riv", "travel-icons-pack.riv", "Clear"]
                         delegate: Button {
                             text: modelData
                             onClicked: {
