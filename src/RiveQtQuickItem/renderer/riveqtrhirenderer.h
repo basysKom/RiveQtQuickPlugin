@@ -22,6 +22,7 @@
 class RhiSubPath;
 class QSGRenderNode;
 class TextureTargetNode;
+class RiveQSGRHIRenderNode;
 
 struct RhiRenderState
 {
@@ -35,7 +36,7 @@ struct RhiRenderState
 class RiveQtRhiRenderer : public rive::Renderer
 {
 public:
-    RiveQtRhiRenderer(QQuickWindow *window);
+    RiveQtRhiRenderer(QQuickWindow *window, RiveQSGRHIRenderNode *node);
     virtual ~RiveQtRhiRenderer();
     void setRiveRect(const QRectF &bounds) { m_riveRect = bounds; }
 
@@ -51,7 +52,7 @@ public:
 
     void setProjectionMatrix(const QMatrix4x4 *projectionMatrix, const QMatrix4x4 *combinedMatrix);
     void updateArtboardSize(const QSize &artboardSize) { m_artboardSize = artboardSize; }
-    void updateViewPort(const QRectF &viewportRect, QRhiTexture *displayBuffer);
+    void updateViewPort(const QRectF &viewportRect);
     void recycleRiveNodes();
 
     void render(QRhiCommandBuffer *cb);
@@ -66,7 +67,6 @@ private:
     QVector<TextureTargetNode *> m_renderNodes;
 
     QQuickWindow *m_window;
-    QRhiTexture *m_displayBuffer;
 
     QMatrix4x4 m_projectionMatrix;
     QMatrix4x4 m_combinedMatrix;
@@ -74,4 +74,6 @@ private:
     QSize m_artboardSize;
     QRectF m_viewportRect;
     QRectF m_riveRect;
+
+    RiveQSGRHIRenderNode *m_node;
 };

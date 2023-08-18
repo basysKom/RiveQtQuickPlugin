@@ -15,20 +15,13 @@
 #include "textures/SearchTex.h"
 
 // quad for our onscreen texture
-static float vertexData[] =
-{ // Y up, CCW
-  -1.0f,   1.0f,   0.0f, 0.0f,
-  -1.0f,  -1.0f,   0.0f, 1.0f,
-  1.0f,   -1.0f,   1.0f, 1.0f,
-  1.0f,   1.0f,    1.0f, 0.0f
+static float vertexData[] = { // Y up, CCW
+    -1.0f, 1.0f, 0.0f, 0.0f, -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f
 };
 
-static quint16 indexData[] =
-{
-    0, 1, 2, 0, 2, 3
-};
+static quint16 indexData[] = { 0, 1, 2, 0, 2, 3 };
 
-// resolution (2 * 4) + flip (4) 
+// resolution (2 * 4) + flip (4)
 const int UBUFSIZE = 12;
 
 QShader getShader(const QString &name)
@@ -57,10 +50,10 @@ PostprocessingSMAA::PostprocessingSMAA()
     QRhiShaderStage blendFragment = loadShader(QRhiShaderStage::Fragment, ":/shaders/qt6/smaa-blend.frag.qsb");
 
     m_shaders.blendPass = { blendVertex, blendFragment };
-
 }
 
-PostprocessingSMAA::~PostprocessingSMAA() {
+PostprocessingSMAA::~PostprocessingSMAA()
+{
     // clear initializePostprocessingPipeline part
     cleanup();
 
@@ -69,7 +62,6 @@ PostprocessingSMAA::~PostprocessingSMAA() {
     m_shaders.weightsPass.clear();
     m_shaders.blendPass.clear();
 }
-
 
 QRhiShaderStage PostprocessingSMAA::loadShader(QRhiShaderStage::Type type, const QString &filename) const
 {
@@ -93,10 +85,10 @@ QByteArray PostprocessingSMAA::loadAreaTextureAsRGBA8Array()
 
     // RHI doesn't support R8G8 textures, so convert to RGBA8
     for (auto k = 0; k < textureSize; k++) {
-        data[4 * k + 0] = areaTexBytes[2 * k];      // r (data channel)
-        data[4 * k + 1] = areaTexBytes[2 * k + 1];  // g (data channel)
-        data[4 * k + 2] = empty;                    // b (empty)
-        data[4 * k + 3] = full;                     // a
+        data[4 * k + 0] = areaTexBytes[2 * k]; // r (data channel)
+        data[4 * k + 1] = areaTexBytes[2 * k + 1]; // g (data channel)
+        data[4 * k + 2] = empty; // b (empty)
+        data[4 * k + 3] = full; // a
     }
 
     return data;
@@ -108,12 +100,12 @@ QByteArray PostprocessingSMAA::loadSearchTextureAsR8Array()
     // one channel texture
     assert(textureSize == sizeof(searchTexBytes) / sizeof(searchTexBytes[0]));
 
-    return QByteArray(reinterpret_cast<const char*>(searchTexBytes), textureSize);
+    return QByteArray(reinterpret_cast<const char *>(searchTexBytes), textureSize);
 }
 
-//void PostprocessingSMAA::initializePostprocessingPipeline(QRhi* rhi, const QSizeF &size, std::weak_ptr<QRhiTexture> frameTexture)
-void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommandBuffer* commandBuffer,
-        const QSize &size, QRhiTexture* frameTexture)
+// void PostprocessingSMAA::initializePostprocessingPipeline(QRhi* rhi, const QSizeF &size, std::weak_ptr<QRhiTexture> frameTexture)
+void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommandBuffer *commandBuffer, const QSize &size,
+                                                          QRhiTexture *frameTexture)
 {
 
     // maybe cleanup (check in method)
@@ -139,8 +131,8 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
     resourceUpdates->uploadStaticBuffer(m_common.quadVertexBuffer, 0, sizeof(vertexData), vertexData);
     resourceUpdates->uploadStaticBuffer(m_common.quadIndexBuffer, indexData);
 
-    m_frameSampler = rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge);
+    m_frameSampler =
+        rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge);
     m_releasePool << m_frameSampler;
     m_frameSampler->create();
 
@@ -149,17 +141,15 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
     m_releasePool << m_edgesPass.edgesTexture;
     m_edgesPass.edgesTexture->create();
 
-    m_edgesPass.edgesSampler = rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge);
+    m_edgesPass.edgesSampler =
+        rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge);
     m_releasePool << m_edgesPass.edgesSampler;
     m_edgesPass.edgesSampler->create();
 
     QRhiVertexInputLayout quadInputLayout;
     quadInputLayout.setBindings({ { 4 * sizeof(float) } });
-    quadInputLayout.setAttributes({
-        { 0, 0, QRhiVertexInputAttribute::Float2, 0 },
-        { 0, 1, QRhiVertexInputAttribute::Float2, quint32(2 * sizeof(float)) }
-    });
+    quadInputLayout.setAttributes(
+        { { 0, 0, QRhiVertexInputAttribute::Float2, 0 }, { 0, 1, QRhiVertexInputAttribute::Float2, quint32(2 * sizeof(float)) } });
 
     // rendering pass for edges
     m_edgesPass.edgesTarget = rhi->newTextureRenderTarget({ m_edgesPass.edgesTexture });
@@ -171,12 +161,10 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
 
     m_edgesPass.edgesResourceBindings = rhi->newShaderResourceBindings();
     m_releasePool << m_edgesPass.edgesResourceBindings;
-    m_edgesPass.edgesResourceBindings->setBindings({
-        QRhiShaderResourceBinding::uniformBuffer(
-            0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, m_common.quadUbuffer, 0, UBUFSIZE
-        ),
-        QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_frameTexture, m_frameSampler)
-    });
+    m_edgesPass.edgesResourceBindings->setBindings(
+        { QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
+                                                   m_common.quadUbuffer, 0, UBUFSIZE),
+          QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_frameTexture, m_frameSampler) });
     m_edgesPass.edgesResourceBindings->create();
 
     m_edgesPass.edgesPipeline = rhi->newGraphicsPipeline();
@@ -193,8 +181,8 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
     m_releasePool << m_weightsPass.weightsTexture;
     m_weightsPass.weightsTexture->create();
 
-    m_weightsPass.weightsSampler = rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge);
+    m_weightsPass.weightsSampler =
+        rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge);
     m_releasePool << m_weightsPass.weightsSampler;
     m_weightsPass.weightsSampler->create();
 
@@ -204,16 +192,15 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
     m_releasePool << m_lookup.areaTexture;
     m_lookup.areaTexture->create();
 
-    m_lookup.areaSampler = rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge);
+    m_lookup.areaSampler =
+        rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge);
     m_releasePool << m_lookup.areaSampler;
     m_lookup.areaSampler->create();
 
     const auto areaTextureData = loadAreaTextureAsRGBA8Array();
 
-    // QImage areaDebug(reinterpret_cast<const unsigned char*>(areaTextureData.constData()), AREATEX_WIDTH, AREATEX_HEIGHT, QImage::Format_RGBA8888);
-    // areaDebug.save("AreaTest.png");
-    // qDebug() << "Area Texture size" << areaTextureData.size();
+    // QImage areaDebug(reinterpret_cast<const unsigned char*>(areaTextureData.constData()), AREATEX_WIDTH, AREATEX_HEIGHT,
+    // QImage::Format_RGBA8888); areaDebug.save("AreaTest.png"); qDebug() << "Area Texture size" << areaTextureData.size();
 
     QRhiTextureUploadDescription areaTextureDesc({ 0, 0, { areaTextureData.constData(), quint32(areaTextureData.size()) } });
     resourceUpdates->uploadTexture(m_lookup.areaTexture, areaTextureDesc);
@@ -222,16 +209,15 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
     m_releasePool << m_lookup.searchTexture;
     m_lookup.searchTexture->create();
 
-    m_lookup.searchSampler = rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge);
+    m_lookup.searchSampler =
+        rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge);
     m_releasePool << m_lookup.searchSampler;
     m_lookup.searchSampler->create();
 
     const auto searchTextureData = loadSearchTextureAsR8Array();
 
-    // QImage searchDebug(reinterpret_cast<const unsigned char*>(searchTextureData.constData()), SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, QImage::Format_Grayscale8);
-    // searchDebug.save("SearchTest.png");
-    // qDebug() << "Search Texture size" << searchTextureData.size();
+    // QImage searchDebug(reinterpret_cast<const unsigned char*>(searchTextureData.constData()), SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT,
+    // QImage::Format_Grayscale8); searchDebug.save("SearchTest.png"); qDebug() << "Search Texture size" << searchTextureData.size();
 
     QRhiTextureUploadDescription searchTextureDesc({ 0, 0, { searchTextureData.constData(), quint32(searchTextureData.size()) } });
     resourceUpdates->uploadTexture(m_lookup.searchTexture, searchTextureDesc);
@@ -246,14 +232,15 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
 
     m_weightsPass.weightsResourceBindings = rhi->newShaderResourceBindings();
     m_releasePool << m_weightsPass.weightsResourceBindings;
-    m_weightsPass.weightsResourceBindings->setBindings({
-        QRhiShaderResourceBinding::uniformBuffer(
-            0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, m_common.quadUbuffer, 0, UBUFSIZE
-        ),
-        QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_edgesPass.edgesTexture, m_edgesPass.edgesSampler),
-        QRhiShaderResourceBinding::sampledTexture(2, QRhiShaderResourceBinding::FragmentStage, m_lookup.areaTexture, m_lookup.areaSampler),
-        QRhiShaderResourceBinding::sampledTexture(3, QRhiShaderResourceBinding::FragmentStage, m_lookup.searchTexture, m_lookup.searchSampler)
-    });
+    m_weightsPass.weightsResourceBindings->setBindings(
+        { QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
+                                                   m_common.quadUbuffer, 0, UBUFSIZE),
+          QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_edgesPass.edgesTexture,
+                                                    m_edgesPass.edgesSampler),
+          QRhiShaderResourceBinding::sampledTexture(2, QRhiShaderResourceBinding::FragmentStage, m_lookup.areaTexture,
+                                                    m_lookup.areaSampler),
+          QRhiShaderResourceBinding::sampledTexture(3, QRhiShaderResourceBinding::FragmentStage, m_lookup.searchTexture,
+                                                    m_lookup.searchSampler) });
     m_weightsPass.weightsResourceBindings->create();
 
     m_weightsPass.weightsPipeline = rhi->newGraphicsPipeline();
@@ -279,13 +266,12 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
     // rendering pass for blending
     m_blendPass.blendResourceBindings = rhi->newShaderResourceBindings();
     m_releasePool << m_blendPass.blendResourceBindings;
-    m_blendPass.blendResourceBindings->setBindings({
-        QRhiShaderResourceBinding::uniformBuffer(
-            0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, m_common.quadUbuffer, 0, UBUFSIZE
-        ),
-        QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_frameTexture, m_frameSampler),
-        QRhiShaderResourceBinding::sampledTexture(2, QRhiShaderResourceBinding::FragmentStage, m_weightsPass.weightsTexture, m_weightsPass.weightsSampler)
-    });
+    m_blendPass.blendResourceBindings->setBindings(
+        { QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
+                                                   m_common.quadUbuffer, 0, UBUFSIZE),
+          QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_frameTexture, m_frameSampler),
+          QRhiShaderResourceBinding::sampledTexture(2, QRhiShaderResourceBinding::FragmentStage, m_weightsPass.weightsTexture,
+                                                    m_weightsPass.weightsSampler) });
     m_blendPass.blendResourceBindings->create();
 
     m_blendPass.blendPipeline = rhi->newGraphicsPipeline();
@@ -297,10 +283,8 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
     m_blendPass.blendPipeline->create();
 
     // set resolution
-    float resolution[] = { static_cast<float>(m_targetSize.width()),
-                            static_cast<float>(m_targetSize.height()) };
+    float resolution[] = { static_cast<float>(m_targetSize.width()), static_cast<float>(m_targetSize.height()) };
     resourceUpdates->updateDynamicBuffer(m_common.quadUbuffer, 0, 8, &resolution);
-
 
     qint32 flip = rhi->isYUpInFramebuffer() ? 1 : 0;
     resourceUpdates->updateDynamicBuffer(m_common.quadUbuffer, 8, 4, &flip);
@@ -308,10 +292,9 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
     commandBuffer->resourceUpdate(resourceUpdates);
     m_target = m_blendPass.blendTexture;
     m_isInitialized = true;
-    
 }
 
-void PostprocessingSMAA::postprocess(QRhi* rhi, QRhiCommandBuffer* commandBuffer)
+void PostprocessingSMAA::postprocess(QRhi *rhi, QRhiCommandBuffer *commandBuffer)
 {
     if (!m_isInitialized || !m_frameTexture) {
         return;
@@ -323,8 +306,8 @@ void PostprocessingSMAA::postprocess(QRhi* rhi, QRhiCommandBuffer* commandBuffer
     commandBuffer->beginPass(m_edgesPass.edgesTarget, Qt::black, { 1.0f, 0 });
 
     commandBuffer->setGraphicsPipeline(m_edgesPass.edgesPipeline);
-    commandBuffer->setViewport({ 0, 0, float(m_edgesPass.edgesTexture->pixelSize().width()),
-                                       float(m_edgesPass.edgesTexture->pixelSize().height()) });
+    commandBuffer->setViewport(
+        { 0, 0, float(m_edgesPass.edgesTexture->pixelSize().width()), float(m_edgesPass.edgesTexture->pixelSize().height()) });
     commandBuffer->setShaderResources();
     commandBuffer->setVertexInput(0, 1, &quadBinding, m_common.quadIndexBuffer, 0, QRhiCommandBuffer::IndexUInt16);
     commandBuffer->drawIndexed(6);
@@ -333,8 +316,8 @@ void PostprocessingSMAA::postprocess(QRhi* rhi, QRhiCommandBuffer* commandBuffer
     // second postprocess pass: weights calculation
     commandBuffer->beginPass(m_weightsPass.weightsTarget, Qt::black, { 1.0f, 0 });
     commandBuffer->setGraphicsPipeline(m_weightsPass.weightsPipeline);
-    commandBuffer->setViewport({ 0, 0, float(m_weightsPass.weightsTexture->pixelSize().width()),
-                                       float(m_weightsPass.weightsTexture->pixelSize().height()) });
+    commandBuffer->setViewport(
+        { 0, 0, float(m_weightsPass.weightsTexture->pixelSize().width()), float(m_weightsPass.weightsTexture->pixelSize().height()) });
     commandBuffer->setShaderResources();
     commandBuffer->setVertexInput(0, 1, &quadBinding, m_common.quadIndexBuffer, 0, QRhiCommandBuffer::IndexUInt16);
     commandBuffer->drawIndexed(6);
@@ -343,8 +326,8 @@ void PostprocessingSMAA::postprocess(QRhi* rhi, QRhiCommandBuffer* commandBuffer
     // third postprocess pass: blending frame and weights
     commandBuffer->beginPass(m_blendPass.blendTarget, Qt::black, { 1.0f, 0 });
     commandBuffer->setGraphicsPipeline(m_blendPass.blendPipeline);
-    commandBuffer->setViewport({ 0, 0, float(m_blendPass.blendTexture->pixelSize().width()),
-                                       float(m_blendPass.blendTexture->pixelSize().height()) });
+    commandBuffer->setViewport(
+        { 0, 0, float(m_blendPass.blendTexture->pixelSize().width()), float(m_blendPass.blendTexture->pixelSize().height()) });
     commandBuffer->setShaderResources();
     commandBuffer->setVertexInput(0, 1, &quadBinding, m_common.quadIndexBuffer, 0, QRhiCommandBuffer::IndexUInt16);
     commandBuffer->drawIndexed(6);
@@ -362,28 +345,28 @@ void PostprocessingSMAA::cleanup()
         m_common.quadIndexBuffer = nullptr;
         m_common.quadUbuffer = nullptr;
 
-        m_lookup.areaTexture = nullptr ;
+        m_lookup.areaTexture = nullptr;
         m_lookup.areaSampler = nullptr;
-        m_lookup.searchTexture = nullptr ;
+        m_lookup.searchTexture = nullptr;
         m_lookup.searchSampler = nullptr;
 
         m_edgesPass.edgesRenderPassDescriptor = nullptr;
         m_edgesPass.edgesTarget = nullptr;
-        m_edgesPass.edgesTexture = nullptr ;
+        m_edgesPass.edgesTexture = nullptr;
         m_edgesPass.edgesSampler = nullptr;
         m_edgesPass.edgesResourceBindings = nullptr;
         m_edgesPass.edgesPipeline = nullptr;
 
         m_weightsPass.weightsRenderPassDescriptor = nullptr;
         m_weightsPass.weightsTarget = nullptr;
-        m_weightsPass.weightsTexture = nullptr ;
+        m_weightsPass.weightsTexture = nullptr;
         m_weightsPass.weightsSampler = nullptr;
         m_weightsPass.weightsResourceBindings = nullptr;
         m_weightsPass.weightsPipeline = nullptr;
 
         m_blendPass.blendRenderPassDescriptor = nullptr;
         m_blendPass.blendTarget = nullptr;
-        m_blendPass.blendTexture = nullptr ;
+        m_blendPass.blendTexture = nullptr;
         m_blendPass.blendResourceBindings = nullptr;
         m_blendPass.blendPipeline = nullptr;
 
@@ -393,7 +376,5 @@ void PostprocessingSMAA::cleanup()
         m_target = nullptr;
 
         m_isInitialized = false;
-
     }
-    
 }

@@ -12,6 +12,7 @@ layout(location = 0) in vec2 texCoord;
 layout(std140, binding = 0) uniform buf {
     mat4 qt_Matrix;
     int blendMode;
+    int flipped;
 };
 
 layout(binding = 1) uniform sampler2D u_texture_src;
@@ -329,10 +330,11 @@ vec4 blend(vec4 srcColor, vec4 destColor, int blendMode) {
 
 void main()
 {
-   vec4 srcColor = texture(u_texture_src, texCoord);
-   vec4 destColor = texture(u_texture_dest, texCoord);
-   vec4 finalColor = blend(srcColor, destColor, blendMode);
+    vec4 srcColor = texture(u_texture_src, texCoord);
+    vec4 destColor = texture(u_texture_dest, texCoord);
 
-   //finalColor.a = 1.0f;
-   fragColor = finalColor;
+    vec4 finalColor = blend(srcColor, destColor, blendMode);
+
+    //finalColor.a = 1.0f;
+    fragColor = finalColor; //finalColor;
 }

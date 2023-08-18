@@ -108,6 +108,7 @@ endif()
 
 include_directories(${Qt${QT_VERSION_MAJOR}Gui_PRIVATE_INCLUDE_DIRS})
 
+# Add before BATCHABLE in case we want to use textureSize in shader: GLSL "300es,330"
 if (${QT_VERSION_MAJOR} EQUAL 6)
     find_package(Qt6 COMPONENTS ShaderTools)
     qt6_add_shaders(${PROJECT_NAME} "graph-shaders"

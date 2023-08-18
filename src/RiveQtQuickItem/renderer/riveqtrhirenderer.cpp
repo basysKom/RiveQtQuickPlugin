@@ -18,9 +18,10 @@
 #include "renderer/riveqtrhirenderer.h"
 #include "rhi/texturetargetnode.h"
 
-RiveQtRhiRenderer::RiveQtRhiRenderer(QQuickWindow *window)
+RiveQtRhiRenderer::RiveQtRhiRenderer(QQuickWindow *window, RiveQSGRHIRenderNode *node)
     : rive::Renderer()
     , m_window(window)
+    , m_node(node)
 {
     m_rhiRenderStack.push_back(RhiRenderState());
 }
@@ -203,7 +204,7 @@ TextureTargetNode *RiveQtRhiRenderer::getRiveDrawTargetNode()
     }
 
     if (!pathNode) {
-        pathNode = new TextureTargetNode(m_window, m_displayBuffer, m_viewportRect, &m_combinedMatrix, &m_projectionMatrix);
+        pathNode = new TextureTargetNode(m_window, m_node, m_viewportRect, &m_combinedMatrix, &m_projectionMatrix);
         pathNode->take();
         m_renderNodes.append(pathNode);
     }
@@ -217,7 +218,7 @@ void RiveQtRhiRenderer::setProjectionMatrix(const QMatrix4x4 *projectionMatrix, 
     m_combinedMatrix = *combinedMatrix;
 }
 
-void RiveQtRhiRenderer::updateViewPort(const QRectF &viewportRect, QRhiTexture *displayBuffer)
+void RiveQtRhiRenderer::updateViewPort(const QRectF &viewportRect)
 {
     while (!m_renderNodes.empty()) {
         auto *textureTargetNode = m_renderNodes.last();
@@ -226,7 +227,6 @@ void RiveQtRhiRenderer::updateViewPort(const QRectF &viewportRect, QRhiTexture *
     }
 
     m_viewportRect = viewportRect;
-    m_displayBuffer = displayBuffer;
 }
 
 void RiveQtRhiRenderer::recycleRiveNodes()
