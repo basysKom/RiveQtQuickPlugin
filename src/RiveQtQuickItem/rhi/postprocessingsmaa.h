@@ -20,10 +20,9 @@ public:
     QRhiTexture *getTarget() const { return m_target; }
     bool isInitialized() const { return m_isInitialized; }
 
-    //void initializePostprocessingPipeline(QRhi *rhi, const QSizeF &size, std::weak_ptr<QRhiTexture> frameTexture);
-    void initializePostprocessingPipeline(QRhi *rhi, QRhiCommandBuffer* commandBuffer,
-        const QSize &size, QRhiTexture* frameTexture);
-    void postprocess(QRhi *rhi, QRhiCommandBuffer* commandBuffer);
+    // void initializePostprocessingPipeline(QRhi *rhi, const QSizeF &size, std::weak_ptr<QRhiTexture> frameTexture);
+    void initializePostprocessingPipeline(QRhi *rhi, QRhiCommandBuffer *commandBuffer, const QSize &size, QRhiTexture *frameTexture);
+    void postprocess(QRhi *rhi, QRhiCommandBuffer *commandBuffer);
     void cleanup();
 
 private:
@@ -35,31 +34,35 @@ private:
     QVector<QRhiResource *> m_releasePool;
 
     // not owned by us (ToDo: should be a weak pointer)
-    QRhiTexture* m_frameTexture { nullptr };
+    QRhiTexture *m_frameTexture { nullptr };
 
     // owned by us
-    QRhiSampler* m_frameSampler { nullptr };
-    struct {
+    QRhiSampler *m_frameSampler { nullptr };
+    struct
+    {
         QVector<QRhiShaderStage> edgePass;
         QVector<QRhiShaderStage> weightsPass;
         QVector<QRhiShaderStage> blendPass;
     } m_shaders;
 
-    struct {
+    struct
+    {
         QRhiBuffer *quadVertexBuffer = nullptr;
         QRhiBuffer *quadIndexBuffer = nullptr;
         QRhiBuffer *quadUbuffer = nullptr;
     } m_common;
 
-    struct {
+    struct
+    {
         // lookup textures for weight computation
-        QRhiTexture *areaTexture = nullptr ;
+        QRhiTexture *areaTexture = nullptr;
         QRhiSampler *areaSampler = nullptr;
-        QRhiTexture *searchTexture = nullptr ;
+        QRhiTexture *searchTexture = nullptr;
         QRhiSampler *searchSampler = nullptr;
     } m_lookup;
 
-    struct {
+    struct
+    {
         // edges target (we are going to render the edges into this texture)
         QRhiRenderPassDescriptor *edgesRenderPassDescriptor = nullptr;
         QRhiTextureRenderTarget *edgesTarget = nullptr;
@@ -71,11 +74,12 @@ private:
         QRhiGraphicsPipeline *edgesPipeline = nullptr;
     } m_edgesPass;
 
-    struct {
+    struct
+    {
         // weights target (we are going to render the weights into this texture)
         QRhiRenderPassDescriptor *weightsRenderPassDescriptor = nullptr;
         QRhiTextureRenderTarget *weightsTarget = nullptr;
-        QRhiTexture *weightsTexture = nullptr ;
+        QRhiTexture *weightsTexture = nullptr;
         QRhiSampler *weightsSampler = nullptr;
 
         // rendering pipeline for our weight calculation pass
@@ -83,11 +87,12 @@ private:
         QRhiGraphicsPipeline *weightsPipeline = nullptr;
     } m_weightsPass;
 
-    struct {
+    struct
+    {
         // blend target (this is the last pass, so we don't need a sampler for the next stage here)
         QRhiRenderPassDescriptor *blendRenderPassDescriptor = nullptr;
         QRhiTextureRenderTarget *blendTarget = nullptr;
-        QRhiTexture *blendTexture = nullptr ;
+        QRhiTexture *blendTexture = nullptr;
 
         // rendering pipeline for blending pass
         QRhiShaderResourceBindings *blendResourceBindings = nullptr;
@@ -96,5 +101,4 @@ private:
 
     QSize m_targetSize;
     QRhiTexture *m_target { nullptr };
-
 };

@@ -20,6 +20,7 @@ class QRhiResourceUpdateBatch;
 
 class QRhiRenderBuffer;
 class QRhiSampler;
+class QRhi;
 class QRhiBuffer;
 class QRhiTexture;
 class QRhiShaderResourceBindings;
@@ -31,10 +32,12 @@ class QRhiShaderStage;
 class QQuickWindow;
 class QQuickItem;
 
+class RiveQSGRHIRenderNode;
+
 class TextureTargetNode
 {
 public:
-    TextureTargetNode(QQuickWindow *window, QRhiTexture *displayBuffer, const QRectF &viewPortRect, const QMatrix4x4 *combinedMatrix,
+    TextureTargetNode(QQuickWindow *window, RiveQSGRHIRenderNode *node, const QRectF &viewPortRect, const QMatrix4x4 *combinedMatrix,
                       const QMatrix4x4 *projectMatrix);
     virtual ~TextureTargetNode();
 
@@ -46,7 +49,7 @@ public:
     void render(QRhiCommandBuffer *cb);
     void renderBlend(QRhiCommandBuffer *cb);
     void releaseResources();
-    void updateViewport(const QRectF &viewPortRect, QRhiTexture *displayBuffer);
+    void updateViewport(const QRectF &rect);
 
     void setOpacity(const float opacity);
     void setClipping(const bool clip);
@@ -80,7 +83,6 @@ private:
     QVector<QRhiResource *> m_cleanupList;
 
     QRhiBuffer *m_vertexBuffer { nullptr };
-    QRhiBuffer *m_uniformBuffer { nullptr };
     QRhiBuffer *m_texCoordBuffer { nullptr };
     QRhiBuffer *m_indicesBuffer { nullptr };
 
@@ -88,23 +90,21 @@ private:
     QRhiBuffer *m_blendTexCoordBuffer { nullptr };
     QRhiBuffer *m_blendUniformBuffer { nullptr };
 
-    QRhiBuffer *m_clippingVertexBuffer { nullptr };
     QRhiBuffer *m_clippingUniformBuffer { nullptr };
+    QRhiBuffer *m_drawUniformBuffer { nullptr };
 
-    QRhiShaderResourceBindings *m_resourceBindings { nullptr };
+    QRhiBuffer *m_clippingVertexBuffer { nullptr };
+
+    QRhiShaderResourceBindings *m_blendResourceBindingsA { nullptr };
+    QRhiShaderResourceBindings *m_blendResourceBindingsB { nullptr };
+    QRhiShaderResourceBindings *m_drawPipelineResourceBindings { nullptr };
     QRhiShaderResourceBindings *m_clippingResourceBindings { nullptr };
-    QRhiShaderResourceBindings *m_blendResourceBindings { nullptr };
 
-    QMap<rive::BlendMode, QRhiGraphicsPipeline *> m_drawPipelines;
+    QRhiTextureRenderTarget *m_blendTextureRenderTargetA { nullptr };
+    QRhiTextureRenderTarget *m_blendTextureRenderTargetB { nullptr };
 
-    QRhiGraphicsPipeline *m_blendPipeLine { nullptr };
-    QRhiGraphicsPipeline *m_clipPipeLine { nullptr };
-
-    QRhiTextureRenderTarget *m_displayBufferTarget { nullptr };
-    QRhiTextureRenderTarget *m_blendTextureRenderTarget { nullptr };
-
-    QRhiRenderPassDescriptor *m_displayBufferTargetDescriptor { nullptr };
-    QRhiRenderPassDescriptor *m_blendRenderDescriptor { nullptr };
+    QRhiRenderPassDescriptor *m_blendRenderDescriptorA { nullptr };
+    QRhiRenderPassDescriptor *m_blendRenderDescriptorB { nullptr };
 
     QRhiRenderBuffer *m_stencilClippingBuffer { nullptr };
 
@@ -115,11 +115,9 @@ private:
     QList<QRhiShaderStage> m_textureShader;
     QList<QRhiShaderStage> m_blendShaders;
 
-    QRhiTexture *m_displayBuffer { nullptr };
-    QRhiTexture *m_internalDisplayBufferTexture { nullptr };
     QRhiTexture *m_qImageTexture { nullptr };
-    QRhiTexture *m_blendSrc { nullptr };
-    QRhiTexture *m_blendDest { nullptr };
+
+    RiveQSGRHIRenderNode *m_node { nullptr };
 
     QRhiResourceUpdateBatch *m_resourceUpdates { nullptr };
     QRhiResourceUpdateBatch *m_blendResourceUpdates { nullptr };
@@ -178,5 +176,10 @@ private:
     const QMatrix4x4 *m_projectionMatrix;
     QMatrix4x4 m_transform;
 
-    QRectF m_bounds;
+    QRectF m_rect;
+    QRhiGraphicsPipeline *createBlendPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPass,
+                                              QRhiShaderResourceBindings *blendResourceBindings);
+
+    QRhiGraphicsPipeline *createClipPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPassDescriptor);
+    void createDrawPipelines(QRhi *rhi, QMap<rive::BlendMode, QRhiGraphicsPipeline *> &map, QRhiRenderPassDescriptor *renderPassDescriptor);
 };

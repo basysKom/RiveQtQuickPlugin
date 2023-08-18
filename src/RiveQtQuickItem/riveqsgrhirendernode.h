@@ -33,7 +33,7 @@ public:
     virtual ~RiveQSGRHIRenderNode();
 
     void setRect(const QRectF &bounds) override;
-    void setFillMode(const RiveRenderSettings::FillMode mode) { m_fillMode = mode; }
+    void setFillMode(const RiveRenderSettings::FillMode mode);
     void setPostprocessingMode(const RiveRenderSettings::PostprocessingMode postprocessingMode);
 
     void renderOffscreen() override;
@@ -47,16 +47,64 @@ public:
     RenderingFlags flags() const override;
     QSGRenderNode::StateFlags changedStates() const override;
 
+    void switchCurrentRenderBuffer();
+
+    QRhiTextureRenderTarget *currentRenderTarget(bool shaderBlending);
+    QRhiTextureRenderTarget *currentBlendTarget();
+    QRhiGraphicsPipeline *renderPipeline(bool shaderBlending);
+    QRhiGraphicsPipeline *clippingPipeline();
+    QRhiGraphicsPipeline *currentBlendPipeline();
+    QRhiRenderPassDescriptor *currentRenderPassDescriptor(bool shaderBlending);
+    QRhiRenderPassDescriptor *currentBlendPassDescriptor();
+
+    QRhiTexture *getCurrentRenderBuffer();
+    QRhiTexture *getRenderBufferA();
+    QRhiTexture *getRenderBufferB();
+    QRhiTexture *getRenderBufferIntern();
+
+    bool isCurrentRenderBufferA();
+
 protected:
+    struct RenderSurface
+    {
+        QRhiTexture *texture { nullptr };
+        QRhiRenderPassDescriptor *desc { nullptr };
+        QRhiRenderPassDescriptor *blendDesc { nullptr };
+        QRhiTextureRenderTarget *target { nullptr };
+        QRhiTextureRenderTarget *blendTarget { nullptr };
+
+        ~RenderSurface() { cleanUp(); }
+
+        void cleanUp();
+
+        bool valid() { return texture != nullptr; }
+
+        // this creates all resources needed to have a texture to draw on
+        bool create(QRhi *rhi, const QSize &surfaceSize, QRhiRenderBuffer *stencilClippingBuffer,
+                    QRhiTextureRenderTarget::Flags flags = QRhiTextureRenderTarget::PreserveColorContents);
+    };
+
     QRhiBuffer *m_vertexBuffer { nullptr };
     QRhiBuffer *m_texCoordBuffer { nullptr };
-    QRhiBuffer *m_uniformBuffer { nullptr };
+    QRhiBuffer *m_finalDrawUniformBuffer { nullptr };
 
-    QRhiShaderResourceBindings *m_resourceBindings { nullptr };
-    QRhiGraphicsPipeline *m_pipeLine { nullptr };
+    // shared clipping buffer for all surfaces
+    QRhiRenderBuffer *m_stencilClippingBuffer { nullptr };
+
+    // those bind the texture of surfaceA and B for the final draw call
+    QRhiShaderResourceBindings *m_finalDrawResourceBindingsA { nullptr };
+    QRhiShaderResourceBindings *m_finalDrawResourceBindingsB { nullptr };
+
+    // in order to configure our pipelines we have to provide resourceBindings
+    // those are empty - the actual bindings are created/set per texturenode
+    // they can not be shared since bindings will transfer information over renderpasses
+    QRhiShaderResourceBindings *m_dummyResourceBindings { nullptr };
+
     QRhiSampler *m_sampler { nullptr };
 
-    QList<QRhiShaderStage> m_shaders;
+    QList<QRhiShaderStage> m_finalDrawShader;
+    QList<QRhiShaderStage> m_blendShaders;
+    QList<QRhiShaderStage> m_pathShader;
 
     QList<QVector2D> m_vertices;
     QList<QVector2D> m_texCoords;
@@ -64,12 +112,47 @@ protected:
     QVector<QRhiResource *> m_cleanupList;
 
     RiveQtRhiRenderer *m_renderer { nullptr };
-    // ToDo: make std::shared_ptr
-    QRhiTexture *m_displayBuffer { nullptr };
+
+    // RenderSurface A and B swap during the renderpathes
+    // since we can not read and write from a texture at the same time
+    // this is used/switch only in case we shader blend in texturenode
+    // the renderSurfaceIntern is a special surface used as temporary render target for geometry that needs to blend in the mainscene
+    RenderSurface m_renderSurfaceA;
+    RenderSurface m_renderSurfaceB;
+    RenderSurface m_renderSurfaceIntern;
+
+    // pointer that holds the current render surface (a/b)
+    // this will be set to &m_renderSurfaceA or &m_renderSurfaceB by the renderprocess
+    RenderSurface *m_currentRenderSurface { nullptr };
+
+    // used to draw the final texture on the qt surface
+    QRhiGraphicsPipeline *m_finalDrawPipeline { nullptr };
+
+    // used in the main draw call to paint directly to the renderSurface texture
+    QRhiGraphicsPipeline *m_drawPipeline { nullptr };
+
+    // used in the main draw call in case we need to draw a to-be-blend geometry
+    QRhiGraphicsPipeline *m_drawPipelineIntern { nullptr };
+
+    // used to shader-blend the to-be-blend geomentry texture to the current renderSurface
+    QRhiGraphicsPipeline *m_blendPipeline { nullptr };
+
+    // used to draw into the stencil buffer during the main draw call
+    QRhiGraphicsPipeline *m_clipPipeline { nullptr };
+
+    // we need this since our default target preserves colors
+    // this is configured to not preserve
     QRhiTextureRenderTarget *m_cleanUpTextureTarget { nullptr };
 
     bool m_verticesDirty = true;
     RiveRenderSettings::FillMode m_fillMode;
 
-    PostprocessingSMAA* m_postprocessing { nullptr };
+    PostprocessingSMAA *m_postprocessing { nullptr };
+
+private:
+    QRhiGraphicsPipeline *createBlendPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPass);
+    QRhiGraphicsPipeline *createClipPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPassDescriptor);
+    QRhiGraphicsPipeline *createDrawPipeline(QRhi *rhi, bool srcOverBlend, bool stencilBuffer,
+                                             QRhiRenderPassDescriptor *renderPassDescriptor, QRhiGraphicsPipeline::Topology t,
+                                             const QList<QRhiShaderStage> &shader);
 };

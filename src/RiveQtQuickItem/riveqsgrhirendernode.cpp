@@ -18,18 +18,39 @@
 RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance,
                                            const QRectF &geometry)
     : RiveQSGRenderNode(window, artboardInstance, geometry)
-    , m_displayBuffer(nullptr)
 {
     QFile file;
     file.setFileName(":/shaders/qt6/finalDraw.vert.qsb");
     file.open(QFile::ReadOnly);
-    m_shaders.append(QRhiShaderStage(QRhiShaderStage::Vertex, QShader::fromSerialized(file.readAll())));
+    m_finalDrawShader.append(QRhiShaderStage(QRhiShaderStage::Vertex, QShader::fromSerialized(file.readAll())));
 
     file.close();
     file.setFileName(":/shaders/qt6/finalDraw.frag.qsb");
     file.open(QFile::ReadOnly);
 
-    m_shaders.append(QRhiShaderStage(QRhiShaderStage::Fragment, QShader::fromSerialized(file.readAll())));
+    m_finalDrawShader.append(QRhiShaderStage(QRhiShaderStage::Fragment, QShader::fromSerialized(file.readAll())));
+
+    file.close();
+    file.setFileName(":/shaders/qt6/drawRiveTextureNode.vert.qsb");
+    file.open(QFile::ReadOnly);
+    m_pathShader.append(QRhiShaderStage(QRhiShaderStage::Vertex, QShader::fromSerialized(file.readAll())));
+
+    file.close();
+    file.setFileName(":/shaders/qt6/drawRiveTextureNode.frag.qsb");
+    file.open(QFile::ReadOnly);
+    m_pathShader.append(QRhiShaderStage(QRhiShaderStage::Fragment, QShader::fromSerialized(file.readAll())));
+    file.close();
+
+    file.setFileName(":/shaders/qt6/blendRiveTextureNode.vert.qsb");
+    file.open(QFile::ReadOnly);
+    m_blendShaders.append(QRhiShaderStage(QRhiShaderStage::Vertex, QShader::fromSerialized(file.readAll())));
+
+    file.close();
+    file.setFileName(":/shaders/qt6/blendRiveTextureNode.frag.qsb");
+    file.open(QFile::ReadOnly);
+
+    m_blendShaders.append(QRhiShaderStage(QRhiShaderStage::Fragment, QShader::fromSerialized(file.readAll())));
+    file.close();
 
     setRect(geometry);
 
@@ -38,8 +59,9 @@ RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(QQuickWindow *window, std::weak_ptr<r
     m_texCoords.append(QVector2D(1.0f, 0.0f));
     m_texCoords.append(QVector2D(1.0f, 1.0f));
 
-    m_renderer = new RiveQtRhiRenderer(window);
-    m_renderer->updateViewPort(m_rect, m_displayBuffer);
+    m_renderer = new RiveQtRhiRenderer(window, this);
+
+    m_renderer->updateViewPort(m_rect);
     m_renderer->setRiveRect({ m_topLeftRivePosition, m_riveSize });
 
     setPostprocessingMode(RiveRenderSettings::SMAA);
@@ -70,18 +92,17 @@ void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
     // todo this is not yet fully correct. Resize is super expensive due to resource destruction
     // TODO: maybe we should only do this in case the texture gets larger and stays larger for some time
     // that may cost us quality but will save us a lot of issues
-    if (m_displayBuffer) {
-        m_cleanupList.removeAll(m_displayBuffer);
-        m_displayBuffer->destroy();
-        m_displayBuffer->deleteLater();
-        m_displayBuffer = nullptr;
-    }
+    m_renderSurfaceA.cleanUp();
+    m_renderSurfaceB.cleanUp();
+    m_renderSurfaceIntern.cleanUp();
 
-    if (m_sampler) {
-        m_cleanupList.removeAll(m_sampler);
-        m_sampler->destroy();
-        m_sampler->deleteLater();
-        m_sampler = nullptr;
+    m_currentRenderSurface = nullptr;
+
+    if (m_stencilClippingBuffer) {
+        m_cleanupList.removeAll(m_stencilClippingBuffer);
+        m_stencilClippingBuffer->destroy();
+        m_stencilClippingBuffer->deleteLater();
+        m_stencilClippingBuffer = nullptr;
     }
 
     if (m_cleanUpTextureTarget) {
@@ -91,12 +112,19 @@ void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
         m_cleanUpTextureTarget = nullptr;
     }
 
-    // this potentialy crashes :/
-    if (m_resourceBindings) {
-        m_cleanupList.removeAll(m_resourceBindings);
-        m_resourceBindings->destroy();
-        m_resourceBindings->deleteLater();
-        m_resourceBindings = nullptr;
+    // not doing this will cause a crash :/
+    if (m_finalDrawResourceBindingsA) {
+        m_cleanupList.removeAll(m_finalDrawResourceBindingsA);
+        m_finalDrawResourceBindingsA->destroy();
+        m_finalDrawResourceBindingsA->deleteLater();
+        m_finalDrawResourceBindingsA = nullptr;
+    }
+
+    if (m_finalDrawResourceBindingsB) {
+        m_cleanupList.removeAll(m_finalDrawResourceBindingsB);
+        m_finalDrawResourceBindingsB->destroy();
+        m_finalDrawResourceBindingsB->deleteLater();
+        m_finalDrawResourceBindingsB = nullptr;
     }
 
     m_verticesDirty = true;
@@ -105,8 +133,15 @@ void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
     markDirty(QSGNode::DirtyGeometry);
 }
 
-void  RiveQSGRHIRenderNode::setPostprocessingMode(const RiveRenderSettings::PostprocessingMode postprocessingMode)
+void RiveQSGRHIRenderNode::setFillMode(const RiveRenderSettings::FillMode mode)
 {
+    m_fillMode = mode;
+}
+
+void RiveQSGRHIRenderNode::setPostprocessingMode(const RiveRenderSettings::PostprocessingMode postprocessingMode)
+{
+    // TODO: Postprocessing is crashing, needs adaption to the two buffer concept
+    return;
     if (postprocessingMode == RiveRenderSettings::None) {
         if (m_postprocessing) {
             m_postprocessing->cleanup();
@@ -115,14 +150,15 @@ void  RiveQSGRHIRenderNode::setPostprocessingMode(const RiveRenderSettings::Post
         }
     } else { // if (postprocessingMode == RiveRenderSettings::SMAA) {
         if (!m_postprocessing) {
-            m_postprocessing = new PostprocessingSMAA(); 
-        } 
-    } 
+            m_postprocessing = new PostprocessingSMAA();
+        }
+    }
 }
 
 void RiveQSGRHIRenderNode::renderOffscreen()
 {
-    if (!m_displayBuffer || m_rect.width() == 0 || m_rect.height() == 0)
+    if (!m_renderSurfaceA.valid() || !m_renderSurfaceB.valid() || !m_renderSurfaceIntern.valid() || m_rect.width() == 0
+        || m_rect.height() == 0)
         return;
 
     if (!m_cleanUpTextureTarget) {
@@ -131,6 +167,8 @@ void RiveQSGRHIRenderNode::renderOffscreen()
 
     QSGRendererInterface *renderInterface = m_window->rendererInterface();
     QRhi *rhi = static_cast<QRhi *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiResource));
+
+    m_currentRenderSurface = &m_renderSurfaceA;
 
     QRhiCommandBuffer *cb;
     rhi->beginOffscreenFrame(&cb);
@@ -150,6 +188,12 @@ void RiveQSGRHIRenderNode::render(const RenderState *state)
         return;
     }
 
+    auto *finalDrawResourceBindings = m_finalDrawResourceBindingsA;
+
+    if (!isCurrentRenderBufferA() && !m_postprocessing) {
+        finalDrawResourceBindings = m_finalDrawResourceBindingsB;
+    }
+
     QSGRendererInterface *renderInterface = m_window->rendererInterface();
     QRhiSwapChain *swapChain =
         static_cast<QRhiSwapChain *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiSwapchainResource));
@@ -158,10 +202,10 @@ void RiveQSGRHIRenderNode::render(const RenderState *state)
     QRhiCommandBuffer *commandBuffer = swapChain->currentFrameCommandBuffer();
     Q_ASSERT(commandBuffer);
 
-    commandBuffer->setGraphicsPipeline(m_pipeLine);
+    commandBuffer->setGraphicsPipeline(m_finalDrawPipeline);
     QSize renderTargetSize = QSGRenderNodePrivate::get(this)->m_rt.rt->pixelSize();
     commandBuffer->setViewport(QRhiViewport(0, 0, renderTargetSize.width(), renderTargetSize.height()));
-    commandBuffer->setShaderResources(m_resourceBindings);
+    commandBuffer->setShaderResources(finalDrawResourceBindings);
     QRhiCommandBuffer::VertexInput vertexBindings[] = { { m_vertexBuffer, 0 }, { m_texCoordBuffer, 0 } };
     commandBuffer->setVertexInput(0, 2, vertexBindings);
 
@@ -193,6 +237,88 @@ QSGRenderNode::StateFlags RiveQSGRHIRenderNode::changedStates() const
              | QSGRenderNode::ScissorState };
 }
 
+void RiveQSGRHIRenderNode::switchCurrentRenderBuffer()
+{
+    if (m_currentRenderSurface == &m_renderSurfaceA) {
+        m_currentRenderSurface = &m_renderSurfaceB;
+    } else {
+        m_currentRenderSurface = &m_renderSurfaceA;
+    }
+}
+
+QRhiTexture *RiveQSGRHIRenderNode::getCurrentRenderBuffer()
+{
+    if (m_currentRenderSurface) {
+        return m_currentRenderSurface->texture;
+    }
+    return nullptr;
+}
+
+QRhiTextureRenderTarget *RiveQSGRHIRenderNode::currentRenderTarget(bool shaderBlending)
+{
+    if (shaderBlending) {
+        return m_renderSurfaceIntern.target;
+    }
+    return isCurrentRenderBufferA() ? m_renderSurfaceA.target : m_renderSurfaceB.target;
+}
+
+QRhiTextureRenderTarget *RiveQSGRHIRenderNode::currentBlendTarget()
+{
+    return isCurrentRenderBufferA() ? m_renderSurfaceA.blendTarget : m_renderSurfaceB.blendTarget;
+}
+
+QRhiGraphicsPipeline *RiveQSGRHIRenderNode::renderPipeline(bool shaderBlending)
+{
+    if (shaderBlending) {
+        return m_drawPipelineIntern;
+    }
+    return m_drawPipeline;
+}
+
+QRhiGraphicsPipeline *RiveQSGRHIRenderNode::clippingPipeline()
+{
+    return m_clipPipeline;
+}
+
+QRhiGraphicsPipeline *RiveQSGRHIRenderNode::currentBlendPipeline()
+{
+    return m_blendPipeline;
+}
+
+QRhiRenderPassDescriptor *RiveQSGRHIRenderNode::currentRenderPassDescriptor(bool shaderBlending)
+{
+    if (shaderBlending) {
+        return m_renderSurfaceIntern.desc;
+    }
+
+    return isCurrentRenderBufferA() ? m_renderSurfaceA.desc : m_renderSurfaceB.desc;
+}
+
+QRhiRenderPassDescriptor *RiveQSGRHIRenderNode::currentBlendPassDescriptor()
+{
+    return isCurrentRenderBufferA() ? m_renderSurfaceA.blendDesc : m_renderSurfaceB.blendDesc;
+}
+
+QRhiTexture *RiveQSGRHIRenderNode::getRenderBufferA()
+{
+    return m_renderSurfaceA.texture;
+}
+
+QRhiTexture *RiveQSGRHIRenderNode::getRenderBufferB()
+{
+    return m_renderSurfaceB.texture;
+}
+
+QRhiTexture *RiveQSGRHIRenderNode::getRenderBufferIntern()
+{
+    return m_renderSurfaceIntern.texture;
+}
+
+bool RiveQSGRHIRenderNode::isCurrentRenderBufferA()
+{
+    return m_currentRenderSurface == &m_renderSurfaceA;
+}
+
 void RiveQSGRHIRenderNode::prepare()
 {
     if (!m_window) {
@@ -208,22 +334,47 @@ void RiveQSGRHIRenderNode::prepare()
 
     QRhiCommandBuffer *commandBuffer = swapChain->currentFrameCommandBuffer();
 
-    if (!m_displayBuffer) {
-        m_displayBuffer = rhi->newTexture(QRhiTexture::RGBA8, QSize(m_rect.width(), m_rect.height()), 1,
-                                          QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource);
-        m_displayBuffer->create();
-        m_cleanupList.append(m_displayBuffer);
+    if (!m_stencilClippingBuffer) {
+        m_stencilClippingBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, QSize(m_rect.width(), m_rect.height()), 1);
+        m_stencilClippingBuffer->create();
+        m_cleanupList.append(m_stencilClippingBuffer);
+    }
 
-        if (m_renderer) {
-            m_renderer->updateViewPort(m_rect, m_displayBuffer);
-            m_renderer->setRiveRect({ m_topLeftRivePosition, m_riveSize });
-        }
+    bool textureCreated = m_renderSurfaceA.create(rhi, QSize(m_rect.width(), m_rect.height()), m_stencilClippingBuffer);
+    m_renderSurfaceB.create(rhi, QSize(m_rect.width(), m_rect.height()), m_stencilClippingBuffer);
+    m_renderSurfaceIntern.create(rhi, QSize(m_rect.width(), m_rect.height()), m_stencilClippingBuffer, {});
 
-        if (m_postprocessing) {
-            // ToDo: m_display_buffer should be std::shared_ptr
-            m_postprocessing->initializePostprocessingPipeline(rhi, commandBuffer, QSize(m_rect.width(), m_rect.height()), m_displayBuffer);
-        }
+    // only set the renderSurface to A in case we created a new texture
+    if (textureCreated) {
+        m_currentRenderSurface = &m_renderSurfaceA;
+    }
 
+    if (!m_dummyResourceBindings) {
+        m_dummyResourceBindings = rhi->newShaderResourceBindings();
+        m_dummyResourceBindings->create();
+        m_cleanupList.append(m_dummyResourceBindings);
+    }
+
+    if (!m_clipPipeline) {
+        m_clipPipeline = createClipPipeline(rhi, m_renderSurfaceA.desc);
+    }
+
+    if (!m_drawPipeline) {
+        m_drawPipeline = createDrawPipeline(rhi, true, true, m_renderSurfaceA.desc, QRhiGraphicsPipeline::Triangles, m_pathShader);
+    }
+
+    if (!m_drawPipelineIntern) {
+        m_drawPipelineIntern =
+            createDrawPipeline(rhi, false, true, m_renderSurfaceIntern.desc, QRhiGraphicsPipeline::Triangles, m_pathShader);
+    }
+
+    if (!m_blendPipeline) {
+        m_blendPipeline = createBlendPipeline(rhi, m_renderSurfaceA.blendDesc);
+    }
+
+    if (m_renderer) {
+        m_renderer->updateViewPort(m_rect);
+        m_renderer->setRiveRect({ m_topLeftRivePosition, m_riveSize });
     }
 
     if (m_artboardInstance.expired()) {
@@ -304,7 +455,7 @@ void RiveQSGRHIRenderNode::prepare()
     artboardInstance->draw(m_renderer);
 
     if (!m_cleanUpTextureTarget) {
-        QRhiColorAttachment colorAttachment(m_displayBuffer);
+        QRhiColorAttachment colorAttachment(m_renderSurfaceA.texture);
         QRhiTextureRenderTargetDescription desc(colorAttachment);
         m_cleanUpTextureTarget = rhi->newTextureRenderTarget(desc);
 
@@ -355,72 +506,56 @@ void RiveQSGRHIRenderNode::prepare()
         m_cleanupList.append(m_sampler);
     }
 
-    if (!m_uniformBuffer) {
-        m_uniformBuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 88);
-        m_uniformBuffer->create();
-        m_cleanupList.append(m_uniformBuffer);
+    if (!m_finalDrawUniformBuffer) {
+        m_finalDrawUniformBuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 88);
+        m_finalDrawUniformBuffer->create();
+        m_cleanupList.append(m_finalDrawUniformBuffer);
     }
 
-    if (!m_resourceBindings) {
-        m_resourceBindings = rhi->newShaderResourceBindings();
+    if (m_postprocessing) {
+        m_postprocessing->initializePostprocessingPipeline(rhi, commandBuffer, QSize(m_rect.width(), m_rect.height()),
+                                                           getCurrentRenderBuffer());
+    }
+
+    if (!m_finalDrawResourceBindingsA) {
+        m_finalDrawResourceBindingsA = rhi->newShaderResourceBindings();
         if (m_postprocessing) {
             QRhiTexture *postprocessedBuffer = m_postprocessing->getTarget();
-            m_resourceBindings->setBindings({
-                QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
-                                                        m_uniformBuffer),
+            m_finalDrawResourceBindingsA->setBindings({
+                QRhiShaderResourceBinding::uniformBuffer(
+                    0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, m_finalDrawUniformBuffer),
                 QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, postprocessedBuffer, m_sampler),
             });
         } else {
-            m_resourceBindings->setBindings({
-                QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
-                                                        m_uniformBuffer),
-                QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_displayBuffer, m_sampler),
+            m_finalDrawResourceBindingsA->setBindings({
+                QRhiShaderResourceBinding::uniformBuffer(
+                    0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, m_finalDrawUniformBuffer),
+                // binding both buffers and decide in the final draw shader which to use.
+                QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_renderSurfaceA.texture, m_sampler),
             });
         }
 
-        m_resourceBindings->create();
-        m_cleanupList.append(m_resourceBindings);
+        m_finalDrawResourceBindingsA->create();
+        m_cleanupList.append(m_finalDrawResourceBindingsA);
     }
 
-    if (!m_pipeLine) {
-        m_pipeLine = rhi->newGraphicsPipeline();
-        m_cleanupList.append(m_pipeLine);
+    if (!m_finalDrawResourceBindingsB) {
+        m_finalDrawResourceBindingsB = rhi->newShaderResourceBindings();
 
-        //
-        // If layer.enabled == true on our QQuickItem, the rendering face is flipped for
-        // backends with isYUpInFrameBuffer == true (OpenGL). This does not happen with
-        // RHI backends with isYUpInFrameBuffer == false. We swap the triangle winding
-        // order to work around this.
-        //
-        m_pipeLine->setFrontFace(rhi->isYUpInFramebuffer() ? QRhiGraphicsPipeline::CCW : QRhiGraphicsPipeline::CW);
-        m_pipeLine->setCullMode(QRhiGraphicsPipeline::None);
-        m_pipeLine->setTopology(QRhiGraphicsPipeline::TriangleStrip);
-
-        // this allows blending with the rest of the QML Scene
-        QRhiGraphicsPipeline::TargetBlend blend;
-        blend.enable = true;
-        blend.srcColor = QRhiGraphicsPipeline::SrcAlpha;
-        blend.dstColor = QRhiGraphicsPipeline::OneMinusSrcAlpha;
-        blend.srcAlpha = QRhiGraphicsPipeline::One;
-        blend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
-        m_pipeLine->setTargetBlends({ blend });
-
-        m_pipeLine->setShaderResourceBindings(m_resourceBindings);
-        m_pipeLine->setShaderStages(m_shaders.cbegin(), m_shaders.cend());
-
-        QRhiVertexInputLayout inputLayout;
-        inputLayout.setBindings({
-            { sizeof(QVector2D) }, // Stride for position buffer
-            { sizeof(QVector2D) } // Stride for texture coordinate buffer
+        m_finalDrawResourceBindingsB->setBindings({
+            QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
+                                                     m_finalDrawUniformBuffer),
+            // binding both buffers and decide in the final draw shader which to use.
+            QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_renderSurfaceB.texture, m_sampler),
         });
-        inputLayout.setAttributes({
-            { 0, 0, QRhiVertexInputAttribute::Float2, 0 }, // Position
-            { 1, 1, QRhiVertexInputAttribute::Float2, 0 } // Texture coordinate
-        });
-        m_pipeLine->setVertexInputLayout(inputLayout);
-        m_pipeLine->setRenderPassDescriptor(QSGRenderNodePrivate::get(this)->m_rt.rpDesc);
 
-        m_pipeLine->create();
+        m_finalDrawResourceBindingsB->create();
+        m_cleanupList.append(m_finalDrawResourceBindingsB);
+    }
+
+    if (!m_finalDrawPipeline) {
+        m_finalDrawPipeline = createDrawPipeline(rhi, true, false, QSGRenderNodePrivate::get(this)->m_rt.rpDesc,
+                                                 QRhiGraphicsPipeline::TriangleStrip, m_finalDrawShader);
     }
 
     QMatrix4x4 mvp = *projectionMatrix();
@@ -433,13 +568,14 @@ void RiveQSGRHIRenderNode::prepare()
     float opacity = inheritedOpacity();
     int flipped = rhi->isYUpInFramebuffer() ? 1 : 0;
 
-    resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 0, 64, mvp.constData());
-    resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 64, 4, &opacity);
-    resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 68, 4, &flipped);
-    resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 72, 4, &left);
-    resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 76, 4, &right);
-    resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 80, 4, &top);
-    resourceUpdates->updateDynamicBuffer(m_uniformBuffer, 84, 4, &bottom);
+    // TODO: is that so? for postprocessing we only have one final texture we use, thats binded to A.
+    resourceUpdates->updateDynamicBuffer(m_finalDrawUniformBuffer, 0, 64, mvp.constData());
+    resourceUpdates->updateDynamicBuffer(m_finalDrawUniformBuffer, 64, 4, &opacity);
+    resourceUpdates->updateDynamicBuffer(m_finalDrawUniformBuffer, 68, 4, &flipped);
+    resourceUpdates->updateDynamicBuffer(m_finalDrawUniformBuffer, 72, 4, &left);
+    resourceUpdates->updateDynamicBuffer(m_finalDrawUniformBuffer, 76, 4, &right);
+    resourceUpdates->updateDynamicBuffer(m_finalDrawUniformBuffer, 80, 4, &top);
+    resourceUpdates->updateDynamicBuffer(m_finalDrawUniformBuffer, 84, 4, &bottom);
 
     commandBuffer->resourceUpdate(resourceUpdates);
 
@@ -447,4 +583,200 @@ void RiveQSGRHIRenderNode::prepare()
     if (m_postprocessing) {
         m_postprocessing->postprocess(rhi, commandBuffer);
     }
+}
+
+QRhiGraphicsPipeline *RiveQSGRHIRenderNode::createClipPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPassDescriptor)
+{
+    QRhiGraphicsPipeline *clipPipeLine = rhi->newGraphicsPipeline();
+
+    clipPipeLine->setShaderStages(m_pathShader.cbegin(), m_pathShader.cend());
+    clipPipeLine->setFlags(QRhiGraphicsPipeline::UsesStencilRef);
+    clipPipeLine->setDepthTest(true);
+    clipPipeLine->setDepthWrite(true);
+
+    QRhiGraphicsPipeline::TargetBlend disabledColorWrite;
+    disabledColorWrite.colorWrite = QRhiGraphicsPipeline::ColorMask(0);
+    clipPipeLine->setTargetBlends({ disabledColorWrite });
+
+    QRhiVertexInputLayout inputLayout;
+    inputLayout.setBindings({
+        { sizeof(QVector2D) },
+        { sizeof(QVector2D) },
+    });
+    inputLayout.setAttributes({
+        { 0, 0, QRhiVertexInputAttribute::Float2, 0 },
+        { 1, 1, QRhiVertexInputAttribute::Float2, 0 },
+    });
+
+    // Configure stencil operations for writing stencil values
+    QRhiGraphicsPipeline::StencilOpState stencilOpState = { QRhiGraphicsPipeline::Keep, QRhiGraphicsPipeline::Keep,
+                                                            QRhiGraphicsPipeline::Replace, QRhiGraphicsPipeline::Always };
+    clipPipeLine->setStencilFront(stencilOpState);
+    clipPipeLine->setStencilBack(stencilOpState);
+    clipPipeLine->setStencilTest(true);
+    clipPipeLine->setCullMode(QRhiGraphicsPipeline::None);
+    clipPipeLine->setTopology(QRhiGraphicsPipeline::Triangles);
+    clipPipeLine->setVertexInputLayout(inputLayout);
+    clipPipeLine->setRenderPassDescriptor(renderPassDescriptor);
+
+    clipPipeLine->setShaderResourceBindings(m_dummyResourceBindings);
+    clipPipeLine->create();
+    m_cleanupList.append(clipPipeLine);
+
+    return clipPipeLine;
+}
+
+QRhiGraphicsPipeline *RiveQSGRHIRenderNode::createDrawPipeline(QRhi *rhi, bool srcOverBlend, bool stencilBuffer,
+                                                               QRhiRenderPassDescriptor *renderPassDescriptor,
+                                                               QRhiGraphicsPipeline::Topology t, const QList<QRhiShaderStage> &shader)
+{
+    QRhiGraphicsPipeline *drawPipeLine = rhi->newGraphicsPipeline();
+
+    //
+    // If layer.enabled == true on our QQuickItem, the rendering face is flipped for
+    // backends with isYUpInFrameBuffer == true (OpenGL). This does not happen with
+    // RHI backends with isYUpInFrameBuffer == false. We swap the triangle winding
+    // order to work around this.
+    //
+    drawPipeLine->setFrontFace(rhi->isYUpInFramebuffer() ? QRhiGraphicsPipeline::CW : QRhiGraphicsPipeline::CCW);
+    drawPipeLine->setCullMode(QRhiGraphicsPipeline::None);
+    drawPipeLine->setTopology(t);
+
+    if (srcOverBlend) {
+        QRhiGraphicsPipeline::TargetBlend blend;
+        blend.enable = true;
+        blend.srcColor = QRhiGraphicsPipeline::SrcAlpha;
+        blend.dstColor = QRhiGraphicsPipeline::OneMinusSrcAlpha;
+        blend.srcAlpha = QRhiGraphicsPipeline::One;
+        blend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
+        drawPipeLine->setTargetBlends({ blend });
+    }
+
+    drawPipeLine->setShaderResourceBindings(m_dummyResourceBindings);
+    drawPipeLine->setShaderStages(shader.cbegin(), shader.cend());
+
+    QRhiVertexInputLayout inputLayout;
+    inputLayout.setBindings({
+        { sizeof(QVector2D) }, // Stride for position buffer
+        { sizeof(QVector2D) }, // Stride for texture coordinate buffer
+    });
+    inputLayout.setAttributes({
+        { 0, 0, QRhiVertexInputAttribute::Float2, 0 }, // Position1
+        { 1, 1, QRhiVertexInputAttribute::Float2, 0 } // Texture coordinate
+    });
+
+    drawPipeLine->setVertexInputLayout(inputLayout);
+    drawPipeLine->setRenderPassDescriptor(renderPassDescriptor);
+
+    if (stencilBuffer) {
+        QRhiGraphicsPipeline::StencilOpState stencilOpState = { QRhiGraphicsPipeline::Keep, QRhiGraphicsPipeline::Keep,
+                                                                QRhiGraphicsPipeline::Replace, QRhiGraphicsPipeline::Equal };
+        drawPipeLine->setDepthTest(false);
+        drawPipeLine->setDepthWrite(false);
+        drawPipeLine->setStencilFront(stencilOpState);
+        drawPipeLine->setStencilBack(stencilOpState);
+        drawPipeLine->setStencilTest(true);
+        drawPipeLine->setStencilWriteMask(0);
+        drawPipeLine->setFlags(QRhiGraphicsPipeline::UsesStencilRef);
+    }
+
+    drawPipeLine->create();
+    m_cleanupList.append(drawPipeLine);
+    return drawPipeLine;
+}
+
+QRhiGraphicsPipeline *RiveQSGRHIRenderNode::createBlendPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPass)
+{
+    auto *blendPipeLine = rhi->newGraphicsPipeline();
+    m_cleanupList.append(blendPipeLine);
+    //
+    // If layer.enabled == true on our QQuickItem, the rendering face is flipped for
+    // backends with isYUpInFrameBuffer == true (OpenGL). This does not happen with
+    // RHI backends with isYUpInFrameBuffer == false. We swap the triangle winding
+    // order to work around this.
+    //
+    blendPipeLine->setFrontFace(rhi->isYUpInFramebuffer() ? QRhiGraphicsPipeline::CW : QRhiGraphicsPipeline::CCW);
+    blendPipeLine->setCullMode(QRhiGraphicsPipeline::None);
+    blendPipeLine->setTopology(QRhiGraphicsPipeline::TriangleStrip);
+
+    blendPipeLine->setStencilTest(false);
+    blendPipeLine->setShaderResourceBindings(m_dummyResourceBindings);
+    blendPipeLine->setShaderStages(m_blendShaders.cbegin(), m_blendShaders.cend());
+
+    QRhiVertexInputLayout inputLayout;
+    inputLayout.setBindings({
+        { sizeof(QVector2D) },
+        { sizeof(QVector2D) },
+    });
+    inputLayout.setAttributes({
+        { 0, 0, QRhiVertexInputAttribute::Float2, 0 }, // Position1
+        { 1, 1, QRhiVertexInputAttribute::Float2, 0 } // Texture coordinate
+    });
+
+    blendPipeLine->setVertexInputLayout(inputLayout);
+    blendPipeLine->setRenderPassDescriptor(renderPass);
+
+    blendPipeLine->create();
+    return blendPipeLine;
+}
+
+void RiveQSGRHIRenderNode::RenderSurface::cleanUp()
+{
+    if (texture) {
+        texture->destroy();
+        texture->deleteLater();
+        texture = nullptr;
+    }
+    if (desc) {
+        desc->destroy();
+        desc->deleteLater();
+        desc = nullptr;
+    }
+    if (target) {
+        target->destroy();
+        target->deleteLater();
+        target = nullptr;
+    }
+    if (blendDesc) {
+        blendDesc->destroy();
+        blendDesc->deleteLater();
+        blendDesc = nullptr;
+    }
+    if (blendTarget) {
+        blendTarget->destroy();
+        blendTarget->deleteLater();
+        blendTarget = nullptr;
+    }
+}
+
+bool RiveQSGRHIRenderNode::RenderSurface::create(QRhi *rhi, const QSize &surfaceSize, QRhiRenderBuffer *stencilClippingBuffer, QRhiTextureRenderTarget::Flags flags)
+{
+    bool textureCreated = false;
+    if (!texture) {
+        texture = rhi->newTexture(QRhiTexture::RGBA8, surfaceSize, 1, QRhiTexture::RenderTarget);
+        texture->create();
+        textureCreated = true;
+    }
+    if (!target) {
+        QRhiColorAttachment colorAttachment(texture);
+        QRhiTextureRenderTargetDescription desc(colorAttachment);
+        desc.setDepthStencilBuffer(stencilClippingBuffer);
+        target = rhi->newTextureRenderTarget(desc, flags);
+        target->create();
+    }
+    if (!blendTarget) {
+        QRhiColorAttachment colorAttachment(texture);
+        QRhiTextureRenderTargetDescription desc(colorAttachment);
+        blendTarget = rhi->newTextureRenderTarget(desc);
+        blendTarget->create();
+    }
+    if (!desc) {
+        desc = target->newCompatibleRenderPassDescriptor();
+        target->setRenderPassDescriptor(desc);
+    }
+    if (!blendDesc) {
+        blendDesc = target->newCompatibleRenderPassDescriptor();
+        blendTarget->setRenderPassDescriptor(blendDesc);
+    }
+    return textureCreated;
 }
