@@ -21,7 +21,7 @@ public:
     bool isInitialized() const { return m_isInitialized; }
 
     // void initializePostprocessingPipeline(QRhi *rhi, const QSizeF &size, std::weak_ptr<QRhiTexture> frameTexture);
-    void initializePostprocessingPipeline(QRhi *rhi, QRhiCommandBuffer *commandBuffer, const QSize &size);
+    void initializePostprocessingPipeline(QRhi *rhi, QRhiCommandBuffer *commandBuffer, const QSize &size, QRhiTexture *frameTexture);
     void postprocess(QRhi *rhi, QRhiCommandBuffer *commandBuffer, QRhiTexture *frameTexture);
     void cleanup();
 

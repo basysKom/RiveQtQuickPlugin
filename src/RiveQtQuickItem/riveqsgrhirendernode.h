@@ -87,23 +87,35 @@ protected:
     QRhiBuffer *m_vertexBuffer { nullptr };
     QRhiBuffer *m_texCoordBuffer { nullptr };
     QRhiBuffer *m_finalDrawUniformBuffer { nullptr };
+    QRhiBuffer *m_drawUniformBuffer { nullptr };
+    QRhiBuffer *m_blendUniformBuffer { nullptr };
+
+    QRhiBuffer *m_clippingUniformBuffer { nullptr };
 
     // shared clipping buffer for all surfaces
     QRhiRenderBuffer *m_stencilClippingBuffer { nullptr };
 
-    // those bind the texture for the final draw call
-    QRhiShaderResourceBindings *m_finalDrawResourceBindings { nullptr };
+    // those bind the texture of surfaceA and B for the final draw call
+    QRhiShaderResourceBindings *m_finalDrawResourceBindingsA { nullptr };
+    QRhiShaderResourceBindings *m_finalDrawResourceBindingsB { nullptr };
 
     // in order to configure our pipelines we have to provide resourceBindings
     // those are empty - the actual bindings are created/set per texturenode
     // they can not be shared since bindings will transfer information over renderpasses
-    QRhiShaderResourceBindings *m_dummyResourceBindings { nullptr };
+    // QRhiShaderResourceBindings *m_dummyResourceBindings { nullptr };
+
+    QRhiShaderResourceBindings *m_blendResourceBindingsA { nullptr };
+    QRhiShaderResourceBindings *m_blendResourceBindingsB { nullptr };
+    QRhiShaderResourceBindings *m_drawPipelineResourceBindings { nullptr };
+    QRhiShaderResourceBindings *m_clippingResourceBindings { nullptr };
 
     QRhiSampler *m_sampler { nullptr };
+    QRhiSampler *m_blendSampler { nullptr };
 
     QList<QRhiShaderStage> m_finalDrawShader;
     QList<QRhiShaderStage> m_blendShaders;
     QList<QRhiShaderStage> m_pathShader;
+    QList<QRhiShaderStage> m_clipShader;
 
     QList<QVector2D> m_vertices;
     QList<QVector2D> m_texCoords;
@@ -120,6 +132,7 @@ protected:
     RenderSurface m_renderSurfaceB;
     RenderSurface m_renderSurfaceIntern;
 
+    QRhiTexture *m_qImageTexture { nullptr };
     // pointer that holds the current render surface (a/b)
     // this will be set to &m_renderSurfaceA or &m_renderSurfaceB by the renderprocess
     RenderSurface *m_currentRenderSurface { nullptr };
@@ -149,9 +162,10 @@ protected:
     PostprocessingSMAA *m_postprocessing { nullptr };
 
 private:
-    QRhiGraphicsPipeline *createBlendPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPass);
-    QRhiGraphicsPipeline *createClipPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPassDescriptor);
+    QRhiGraphicsPipeline *createBlendPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPass, QRhiShaderResourceBindings *bindings);
+    QRhiGraphicsPipeline *createClipPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPassDescriptor,
+                                             QRhiShaderResourceBindings *bindings);
     QRhiGraphicsPipeline *createDrawPipeline(QRhi *rhi, bool srcOverBlend, bool stencilBuffer,
                                              QRhiRenderPassDescriptor *renderPassDescriptor, QRhiGraphicsPipeline::Topology t,
-                                             const QList<QRhiShaderStage> &shader);
+                                             const QList<QRhiShaderStage> &shader, QRhiShaderResourceBindings *bindings);
 };
