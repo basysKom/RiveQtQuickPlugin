@@ -169,6 +169,7 @@ private:
         QVector<QVector2D> gradientPositions; // 464
     };
 
+    bool m_useTexture { false };
     GradientData m_gradientData;
 
     // drawing matrix and transformations

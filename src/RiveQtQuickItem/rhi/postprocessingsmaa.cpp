@@ -104,7 +104,8 @@ QByteArray PostprocessingSMAA::loadSearchTextureAsR8Array()
 }
 
 // void PostprocessingSMAA::initializePostprocessingPipeline(QRhi* rhi, const QSizeF &size, std::weak_ptr<QRhiTexture> frameTexture)
-void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommandBuffer *commandBuffer, const QSize &size)
+void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommandBuffer *commandBuffer, const QSize &size,
+                                                          QRhiTexture *frameTexture)
 {
 
     // maybe cleanup (check in method)
@@ -158,6 +159,11 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
     m_edgesPass.edgesTarget->create();
 
     m_edgesPass.edgesResourceBindings = rhi->newShaderResourceBindings();
+    m_edgesPass.edgesResourceBindings->setBindings(
+        { QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
+                                                   m_common.quadUbuffer, 0, UBUFSIZE),
+          QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, frameTexture, m_frameSampler) });
+
     m_releasePool << m_edgesPass.edgesResourceBindings;
     m_edgesPass.edgesResourceBindings->create();
 
@@ -259,6 +265,12 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
 
     // rendering pass for blending
     m_blendPass.blendResourceBindings = rhi->newShaderResourceBindings();
+    m_blendPass.blendResourceBindings->setBindings(
+        { QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
+                                                   m_common.quadUbuffer, 0, UBUFSIZE),
+          QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, frameTexture, m_frameSampler),
+          QRhiShaderResourceBinding::sampledTexture(2, QRhiShaderResourceBinding::FragmentStage, m_weightsPass.weightsTexture,
+                                                    m_weightsPass.weightsSampler) });
     m_releasePool << m_blendPass.blendResourceBindings;
     m_blendPass.blendResourceBindings->create();
 
@@ -290,7 +302,7 @@ void PostprocessingSMAA::postprocess(QRhi *rhi, QRhiCommandBuffer *commandBuffer
 
     m_edgesPass.edgesResourceBindings->setBindings(
         { QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
-                                                m_common.quadUbuffer, 0, UBUFSIZE),
+                                                   m_common.quadUbuffer, 0, UBUFSIZE),
           QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, frameTexture, m_frameSampler) });
 
     m_blendPass.blendResourceBindings->setBindings(
@@ -299,8 +311,6 @@ void PostprocessingSMAA::postprocess(QRhi *rhi, QRhiCommandBuffer *commandBuffer
           QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, frameTexture, m_frameSampler),
           QRhiShaderResourceBinding::sampledTexture(2, QRhiShaderResourceBinding::FragmentStage, m_weightsPass.weightsTexture,
                                                     m_weightsPass.weightsSampler) });
-
-    
 
     QRhiCommandBuffer::VertexInput quadBinding(m_common.quadVertexBuffer, 0);
 

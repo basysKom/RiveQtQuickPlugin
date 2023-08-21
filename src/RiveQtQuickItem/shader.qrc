@@ -20,5 +20,7 @@
         <file>shaders/qt6/smaa-weights.vert</file>
         <file>shaders/qt6/smaa-blend.frag</file>
         <file>shaders/qt6/smaa-blend.vert</file>
+        <file>shaders/qt6/clipRiveTextureNode.frag</file>
+        <file>shaders/qt6/clipRiveTextureNode.vert</file>
     </qresource>
 </RCC>

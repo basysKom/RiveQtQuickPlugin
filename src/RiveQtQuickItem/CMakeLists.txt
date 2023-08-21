@@ -124,6 +124,8 @@ if (${QT_VERSION_MAJOR} EQUAL 6)
             "shaders/qt6/finalDraw.vert"
             "shaders/qt6/blendRiveTextureNode.frag"
             "shaders/qt6/blendRiveTextureNode.vert"
+            "shaders/qt6/clipRiveTextureNode.frag"
+            "shaders/qt6/clipRiveTextureNode.vert"
             # smaa postprocessing
             "shaders/qt6/edges-luma.frag"
             "shaders/qt6/edges.vert"
