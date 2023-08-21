@@ -113,18 +113,11 @@ void RiveQSGRHIRenderNode::setRect(const QRectF &bounds)
     }
 
     // not doing this will cause a crash :/
-    if (m_finalDrawResourceBindingsA) {
-        m_cleanupList.removeAll(m_finalDrawResourceBindingsA);
-        m_finalDrawResourceBindingsA->destroy();
-        m_finalDrawResourceBindingsA->deleteLater();
-        m_finalDrawResourceBindingsA = nullptr;
-    }
-
-    if (m_finalDrawResourceBindingsB) {
-        m_cleanupList.removeAll(m_finalDrawResourceBindingsB);
-        m_finalDrawResourceBindingsB->destroy();
-        m_finalDrawResourceBindingsB->deleteLater();
-        m_finalDrawResourceBindingsB = nullptr;
+    if (m_finalDrawResourceBindings) {
+        m_cleanupList.removeAll(m_finalDrawResourceBindings);
+        m_finalDrawResourceBindings->destroy();
+        m_finalDrawResourceBindings->deleteLater();
+        m_finalDrawResourceBindings = nullptr;
     }
 
     m_verticesDirty = true;
@@ -140,8 +133,6 @@ void RiveQSGRHIRenderNode::setFillMode(const RiveRenderSettings::FillMode mode)
 
 void RiveQSGRHIRenderNode::setPostprocessingMode(const RiveRenderSettings::PostprocessingMode postprocessingMode)
 {
-    // TODO: Postprocessing is crashing, needs adaption to the two buffer concept
-    return;
     if (postprocessingMode == RiveRenderSettings::None) {
         if (m_postprocessing) {
             m_postprocessing->cleanup();
@@ -180,6 +171,7 @@ void RiveQSGRHIRenderNode::renderOffscreen()
         m_renderer->render(cb);
     }
     rhi->endOffscreenFrame();
+
 }
 
 void RiveQSGRHIRenderNode::render(const RenderState *state)
@@ -188,11 +180,6 @@ void RiveQSGRHIRenderNode::render(const RenderState *state)
         return;
     }
 
-    auto *finalDrawResourceBindings = m_finalDrawResourceBindingsA;
-
-    if (!isCurrentRenderBufferA() && !m_postprocessing) {
-        finalDrawResourceBindings = m_finalDrawResourceBindingsB;
-    }
 
     QSGRendererInterface *renderInterface = m_window->rendererInterface();
     QRhiSwapChain *swapChain =
@@ -205,7 +192,7 @@ void RiveQSGRHIRenderNode::render(const RenderState *state)
     commandBuffer->setGraphicsPipeline(m_finalDrawPipeline);
     QSize renderTargetSize = QSGRenderNodePrivate::get(this)->m_rt.rt->pixelSize();
     commandBuffer->setViewport(QRhiViewport(0, 0, renderTargetSize.width(), renderTargetSize.height()));
-    commandBuffer->setShaderResources(finalDrawResourceBindings);
+    commandBuffer->setShaderResources(m_finalDrawResourceBindings);
     QRhiCommandBuffer::VertexInput vertexBindings[] = { { m_vertexBuffer, 0 }, { m_texCoordBuffer, 0 } };
     commandBuffer->setVertexInput(0, 2, vertexBindings);
 
@@ -346,7 +333,7 @@ void RiveQSGRHIRenderNode::prepare()
 
     // only set the renderSurface to A in case we created a new texture
     if (textureCreated) {
-        m_currentRenderSurface = &m_renderSurfaceA;
+       m_currentRenderSurface = &m_renderSurfaceA;
     }
 
     if (!m_dummyResourceBindings) {
@@ -472,6 +459,9 @@ void RiveQSGRHIRenderNode::prepare()
             m_vertexBuffer->deleteLater();
             m_vertexBuffer = nullptr;
         }
+        if (m_postprocessing) {
+            m_postprocessing->initializePostprocessingPipeline(rhi, commandBuffer, QSize(m_rect.width(), m_rect.height()));
+        }
         m_verticesDirty = false;
     }
 
@@ -512,45 +502,33 @@ void RiveQSGRHIRenderNode::prepare()
         m_cleanupList.append(m_finalDrawUniformBuffer);
     }
 
-    if (m_postprocessing) {
-        m_postprocessing->initializePostprocessingPipeline(rhi, commandBuffer, QSize(m_rect.width(), m_rect.height()),
-                                                           getCurrentRenderBuffer());
-    }
-
-    if (!m_finalDrawResourceBindingsA) {
-        m_finalDrawResourceBindingsA = rhi->newShaderResourceBindings();
+    if (!m_finalDrawResourceBindings) {
+        m_finalDrawResourceBindings = rhi->newShaderResourceBindings();
         if (m_postprocessing) {
             QRhiTexture *postprocessedBuffer = m_postprocessing->getTarget();
-            m_finalDrawResourceBindingsA->setBindings({
+            m_finalDrawResourceBindings->setBindings({
                 QRhiShaderResourceBinding::uniformBuffer(
                     0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, m_finalDrawUniformBuffer),
                 QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, postprocessedBuffer, m_sampler),
             });
         } else {
-            m_finalDrawResourceBindingsA->setBindings({
+            m_finalDrawResourceBindings->setBindings({
                 QRhiShaderResourceBinding::uniformBuffer(
                     0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, m_finalDrawUniformBuffer),
                 // binding both buffers and decide in the final draw shader which to use.
-                QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_renderSurfaceA.texture, m_sampler),
+                QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, getCurrentRenderBuffer(), m_sampler),
             });
         }
-
-        m_finalDrawResourceBindingsA->create();
-        m_cleanupList.append(m_finalDrawResourceBindingsA);
+        m_finalDrawResourceBindings->create();
+        m_cleanupList.append(m_finalDrawResourceBindings);
     }
 
-    if (!m_finalDrawResourceBindingsB) {
-        m_finalDrawResourceBindingsB = rhi->newShaderResourceBindings();
-
-        m_finalDrawResourceBindingsB->setBindings({
-            QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
-                                                     m_finalDrawUniformBuffer),
-            // binding both buffers and decide in the final draw shader which to use.
-            QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, m_renderSurfaceB.texture, m_sampler),
+    if (!m_postprocessing) {
+        m_finalDrawResourceBindings->setBindings({
+            QRhiShaderResourceBinding::uniformBuffer(
+                    0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, m_finalDrawUniformBuffer),
+            QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, getCurrentRenderBuffer(), m_sampler),
         });
-
-        m_finalDrawResourceBindingsB->create();
-        m_cleanupList.append(m_finalDrawResourceBindingsB);
     }
 
     if (!m_finalDrawPipeline) {
@@ -579,9 +557,10 @@ void RiveQSGRHIRenderNode::prepare()
 
     commandBuffer->resourceUpdate(resourceUpdates);
 
+        
     // postprocess display buffer
     if (m_postprocessing) {
-        m_postprocessing->postprocess(rhi, commandBuffer);
+        m_postprocessing->postprocess(rhi, commandBuffer, getCurrentRenderBuffer());
     }
 }
 

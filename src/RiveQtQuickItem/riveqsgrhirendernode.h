@@ -91,9 +91,8 @@ protected:
     // shared clipping buffer for all surfaces
     QRhiRenderBuffer *m_stencilClippingBuffer { nullptr };
 
-    // those bind the texture of surfaceA and B for the final draw call
-    QRhiShaderResourceBindings *m_finalDrawResourceBindingsA { nullptr };
-    QRhiShaderResourceBindings *m_finalDrawResourceBindingsB { nullptr };
+    // those bind the texture for the final draw call
+    QRhiShaderResourceBindings *m_finalDrawResourceBindings { nullptr };
 
     // in order to configure our pipelines we have to provide resourceBindings
     // those are empty - the actual bindings are created/set per texturenode

@@ -21,8 +21,8 @@ public:
     bool isInitialized() const { return m_isInitialized; }
 
     // void initializePostprocessingPipeline(QRhi *rhi, const QSizeF &size, std::weak_ptr<QRhiTexture> frameTexture);
-    void initializePostprocessingPipeline(QRhi *rhi, QRhiCommandBuffer *commandBuffer, const QSize &size, QRhiTexture *frameTexture);
-    void postprocess(QRhi *rhi, QRhiCommandBuffer *commandBuffer);
+    void initializePostprocessingPipeline(QRhi *rhi, QRhiCommandBuffer *commandBuffer, const QSize &size);
+    void postprocess(QRhi *rhi, QRhiCommandBuffer *commandBuffer, QRhiTexture *frameTexture);
     void cleanup();
 
 private:
@@ -32,9 +32,6 @@ private:
 
     bool m_isInitialized { false };
     QVector<QRhiResource *> m_releasePool;
-
-    // not owned by us (ToDo: should be a weak pointer)
-    QRhiTexture *m_frameTexture { nullptr };
 
     // owned by us
     QRhiSampler *m_frameSampler { nullptr };
