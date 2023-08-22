@@ -445,6 +445,7 @@ void RiveQSGRHIRenderNode::prepare()
         QRhiColorAttachment colorAttachment(m_renderSurfaceA.texture);
         QRhiTextureRenderTargetDescription desc(colorAttachment);
         m_cleanUpTextureTarget = rhi->newTextureRenderTarget(desc);
+        m_cleanUpTextureTarget->setRenderPassDescriptor(m_cleanUpTextureTarget->newCompatibleRenderPassDescriptor());
 
         m_cleanUpTextureTarget->create();
         m_cleanupList.append(m_cleanUpTextureTarget);
@@ -738,24 +739,24 @@ bool RiveQSGRHIRenderNode::RenderSurface::create(QRhi *rhi, const QSize &surface
     }
     if (!target) {
         QRhiColorAttachment colorAttachment(texture);
-        QRhiTextureRenderTargetDescription desc(colorAttachment);
-        desc.setDepthStencilBuffer(stencilClippingBuffer);
-        target = rhi->newTextureRenderTarget(desc, flags);
-        target->create();
+        QRhiTextureRenderTargetDescription description(colorAttachment);
+        description.setDepthStencilBuffer(stencilClippingBuffer);
+        target = rhi->newTextureRenderTarget(description, flags);
     }
     if (!blendTarget) {
         QRhiColorAttachment colorAttachment(texture);
-        QRhiTextureRenderTargetDescription desc(colorAttachment);
-        blendTarget = rhi->newTextureRenderTarget(desc);
-        blendTarget->create();
+        QRhiTextureRenderTargetDescription description(colorAttachment);
+        blendTarget = rhi->newTextureRenderTarget(description);
     }
     if (!desc) {
         desc = target->newCompatibleRenderPassDescriptor();
         target->setRenderPassDescriptor(desc);
+        target->create();
     }
     if (!blendDesc) {
         blendDesc = target->newCompatibleRenderPassDescriptor();
         blendTarget->setRenderPassDescriptor(blendDesc);
+        blendTarget->create();
     }
     return textureCreated;
 }
