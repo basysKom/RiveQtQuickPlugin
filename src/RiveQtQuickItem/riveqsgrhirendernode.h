@@ -104,6 +104,7 @@ protected:
     QList<QRhiShaderStage> m_finalDrawShader;
     QList<QRhiShaderStage> m_blendShaders;
     QList<QRhiShaderStage> m_pathShader;
+    QList<QRhiShaderStage> m_clipShader;
 
     QList<QVector2D> m_vertices;
     QList<QVector2D> m_texCoords;

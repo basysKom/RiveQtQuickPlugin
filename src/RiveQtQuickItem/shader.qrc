@@ -10,6 +10,8 @@
         <file>shaders/path_vertex_shader.glsl</file>
         <file>shaders/qt6/drawRiveTextureNode.frag</file>
         <file>shaders/qt6/drawRiveTextureNode.vert</file>
+        <file>shaders/qt6/clipTextureNode.frag</file>
+        <file>shaders/qt6/clipTextureNode.vert</file>
         <file>shaders/qt6/finalDraw.frag</file>
         <file>shaders/qt6/finalDraw.vert</file>
         <file>shaders/qt6/blendRiveTextureNode.frag</file>

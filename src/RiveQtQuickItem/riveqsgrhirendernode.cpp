@@ -41,6 +41,17 @@ RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(QQuickWindow *window, std::weak_ptr<r
     m_pathShader.append(QRhiShaderStage(QRhiShaderStage::Fragment, QShader::fromSerialized(file.readAll())));
     file.close();
 
+    file.close();
+    file.setFileName(":/shaders/qt6/clipTextureNode.vert.qsb");
+    file.open(QFile::ReadOnly);
+    m_clipShader.append(QRhiShaderStage(QRhiShaderStage::Vertex, QShader::fromSerialized(file.readAll())));
+
+    file.close();
+    file.setFileName(":/shaders/qt6/clipTextureNode.frag.qsb");
+    file.open(QFile::ReadOnly);
+    m_clipShader.append(QRhiShaderStage(QRhiShaderStage::Fragment, QShader::fromSerialized(file.readAll())));
+    file.close();
+
     file.setFileName(":/shaders/qt6/blendRiveTextureNode.vert.qsb");
     file.open(QFile::ReadOnly);
     m_blendShaders.append(QRhiShaderStage(QRhiShaderStage::Vertex, QShader::fromSerialized(file.readAll())));
@@ -63,8 +74,6 @@ RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(QQuickWindow *window, std::weak_ptr<r
 
     m_renderer->updateViewPort(m_rect);
     m_renderer->setRiveRect({ m_topLeftRivePosition, m_riveSize });
-
-    setPostprocessingMode(RiveRenderSettings::SMAA);
 }
 
 RiveQSGRHIRenderNode::~RiveQSGRHIRenderNode()
@@ -569,7 +578,7 @@ QRhiGraphicsPipeline *RiveQSGRHIRenderNode::createClipPipeline(QRhi *rhi, QRhiRe
 {
     QRhiGraphicsPipeline *clipPipeLine = rhi->newGraphicsPipeline();
 
-    clipPipeLine->setShaderStages(m_pathShader.cbegin(), m_pathShader.cend());
+    clipPipeLine->setShaderStages(m_clipShader.cbegin(), m_clipShader.cend());
     clipPipeLine->setFlags(QRhiGraphicsPipeline::UsesStencilRef);
     clipPipeLine->setDepthTest(true);
     clipPipeLine->setDepthWrite(true);
@@ -581,11 +590,9 @@ QRhiGraphicsPipeline *RiveQSGRHIRenderNode::createClipPipeline(QRhi *rhi, QRhiRe
     QRhiVertexInputLayout inputLayout;
     inputLayout.setBindings({
         { sizeof(QVector2D) },
-        { sizeof(QVector2D) },
     });
     inputLayout.setAttributes({
         { 0, 0, QRhiVertexInputAttribute::Float2, 0 },
-        { 1, 1, QRhiVertexInputAttribute::Float2, 0 },
     });
 
     // Configure stencil operations for writing stencil values

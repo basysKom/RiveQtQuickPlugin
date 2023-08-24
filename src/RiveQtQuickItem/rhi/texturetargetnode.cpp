@@ -171,7 +171,7 @@ void TextureTargetNode::prepareRender()
     }
 
     if (!m_clippingUniformBuffer) {
-        m_clippingUniformBuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 848);
+        m_clippingUniformBuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 2 * 64);
         m_clippingUniformBuffer->create();
         m_cleanupList.append(m_clippingUniformBuffer);
     }
@@ -211,7 +211,7 @@ void TextureTargetNode::prepareRender()
     // note: the clipping path is provided in global coordinates, not local like the geometry
     // thats why we need to bind another matrix (without the transform) and thats why we have another UniformBuffer here!
     m_resourceUpdates->updateDynamicBuffer(m_clippingUniformBuffer, 0, 64, (*m_combinedMatrix).constData());
-    m_resourceUpdates->updateDynamicBuffer(m_clippingUniformBuffer, 784, 64, QMatrix4x4().constData());
+    m_resourceUpdates->updateDynamicBuffer(m_clippingUniformBuffer, 64, 64, QMatrix4x4().constData());
 
     m_resourceUpdates->updateDynamicBuffer(m_drawUniformBuffer, 0, 64, (*m_combinedMatrix).constData());
     m_resourceUpdates->updateDynamicBuffer(m_drawUniformBuffer, 784, 64, m_transform.constData());

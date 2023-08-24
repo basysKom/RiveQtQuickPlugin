@@ -120,6 +120,8 @@ if (${QT_VERSION_MAJOR} EQUAL 6)
         FILES
             "shaders/qt6/drawRiveTextureNode.frag"
             "shaders/qt6/drawRiveTextureNode.vert"
+            "shaders/qt6/clipTextureNode.frag"
+            "shaders/qt6/clipTextureNode.vert"
             "shaders/qt6/finalDraw.frag"
             "shaders/qt6/finalDraw.vert"
             "shaders/qt6/blendRiveTextureNode.frag"
@@ -137,6 +139,8 @@ if (${QT_VERSION_MAJOR} EQUAL 6)
         "shaders.qrc"
         "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/drawRiveTextureNode.vert.qsb"
         "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/drawRiveTextureNode.frag.qsb"
+        "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/clipTextureNode.vert.qsb"
+        "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/clipTextureNode.frag.qsb"
         "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/finalDraw.vert.qsb"
         "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/finalDraw.frag.qsb"
         "${CMAKE_CURRENT_BINARY_DIR}/shaders/qt6/blendRiveTextureNode.vert.qsb"
