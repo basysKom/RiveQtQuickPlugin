@@ -81,9 +81,10 @@ void TextureTargetNode::recycle()
     m_opacity = 1.0f;
     m_clip = false;
     m_shaderBlending = false;
-    m_useTexture = false;
 
-    if (m_qImageTexture) {
+    if (m_qImageTexture && m_useTexture) {
+        m_useTexture = false;
+
         if (m_sampler) {
             m_cleanupList.removeAll(m_sampler);
             m_sampler->destroy();
@@ -151,16 +152,11 @@ void TextureTargetNode::prepareRender()
             m_clippingData.constData());
     }
 
-    // only for bindings
-    if (!m_qImageTexture) {
-        m_qImageTexture = rhi->newTexture(QRhiTexture::BGRA8, QSize(1, 1), 1);
-        m_texture = QImage(QSize(1, 1), QImage::Format_RGB888);
-        m_cleanupList.append(m_qImageTexture);
-        m_qImageTexture->create();
-        m_useTexture = false;
+    if (!m_useTexture) {
+        m_qImageTexture = m_node->getDummyTexture();
     }
 
-    if (m_qImageTexture) {
+    if (m_useTexture && m_qImageTexture) {
         m_resourceUpdates->uploadTexture(m_qImageTexture, m_texture);
     }
 
