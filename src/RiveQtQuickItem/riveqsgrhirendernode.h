@@ -61,6 +61,7 @@ public:
     QRhiTexture *getRenderBufferA();
     QRhiTexture *getRenderBufferB();
     QRhiTexture *getRenderBufferIntern();
+    QRhiTexture *getDummyTexture();
 
     bool isCurrentRenderBufferA();
 
@@ -96,13 +97,7 @@ protected:
     QRhiRenderBuffer *m_stencilClippingBuffer { nullptr };
 
     // those bind the texture of surfaceA and B for the final draw call
-    QRhiShaderResourceBindings *m_finalDrawResourceBindingsA { nullptr };
-    QRhiShaderResourceBindings *m_finalDrawResourceBindingsB { nullptr };
-
-    // in order to configure our pipelines we have to provide resourceBindings
-    // those are empty - the actual bindings are created/set per texturenode
-    // they can not be shared since bindings will transfer information over renderpasses
-    // QRhiShaderResourceBindings *m_dummyResourceBindings { nullptr };
+    QRhiShaderResourceBindings *m_finalDrawResourceBindings { nullptr };
 
     QRhiShaderResourceBindings *m_blendResourceBindingsA { nullptr };
     QRhiShaderResourceBindings *m_blendResourceBindingsB { nullptr };
@@ -132,7 +127,9 @@ protected:
     RenderSurface m_renderSurfaceB;
     RenderSurface m_renderSurfaceIntern;
 
-    QRhiTexture *m_qImageTexture { nullptr };
+    // dummy texture to make the shader binding happy
+    QRhiTexture *m_dummyTexture { nullptr };
+
     // pointer that holds the current render surface (a/b)
     // this will be set to &m_renderSurfaceA or &m_renderSurfaceB by the renderprocess
     RenderSurface *m_currentRenderSurface { nullptr };

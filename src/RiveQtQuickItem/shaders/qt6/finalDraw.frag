@@ -17,9 +17,12 @@ layout(std140, binding = 0) uniform buf {
     float right;
     float top;
     float bottom;
+    int useTextureNumber;
 };
 
-layout(binding = 1) uniform sampler2D u_texture;
+layout(binding = 1) uniform sampler2D u_textureA;
+layout(binding = 2) uniform sampler2D u_textureB;
+layout(binding = 3) uniform sampler2D u_texturePP;
 
 vec4 drawTexture(sampler2D s_texture, vec2 texCoord) {
     if (texCoord.x >= left && texCoord.x <= right &&
@@ -32,6 +35,16 @@ vec4 drawTexture(sampler2D s_texture, vec2 texCoord) {
 
 void main()
 {
-    vec4 finalColor = drawTexture(u_texture, texCoord);
-    fragColor = finalColor * qt_Opacity;
+    if (useTextureNumber == 0) {
+        vec4 finalColor = drawTexture(u_textureA, texCoord);
+        fragColor = finalColor * qt_Opacity;
+    }
+    if (useTextureNumber == 1) {
+        vec4 finalColor = drawTexture(u_textureB, texCoord);
+        fragColor = finalColor * qt_Opacity;
+    }
+    if (useTextureNumber == 2) {
+        vec4 finalColor = drawTexture(u_texturePP, texCoord);
+        fragColor = finalColor * qt_Opacity;
+    }
 }

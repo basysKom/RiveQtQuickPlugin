@@ -11,18 +11,21 @@
 #include <private/qrhi_p.h>
 #include <private/qsgrendernode_p.h>
 
+#include <QSGRendererInterface>
+
 class PostprocessingSMAA
 {
 public:
-    PostprocessingSMAA();
+    PostprocessingSMAA(QSGRendererInterface::GraphicsApi graphicsApi);
     virtual ~PostprocessingSMAA();
 
-    QRhiTexture *getTarget() const { return m_target; }
+    QRhiTexture *getTarget() const { return m_postprocessingRenderTexture; }
     bool isInitialized() const { return m_isInitialized; }
 
     // void initializePostprocessingPipeline(QRhi *rhi, const QSizeF &size, std::weak_ptr<QRhiTexture> frameTexture);
-    void initializePostprocessingPipeline(QRhi *rhi, QRhiCommandBuffer *commandBuffer, const QSize &size, QRhiTexture *frameTexture);
-    void postprocess(QRhi *rhi, QRhiCommandBuffer *commandBuffer, QRhiTexture *frameTexture);
+    void initializePostprocessingPipeline(QRhi *rhi, QRhiCommandBuffer *commandBuffer, const QSize &size, QRhiTexture *frameTextureA,
+                                          QRhiTexture *frameTextureB);
+    void postprocess(QRhi *rhi, QRhiCommandBuffer *commandBuffer, bool useTextureBufferA);
     void cleanup();
 
 private:
@@ -44,58 +47,61 @@ private:
 
     struct
     {
-        QRhiBuffer *quadVertexBuffer = nullptr;
-        QRhiBuffer *quadIndexBuffer = nullptr;
-        QRhiBuffer *quadUbuffer = nullptr;
+        QRhiBuffer *quadVertexBuffer { nullptr };
+        QRhiBuffer *quadIndexBuffer { nullptr };
+        QRhiBuffer *quadUbuffer { nullptr };
     } m_common;
 
     struct
     {
         // lookup textures for weight computation
-        QRhiTexture *areaTexture = nullptr;
-        QRhiSampler *areaSampler = nullptr;
-        QRhiTexture *searchTexture = nullptr;
-        QRhiSampler *searchSampler = nullptr;
+        QRhiTexture *areaTexture { nullptr };
+        QRhiSampler *areaSampler { nullptr };
+        QRhiTexture *searchTexture { nullptr };
+        QRhiSampler *searchSampler { nullptr };
     } m_lookup;
 
     struct
     {
         // edges target (we are going to render the edges into this texture)
-        QRhiRenderPassDescriptor *edgesRenderPassDescriptor = nullptr;
-        QRhiTextureRenderTarget *edgesTarget = nullptr;
-        QRhiTexture *edgesTexture = nullptr;
-        QRhiSampler *edgesSampler = nullptr;
+        QRhiRenderPassDescriptor *edgesRenderPassDescriptor { nullptr };
+        QRhiTextureRenderTarget *edgesTarget { nullptr };
+        QRhiTexture *edgesTexture { nullptr };
+        QRhiSampler *edgesSampler { nullptr };
 
         // rendering pipeline for edges
-        QRhiShaderResourceBindings *edgesResourceBindings = nullptr;
-        QRhiGraphicsPipeline *edgesPipeline = nullptr;
+        QRhiShaderResourceBindings *edgesResourceBindingsA { nullptr };
+        QRhiShaderResourceBindings *edgesResourceBindingsB { nullptr };
+        QRhiGraphicsPipeline *edgesPipeline { nullptr };
     } m_edgesPass;
 
     struct
     {
         // weights target (we are going to render the weights into this texture)
-        QRhiRenderPassDescriptor *weightsRenderPassDescriptor = nullptr;
-        QRhiTextureRenderTarget *weightsTarget = nullptr;
-        QRhiTexture *weightsTexture = nullptr;
-        QRhiSampler *weightsSampler = nullptr;
+        QRhiRenderPassDescriptor *weightsRenderPassDescriptor { nullptr };
+        QRhiTextureRenderTarget *weightsTarget { nullptr };
+        QRhiTexture *weightsTexture { nullptr };
+        QRhiSampler *weightsSampler { nullptr };
 
         // rendering pipeline for our weight calculation pass
-        QRhiShaderResourceBindings *weightsResourceBindings = nullptr;
-        QRhiGraphicsPipeline *weightsPipeline = nullptr;
+        QRhiShaderResourceBindings *weightsResourceBindings { nullptr };
+        QRhiGraphicsPipeline *weightsPipeline { nullptr };
     } m_weightsPass;
 
     struct
     {
         // blend target (this is the last pass, so we don't need a sampler for the next stage here)
-        QRhiRenderPassDescriptor *blendRenderPassDescriptor = nullptr;
-        QRhiTextureRenderTarget *blendTarget = nullptr;
-        QRhiTexture *blendTexture = nullptr;
+        QRhiRenderPassDescriptor *blendRenderPassDescriptor { nullptr };
+        QRhiTextureRenderTarget *blendTarget { nullptr };
+        QRhiTexture *blendTexture { nullptr };
 
         // rendering pipeline for blending pass
-        QRhiShaderResourceBindings *blendResourceBindings = nullptr;
-        QRhiGraphicsPipeline *blendPipeline = nullptr;
+        QRhiShaderResourceBindings *blendResourceBindings { nullptr };
+        QRhiGraphicsPipeline *blendPipeline { nullptr };
     } m_blendPass;
 
     QSize m_targetSize;
-    QRhiTexture *m_target { nullptr };
+    QRhiTexture *m_postprocessingRenderTexture { nullptr };
+
+    QSGRendererInterface::GraphicsApi m_api;
 };
