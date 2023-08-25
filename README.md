@@ -16,6 +16,16 @@ This plugin allows you to display Rive animations, interact with them, and bind 
 
 https://user-images.githubusercontent.com/1797537/233192955-7360403b-b51b-422a-8770-20d504c130c0.mp4
 
+## State of Implementation
+| Platform            | OpenGL                 | Direct3D    |Vulkan    |Metal    |SoftwareRendering    |
+|----------------     |-----------             |-----------  |-----------|-----------|-----------|
+| Qt5.15.2 Windows    | partial, no blending   |❌|❌|❌|✅(no texture meshes)
+| Qt5.15.2 Linux      | partial, no blending   |❌|❌|❌|✅(no texture meshes)
+| Qt5.15.2 macOS      | ❌                    |❌|❌|❌|✅(no texture meshes)
+| Qt6.5 Windows    | ✅   |✅|✅|❌|✅(no texture meshes)
+| Qt6.5 Linux      | ✅   |❌|✅|❌|✅(no texture meshes)
+| Qt6.5 macOS      | ❌   |❌|❌|❌|✅(no texture meshes)
+
 
 ## Features
 
