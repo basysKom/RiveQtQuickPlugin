@@ -31,6 +31,9 @@
 class RiveQSGRenderNode;
 class RiveQSGRHIRenderNode;
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+class RiveQSGSoftwareRenderNode;
+#endif
 /**
  * \class RiveQtQuickItem
  * \brief A quick item for Rive-based animations.
@@ -39,7 +42,11 @@ class RiveQSGRHIRenderNode;
  * \author Jeremias Bosch, Jonas Kalinka, basysKom GmbH
  * \date 2023/08/01
  */
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+class RiveQtQuickItem : public QQuickPaintedItem
+#else
 class RiveQtQuickItem : public QQuickItem
+#endif
 {
     Q_OBJECT
 
@@ -310,7 +317,8 @@ class RiveQtQuickItem : public QQuickItem
      * }
      * \endcode
      */
-    Q_PROPERTY(RiveRenderSettings::PostprocessingMode postprocessingMode READ postprocessingMode WRITE setPostprocessingMode NOTIFY postprocessingModeChanged)
+    Q_PROPERTY(RiveRenderSettings::PostprocessingMode postprocessingMode READ postprocessingMode WRITE setPostprocessingMode NOTIFY
+                   postprocessingModeChanged)
 
     /**
      * \property RiveQtQuickItem::fillMode
@@ -371,21 +379,21 @@ public:
 
     void triggerAnimation(int id);
 
-    bool isTextureProvider() const override { return true; }
+    bool isTextureProvider() const override;
 
-    QSGTextureProvider *textureProvider() const override { return m_textureProvider.data(); }
+    QSGTextureProvider *textureProvider() const override;
 
-    QString fileSource() const { return m_fileSource; }
+    QString fileSource() const;
     void setFileSource(const QString &source);
 
-    LoadingStatus loadingStatus() const { return m_loadingStatus; }
+    LoadingStatus loadingStatus() const;
 
     int currentAnimationIndex() const;
     int currentArtboardIndex() const;
     void setCurrentArtboardIndex(const int newCurrentArtboardIndex);
 
     const QVector<ArtBoardInfo> &artboards() const;
-    const QVector<StateMachineInfo> &stateMachines() const { return m_stateMachineList; }
+    const QVector<StateMachineInfo> &stateMachines() const;
     const QVector<AnimationInfo> &animations() const;
 
     int currentStateMachineIndex() const;
@@ -397,28 +405,20 @@ public:
     bool interactive() const;
     void setInteractive(bool newInteractive);
 
-    RiveRenderSettings::PostprocessingMode postprocessingMode() const { return m_renderSettings.postprocessingMode; }
-    void setPostprocessingMode(const RiveRenderSettings::PostprocessingMode mode)
-    {
-        m_renderSettings.postprocessingMode = mode;
-        emit postprocessingModeChanged();
-    }
+    RiveRenderSettings::PostprocessingMode postprocessingMode() const;
+    void setPostprocessingMode(const RiveRenderSettings::PostprocessingMode mode);
 
-    RiveRenderSettings::RenderQuality renderQuality() const { return m_renderSettings.renderQuality; }
-    void setRenderQuality(const RiveRenderSettings::RenderQuality quality)
-    {
-        m_renderSettings.renderQuality = quality;
-        emit renderQualityChanged();
-    }
+    RiveRenderSettings::RenderQuality renderQuality() const;
+    void setRenderQuality(const RiveRenderSettings::RenderQuality quality);
 
-    RiveRenderSettings::FillMode fillMode() const { return m_renderSettings.fillMode; }
-    void setFillMode(const RiveRenderSettings::FillMode fillMode)
-    {
-        m_renderSettings.fillMode = fillMode;
-        emit fillModeChanged();
-    }
+    RiveRenderSettings::FillMode fillMode() const;
+    void setFillMode(const RiveRenderSettings::FillMode fillMode);
 
-    int frameRate() { return m_frameRate; }
+    int frameRate();
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    void paint(QPainter *painter) override;
+#endif
 
 signals:
     void animationsChanged();
@@ -447,7 +447,7 @@ signals:
     void frameRateChanged();
 
 protected:
-    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data) override;
     void componentComplete() override;
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -523,5 +523,8 @@ private:
     RiveQSGRenderNode *m_renderNode { nullptr };
     void updateStateMachineValues();
 
-    bool m_loadingGuard {false};
+    bool m_loadingGuard { false };
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    RiveQSGSoftwareRenderNode *softwareRenderNode;
+#endif
 };

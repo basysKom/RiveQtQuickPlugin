@@ -14,8 +14,6 @@
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #    include "renderer/riveqtrhirenderer.h"
-#else
-#    include "riveqsgopenglrendernode.h"
 #endif
 
 RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance,
@@ -32,10 +30,6 @@ RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr
         node->setPostprocessingMode(m_renderSettings.postprocessingMode);
         return node;
     }
-#else
-    case QSGRendererInterface::GraphicsApi::OpenGL:
-        return new RiveQSGOpenGLRenderNode(window, artboardInstance, geometry);
-        break;
 #endif
     case QSGRendererInterface::GraphicsApi::Software:
     default:

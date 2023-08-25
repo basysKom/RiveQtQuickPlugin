@@ -25,6 +25,68 @@ void RiveQSGSoftwareRenderNode::render(const RenderState *state)
     renderSoftware(state);
 }
 
+void RiveQSGSoftwareRenderNode::paint(QPainter *painter)
+{
+    if (!painter) {
+        return;
+    }
+
+    if (m_artboardInstance.expired()) {
+        return;
+    }
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    auto artboardInstance = m_artboardInstance.lock();
+
+    auto x = 0;
+    auto y = 0;
+
+    auto aspectX = painter->device()->width() / (artboardInstance->width());
+    auto aspectY = painter->device()->height() / (artboardInstance->height());
+
+    // Calculate the uniform scale factor to preserve the aspect ratio
+    auto scaleFactor = qMin(aspectX, aspectY);
+
+    // Calculate the new width and height of the item while preserving the aspect ratio
+    auto newWidth = artboardInstance->width() * scaleFactor;
+    auto newHeight = artboardInstance->height() * scaleFactor;
+
+    // Calculate the offsets needed to center the item within its bounding rectangle
+    auto offsetX = (painter->device()->width() - newWidth) / 2.0;
+    auto offsetY = (painter->device()->height() - newHeight) / 2.0;
+
+    // TODO this only works for PreserverAspectFit
+    m_scaleFactorX = scaleFactor;
+    m_scaleFactorY = scaleFactor;
+    m_topLeftRivePosition.setX(offsetX);
+    m_topLeftRivePosition.setY(offsetY);
+
+    m_modelViewTransform = QTransform();
+    // Apply transformations in the correct order
+    m_modelViewTransform.translate(x, y);
+    m_modelViewTransform.translate(offsetX, offsetY);
+    m_modelViewTransform.scale(scaleFactor, scaleFactor);
+#endif
+
+    painter->save();
+    {
+        auto artboardInstance = m_artboardInstance.lock();
+
+        painter->setTransform(m_modelViewTransform, false);
+
+        m_renderer.setPainter(painter);
+
+        painter->save();
+        {
+            if (artboardInstance) {
+                artboardInstance->draw(&m_renderer);
+            }
+        }
+        painter->restore();
+    }
+    painter->restore();
+}
+
 QTransform matrix4x4ToTransform(const QMatrix4x4 &matrix)
 {
     return QTransform(matrix(0, 0), matrix(0, 1), matrix(0, 3), matrix(1, 0), matrix(1, 1), matrix(1, 3), matrix(3, 0), matrix(3, 1),
@@ -33,6 +95,8 @@ QTransform matrix4x4ToTransform(const QMatrix4x4 &matrix)
 
 void RiveQSGSoftwareRenderNode::renderSoftware(const RenderState *state)
 {
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     if (m_artboardInstance.expired()) {
         return;
     }
@@ -49,6 +113,7 @@ void RiveQSGSoftwareRenderNode::renderSoftware(const RenderState *state)
     auto artboardInstance = m_artboardInstance.lock();
 
     const QRect &boundingRect = state->clipRegion()->boundingRect();
+
     auto x = boundingRect.x();
     auto y = boundingRect.y();
 
@@ -72,6 +137,14 @@ void RiveQSGSoftwareRenderNode::renderSoftware(const RenderState *state)
     m_topLeftRivePosition.setX(offsetX);
     m_topLeftRivePosition.setY(offsetY);
 
+    //  Set the model-view matrix and apply the translation and scale
+    m_matrix = *state->projectionMatrix();
+    m_modelViewTransform = matrix4x4ToTransform(m_matrix);
+    // Apply transformations in the correct order
+    m_modelViewTransform.translate(x, y);
+    m_modelViewTransform.translate(offsetX, offsetY);
+    m_modelViewTransform.scale(scaleFactor, scaleFactor);
+
     QPainter *painter = nullptr;
 
     void *vPainter = renderInterface->getResource(m_window, QSGRendererInterface::Resource::PainterResource);
@@ -80,27 +153,7 @@ void RiveQSGSoftwareRenderNode::renderSoftware(const RenderState *state)
     } else {
         return;
     }
-
-    painter->save();
-    {
-        //  Set the model-view matrix and apply the translation and scale
-        QMatrix4x4 matrix = *state->projectionMatrix();
-        QTransform modelViewTransform = matrix4x4ToTransform(matrix);
-
-        // Apply transformations in the correct order
-        modelViewTransform.translate(x, y);
-        modelViewTransform.translate(offsetX, offsetY);
-        modelViewTransform.scale(scaleFactor, scaleFactor);
-
-        painter->setTransform(modelViewTransform, false);
-
-        m_renderer.setPainter(painter);
-
-        painter->save();
-        {
-            artboardInstance->draw(&m_renderer);
-        }
-        painter->restore();
-    }
-    painter->restore();
+    paint(painter);
+#endif
+    // in qt5 paint will be called by paint method of paintedItem
 }

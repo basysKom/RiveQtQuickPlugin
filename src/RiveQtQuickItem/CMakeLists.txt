@@ -26,8 +26,6 @@ set(PROJECT_SOURCES
     riveqtquickitem.cpp
     rivestatemachineinput.h
     rivestatemachineinput.cpp
-    riveqsgopenglrendernode.h
-    riveqsgopenglrendernode.cpp
     riveqsgsoftwarerendernode.h
     riveqsgsoftwarerendernode.cpp
     riveqsgrendernode.h
