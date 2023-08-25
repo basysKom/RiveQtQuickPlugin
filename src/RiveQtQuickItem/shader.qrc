@@ -1,13 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>shaders/blending_fragment_shader.glsl</file>
-        <file>shaders/blending_vertex_shader.glsl</file>
-        <file>shaders/image_fragment_shader.glsl</file>
-        <file>shaders/image_vertex_shader.glsl</file>
-        <file>shaders/imageMesh_fragment_shader.glsl</file>
-        <file>shaders/imageMesh_vertex_shader.glsl</file>
-        <file>shaders/path_fragement_shader.glsl</file>
-        <file>shaders/path_vertex_shader.glsl</file>
         <file>shaders/qt6/drawRiveTextureNode.frag</file>
         <file>shaders/qt6/drawRiveTextureNode.vert</file>
         <file>shaders/qt6/finalDraw.frag</file>

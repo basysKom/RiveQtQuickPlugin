@@ -32,6 +32,8 @@ public:
 
     void render(const RenderState *state) override;
 
+    void paint(QPainter *painter);
+
 private:
     void renderSoftware(const RenderState *state);
 
@@ -39,4 +41,7 @@ private:
 
     QPainter m_fallbackPainter;
     QPixmap m_fallbackPixmap;
+
+    QMatrix4x4 m_matrix;
+    QTransform m_modelViewTransform;
 };

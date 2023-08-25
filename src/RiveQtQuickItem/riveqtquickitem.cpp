@@ -26,8 +26,16 @@
 #include "riveqtquickitem.h"
 #include "renderer/riveqtfactory.h"
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#    include "riveqsgsoftwarerendernode.h"
+#endif
+
 RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    : QQuickPaintedItem(parent)
+#else
     : QQuickItem(parent)
+#endif
 {
     // set global flags and configs of our item
     // TODO: maybe we should also allow Hover Events to be used
@@ -61,7 +69,9 @@ RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
     m_lastUpdateTime = m_elapsedTimer.elapsed();
 
     m_stateMachineInterface = new RiveStateMachineInput(this);
-
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    setVisible(true);
+#endif
     update();
 }
 
@@ -91,6 +101,21 @@ void RiveQtQuickItem::triggerAnimation(int id)
 
     qCDebug(rqqpItem) << "Selected Animation" << QString::fromStdString(m_animationInstance->name());
     emit currentAnimationIndexChanged();
+}
+
+bool RiveQtQuickItem::isTextureProvider() const
+{
+    return true;
+}
+
+QSGTextureProvider *RiveQtQuickItem::textureProvider() const
+{
+    return m_textureProvider.data();
+}
+
+QString RiveQtQuickItem::fileSource() const
+{
+    return m_fileSource;
 }
 
 void RiveQtQuickItem::updateInternalArtboard()
@@ -140,7 +165,7 @@ void RiveQtQuickItem::updateInternalArtboard()
     emit internalArtboardChanged();
 }
 
-QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
+QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
 {
     if (m_loadingGuard) {
         return oldNode;
@@ -152,7 +177,9 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         return oldNode;
     }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     m_renderNode = static_cast<RiveQSGRenderNode *>(oldNode);
+#endif
 
     // unload the file from the render thread to make sure its not accessed at time of unloading
     if (m_loadingStatus == Unloading && m_renderNode) {
@@ -176,13 +203,21 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         emit loadFileAfterUnloading(m_fileSource);
         m_frameRate = 0;
         emit frameRateChanged();
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+        return QQuickPaintedItem::updatePaintNode(oldNode, data);
+#else
         return m_renderNode;
+#endif
     }
 
     if (!isVisible()) {
         m_frameRate = 0;
         emit frameRateChanged();
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+        return QQuickPaintedItem::updatePaintNode(oldNode, data);
+#else
         return m_renderNode;
+#endif
     }
 
     if (m_scheduleArtboardChange) {
@@ -201,7 +236,11 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
             emit internalStateMachineChanged();
             m_frameRate = 0;
             emit frameRateChanged();
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+            return QQuickPaintedItem::updatePaintNode(oldNode, data);
+#else
             return m_renderNode;
+#endif
         }
 
         m_scheduleArtboardChange = false;
@@ -272,7 +311,11 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     et.start();
 
     m_hasValidRenderNode = true;
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    return QQuickPaintedItem::updatePaintNode(oldNode, data);
+#else
     return m_renderNode;
+#endif
 }
 
 void RiveQtQuickItem::componentComplete()
@@ -283,8 +326,7 @@ void RiveQtQuickItem::componentComplete()
     // and usefull when building more generic views
     //
 
-    connect(m_stateMachineInterface, &RiveStateMachineInput::riveInputsChanged, this,
-            &RiveQtQuickItem::stateMachineStringInterfaceChanged);
+    connect(m_stateMachineInterface, &RiveStateMachineInput::riveInputsChanged, this, &RiveQtQuickItem::stateMachineStringInterfaceChanged);
     m_stateMachineInterface->initializeInternal();
 }
 
@@ -366,6 +408,11 @@ void RiveQtQuickItem::setFileSource(const QString &source)
 
     // Load the Rive file when the fileSource is set
     loadRiveFile(source);
+}
+
+RiveQtQuickItem::LoadingStatus RiveQtQuickItem::loadingStatus() const
+{
+    return m_loadingStatus;
 }
 
 int RiveQtQuickItem::currentAnimationIndex() const
@@ -603,6 +650,11 @@ const QVector<ArtBoardInfo> &RiveQtQuickItem::artboards() const
     return m_artboardInfoList;
 }
 
+const QVector<StateMachineInfo> &RiveQtQuickItem::stateMachines() const
+{
+    return m_stateMachineList;
+}
+
 int RiveQtQuickItem::currentArtboardIndex() const
 {
     return m_currentArtboardIndex;
@@ -812,3 +864,50 @@ void RiveQtQuickItem::setInteractive(bool newInteractive)
 
     emit interactiveChanged();
 }
+
+RiveRenderSettings::PostprocessingMode RiveQtQuickItem::postprocessingMode() const
+{
+    return m_renderSettings.postprocessingMode;
+}
+
+void RiveQtQuickItem::setPostprocessingMode(const RiveRenderSettings::PostprocessingMode mode)
+{
+    m_renderSettings.postprocessingMode = mode;
+    emit postprocessingModeChanged();
+}
+
+RiveRenderSettings::RenderQuality RiveQtQuickItem::renderQuality() const
+{
+    return m_renderSettings.renderQuality;
+}
+
+void RiveQtQuickItem::setRenderQuality(const RiveRenderSettings::RenderQuality quality)
+{
+    m_renderSettings.renderQuality = quality;
+    emit renderQualityChanged();
+}
+
+RiveRenderSettings::FillMode RiveQtQuickItem::fillMode() const
+{
+    return m_renderSettings.fillMode;
+}
+
+void RiveQtQuickItem::setFillMode(const RiveRenderSettings::FillMode fillMode)
+{
+    m_renderSettings.fillMode = fillMode;
+    emit fillModeChanged();
+}
+
+int RiveQtQuickItem::frameRate()
+{
+    return m_frameRate;
+}
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+void RiveQtQuickItem::paint(QPainter *painter)
+{
+    if (m_renderNode) {
+        static_cast<RiveQSGSoftwareRenderNode *>(m_renderNode)->paint(painter);
+    }
+}
+#endif
