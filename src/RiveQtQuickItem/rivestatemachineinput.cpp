@@ -75,18 +75,27 @@ void RiveStateMachineInput::setRiveProperty(const QString &propertyName, const Q
     if (m_generatedRivePropertyMap.contains(propertyName)) {
         const auto &type = m_generatedRivePropertyMap.value(propertyName).value<RiveStateMachineInput::RivePropertyType>();
 
-        // use type to stay compatible to qt5
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        if ((value.typeId() ==  QMetaType::Type::Int || value.typeId() ==  QMetaType::Type::Double)
+            && type == RiveStateMachineInput::RivePropertyType::RiveNumber) {
+            auto *input = static_cast<rive::SMINumber *>(m_inputMap.value(propertyName));
+            input->value(value.toDouble());
+        }
+        if (value.typeId() ==  QMetaType::Type::Bool && type == RiveStateMachineInput::RivePropertyType::RiveBoolean) {
+            auto *input = static_cast<rive::SMIBool *>(m_inputMap.value(propertyName));
+            input->value(value.toBool());
+        }
+#else
         if ((value.type() == QVariant::Type::Int || value.type() == QVariant::Type::Double)
             && type == RiveStateMachineInput::RivePropertyType::RiveNumber) {
             auto *input = static_cast<rive::SMINumber *>(m_inputMap.value(propertyName));
             input->value(value.toDouble());
         }
-
-        // use type to stay compatible to qt5
         if (value.type() == QVariant::Type::Bool && type == RiveStateMachineInput::RivePropertyType::RiveBoolean) {
             auto *input = static_cast<rive::SMIBool *>(m_inputMap.value(propertyName));
             input->value(value.toBool());
         }
+#endif
     }
 }
 
