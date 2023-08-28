@@ -121,15 +121,20 @@ $(document).ready(function(){initNavTree('riveqsgsoftwarerendernode_8h_source.ht
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <span class="keywordtype">void</span> render(<span class="keyword">const</span> RenderState *state) <span class="keyword">override</span>;</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <span class="keywordtype">void</span> renderSoftware(<span class="keyword">const</span> RenderState *state);</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160; </div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    RiveQtPainterRenderer m_renderer;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <span class="keywordtype">void</span> paint(QPainter *painter);</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <span class="keywordtype">void</span> renderSoftware(<span class="keyword">const</span> RenderState *state);</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    QPainter m_fallbackPainter;</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    QPixmap m_fallbackPixmap;</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;};</div>
-<div class="ttc" id="aclassRiveQtQuickItem_html"><div class="ttname"><a href="classRiveQtQuickItem.html">RiveQtQuickItem</a></div><div class="ttdoc">A quick item for Rive-based animations.</div><div class="ttdef"><b>Definition:</b> riveqtquickitem.h:43</div></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    RiveQtPainterRenderer m_renderer;</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160; </div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    QPainter m_fallbackPainter;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    QPixmap m_fallbackPixmap;</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    QMatrix4x4 m_matrix;</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    QTransform m_modelViewTransform;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;};</div>
+<div class="ttc" id="aclassRiveQtQuickItem_html"><div class="ttname"><a href="classRiveQtQuickItem.html">RiveQtQuickItem</a></div><div class="ttdoc">A quick item for Rive-based animations.</div><div class="ttdef"><b>Definition:</b> riveqtquickitem.h:50</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
