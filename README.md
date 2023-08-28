@@ -24,7 +24,7 @@ https://user-images.githubusercontent.com/1797537/233192955-7360403b-b51b-422a-8
 | Qt5.15.2 macOS      | ❌   |❌|❌|❌|✅(no texture meshes)
 | Qt6.5 Windows    | ✅   |✅|✅|❌|✅(no texture meshes)
 | Qt6.5 Linux      | ✅   |❌|✅|❌|✅(no texture meshes)
-| Qt6.5 macOS      | ❌   |❌|❌|❌|✅(no texture meshes)
+| Qt6.5 macOS      | ✅   |❌|❌|✅|✅(no texture meshes)
 
 
 ## Features
