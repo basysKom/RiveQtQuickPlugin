@@ -39,6 +39,7 @@
 
 3rdParty/rive/cmake/rive-cpp-src/
 *.user
+.vscode
 
 builds/
 .directory
