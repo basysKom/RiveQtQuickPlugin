@@ -298,13 +298,17 @@ void RiveStateMachineInput::handlePropertyChanged()
 
 void RiveStateMachineInput::connectStateMachineToProperties()
 {
+
+    // reset
+    m_inputMap.clear();
+    m_generatedRivePropertyMap.clear();
+
+    // return if empty state machine has been set
     if (!m_isCompleted)
         return;
     if (!m_stateMachineInstance)
         return;
 
-    m_inputMap.clear();
-    m_generatedRivePropertyMap.clear();
     for (int i = 0; i < m_stateMachineInstance->inputCount(); i++) {
         auto input = m_stateMachineInstance->input(i);
 
@@ -328,8 +332,8 @@ void RiveStateMachineInput::connectStateMachineToProperties()
 
         if (input->inputCoreType() == rive::StateMachineTrigger::typeKey) {
             qCDebug(rqqpInspection) << "Found the following function in rive animation" << propertyName << "Type: Trigger";
-            auto tiggerInput = static_cast<rive::SMITrigger *>(input);
-            m_inputMap.insert(propertyName, tiggerInput);
+            auto triggerInput = static_cast<rive::SMITrigger *>(input);
+            m_inputMap.insert(propertyName, triggerInput);
             m_generatedRivePropertyMap.insert(propertyName, QVariant::fromValue(RiveStateMachineInput::RivePropertyType::RiveTrigger));
         }
     }
