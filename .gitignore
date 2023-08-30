@@ -38,6 +38,7 @@
 *.app
 
 3rdParty/rive/cmake/rive-cpp-src/
+3rdParty/rive/cmake/rive-cpp-QtPlugin.zip
 *.user
 .vscode
 

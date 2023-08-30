@@ -55,7 +55,10 @@ endfunction()
 # there are some upstream fixes in regard of clip fill rule that mostlikely cause this
 # since this code works around the potential issue
 #set(RIVE_CPP_DOWNLOAD_URL "https://codeload.github.com/rive-app/rive-cpp/zip/ec9d94ab7915c6633d3bd0fd9b2fe74a4f69dda0")
-set(RIVE_CPP_DOWNLOAD_URL "https://codeload.github.com/rive-app/rive-cpp/zip/79e32293139f7360004fe56ce75314ec23f2f8be")
+#set(RIVE_CPP_DOWNLOAD_URL "https://codeload.github.com/rive-app/rive-cpp/zip/79e32293139f7360004fe56ce75314ec23f2f8be")
+
+# use the version that fixes gcc compilation 
+set(RIVE_CPP_DOWNLOAD_URL "https://github.com/basysKom/rive-cpp/archive/refs/heads/rive-cpp-QtPlugin.zip")
 
 set(RIVE_CPP_DOWNLOAD_DIR "${CMAKE_BINARY_DIR}/rive-cpp-src-download")
 set(RIVE_CPP_SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdParty/rive/cmake/rive-cpp-src")

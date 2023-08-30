@@ -41,14 +41,17 @@ The plugin has been tested on:
 
 - Windows using the MSVC 2019 compiler and Qt 5.15.2
 
-- Linux (Ubuntu 22.04 LTS) using Clang14 and Qt 5.15.2, Qt 6.5.0
+- Linux (Ubuntu 22.04 LTS) and Qt 5.15.2, Qt 6.5.0
+  - Clang14 and gcc 11.4 (or newer versions) are supported
 
-  - Ensure that all clang dependencies are installed 
+  - If you are using Clang14, ensure that all clang dependencies are installed 
 
   - `apt-get install clang-format clang-tidy clang-tools clang clangd libc++-dev libc++1 libc++abi-dev libc++abi1 libclang-dev libclang1 liblldb-dev libllvm-ocaml-dev libomp-dev libomp5 lld lldb llvm-dev llvm-runtime llvm python3-clang`
 
   - Use the automatic installation script if you get issues: https://apt.llvm.org/ 
   - `chmod +x llvm.sh` and `sudo ./llvm.sh 14`
+  
+We recommend to build the plugin with Clang14, as it includes the Clang vector builtins.
 
 ## Dependencies
 
@@ -64,8 +67,9 @@ The plugin has been tested on:
 ```example
 cd /path/to/repo/
 
-export CC=clang
-export CXX=clang++
+# Remove comment if you're building with Clang14
+# export CC=clang
+# export CXX=clang++
 
 mkdir build
 cd build
