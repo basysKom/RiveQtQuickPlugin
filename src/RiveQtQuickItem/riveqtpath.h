@@ -30,6 +30,7 @@ public:
     void addRenderPath(rive::RenderPath *path, const rive::Mat2D &transform) override;
 
     void setQPainterPath(QPainterPath path);
+    void intersectWith(const QPainterPath &other);
     QPainterPath toQPainterPath() const { return m_qPainterPath; }
     QPainterPath toQPainterPaths(const QMatrix4x4 &t);
 

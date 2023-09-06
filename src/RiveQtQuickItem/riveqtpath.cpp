@@ -135,6 +135,15 @@ QVector<QVector<QVector2D>> RiveQtPath::toVertices()
     return m_pathVertices;
 }
 
+void RiveQtPath::intersectWith(const QPainterPath &other)
+{
+    if (!m_qPainterPath.isEmpty()) {
+        m_qPainterPath = m_qPainterPath.intersected(other);
+        m_pathSegmentDataDirty = true;
+        m_pathSegmentOutlineDataDirty = true;
+    }
+}
+
 QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
 {
     if (!m_pathSegmentOutlineDataDirty) {
