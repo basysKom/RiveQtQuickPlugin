@@ -116,6 +116,20 @@ void RiveQtRhiRenderer::clipPath(rive::RenderPath *path)
     // draw each one by one to the stencil buffer
     // -> I would guess that would be faster
     RiveQtPath *qtPath = static_cast<RiveQtPath *>(path);
+    assert(qtPath != nullptr);
+
+    // Rive expects intersected clip pathes
+    // ToDo: behavior can be implemented with stencil ops:
+    //   glStencilFunc(GL_ALWAYS, 1, 0xff);
+    //   glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+    //   drawToStencilBuffer();
+    //   glStencilFunc(GL_EQUAL, pathesCount, 0xff);
+    //   drawPath();
+    QPainterPath currentClipPath = m_rhiRenderStack.back().clipPath;
+    if (!currentClipPath.isEmpty()) {
+        qtPath->intersectWith(currentClipPath);
+    }
+
     auto pathVertices = qtPath->toVertices();
 
     for (auto &path : pathVertices) {
@@ -127,6 +141,7 @@ void RiveQtRhiRenderer::clipPath(rive::RenderPath *path)
     }
 
     m_rhiRenderStack.back().clippingGeometry = pathVertices;
+    m_rhiRenderStack.back().clipPath = qtPath->toQPainterPath();
 
     for (TextureTargetNode *textureTargetNode : m_rhiRenderStack.back().stackNodes) {
         textureTargetNode->updateClippingGeometry(m_rhiRenderStack.back().clippingGeometry);
