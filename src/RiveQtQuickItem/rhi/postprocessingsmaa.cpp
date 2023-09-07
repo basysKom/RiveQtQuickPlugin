@@ -319,17 +319,30 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
         m_blendPass.blendTarget->create();
     }
 
-    if (!m_blendPass.blendResourceBindings) {
+    if (!m_blendPass.blendResourceBindingsA) {
         // rendering pass for blending
-        m_blendPass.blendResourceBindings = rhi->newShaderResourceBindings();
-        m_blendPass.blendResourceBindings->setBindings(
+        m_blendPass.blendResourceBindingsA = rhi->newShaderResourceBindings();
+        m_blendPass.blendResourceBindingsA->setBindings(
             { QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
                                                        m_common.quadUbuffer, 0, UBUFSIZE),
               QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, frameTextureA, m_frameSampler),
               QRhiShaderResourceBinding::sampledTexture(2, QRhiShaderResourceBinding::FragmentStage, m_weightsPass.weightsTexture,
                                                         m_weightsPass.weightsSampler) });
-        m_releasePool << m_blendPass.blendResourceBindings;
-        m_blendPass.blendResourceBindings->create();
+        m_releasePool << m_blendPass.blendResourceBindingsA;
+        m_blendPass.blendResourceBindingsA->create();
+    }
+
+    if (!m_blendPass.blendResourceBindingsB) {
+        // rendering pass for blending
+        m_blendPass.blendResourceBindingsB = rhi->newShaderResourceBindings();
+        m_blendPass.blendResourceBindingsB->setBindings(
+            { QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
+                                                       m_common.quadUbuffer, 0, UBUFSIZE),
+              QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, frameTextureB, m_frameSampler),
+              QRhiShaderResourceBinding::sampledTexture(2, QRhiShaderResourceBinding::FragmentStage, m_weightsPass.weightsTexture,
+                                                        m_weightsPass.weightsSampler) });
+        m_releasePool << m_blendPass.blendResourceBindingsB;
+        m_blendPass.blendResourceBindingsB->create();
     }
 
     if (!m_blendPass.blendPipeline) {
@@ -344,7 +357,7 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
             { { 0, 0, QRhiVertexInputAttribute::Float2, 0 }, { 0, 1, QRhiVertexInputAttribute::Float2, quint32(2 * sizeof(float)) } });
 
         m_blendPass.blendPipeline->setVertexInputLayout(quadInputLayout);
-        m_blendPass.blendPipeline->setShaderResourceBindings(m_blendPass.blendResourceBindings);
+        m_blendPass.blendPipeline->setShaderResourceBindings(m_blendPass.blendResourceBindingsA);
         m_blendPass.blendPipeline->setRenderPassDescriptor(m_blendPass.blendRenderPassDescriptor);
         m_blendPass.blendPipeline->create();
     }
@@ -403,7 +416,11 @@ void PostprocessingSMAA::postprocess(QRhi *rhi, QRhiCommandBuffer *commandBuffer
     commandBuffer->setGraphicsPipeline(m_blendPass.blendPipeline);
     commandBuffer->setViewport(
         { 0, 0, float(m_blendPass.blendTexture->pixelSize().width()), float(m_blendPass.blendTexture->pixelSize().height()) });
-    commandBuffer->setShaderResources(m_blendPass.blendResourceBindings);
+    if (useTextureBufferA) {
+        commandBuffer->setShaderResources(m_blendPass.blendResourceBindingsA);
+    } else {
+        commandBuffer->setShaderResources(m_blendPass.blendResourceBindingsB);
+    }
     commandBuffer->setVertexInput(0, 1, &quadBinding, m_common.quadIndexBuffer, 0, QRhiCommandBuffer::IndexUInt16);
     commandBuffer->drawIndexed(6);
     commandBuffer->endPass();
@@ -443,7 +460,8 @@ void PostprocessingSMAA::cleanup()
         m_blendPass.blendRenderPassDescriptor = nullptr;
         m_blendPass.blendTarget = nullptr;
         m_blendPass.blendTexture = nullptr;
-        m_blendPass.blendResourceBindings = nullptr;
+        m_blendPass.blendResourceBindingsA = nullptr;
+        m_blendPass.blendResourceBindingsB = nullptr;
         m_blendPass.blendPipeline = nullptr;
 
         m_frameSampler = nullptr;

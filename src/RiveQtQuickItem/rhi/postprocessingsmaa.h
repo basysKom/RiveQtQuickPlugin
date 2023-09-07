@@ -96,7 +96,8 @@ private:
         QRhiTexture *blendTexture { nullptr };
 
         // rendering pipeline for blending pass
-        QRhiShaderResourceBindings *blendResourceBindings { nullptr };
+        QRhiShaderResourceBindings *blendResourceBindingsA { nullptr };
+        QRhiShaderResourceBindings *blendResourceBindingsB { nullptr };
         QRhiGraphicsPipeline *blendPipeline { nullptr };
     } m_blendPass;
 
