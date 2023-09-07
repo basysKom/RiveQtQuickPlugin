@@ -318,8 +318,13 @@ void TextureTargetNode::render(QRhiCommandBuffer *commandBuffer)
             QRhiCommandBuffer::VertexInput vertexBindings[] = { { m_vertexBuffer, 0 }, { m_texCoordBuffer, 0 } };
             commandBuffer->setVertexInput(0, 2, vertexBindings, m_indicesBuffer, 0, QRhiCommandBuffer::IndexUInt16);
         } else {
-            QRhiCommandBuffer::VertexInput vertexBindings[] = { { m_vertexBuffer, 0 } };
-            commandBuffer->setVertexInput(0, 1, vertexBindings);
+            // Some APIs, such as Metal, may raise complaints when a binding for a vertex attribute is missing;
+            // in this specific code path, m_texCoordBuffer is nullptr, so if you attempt to bind this buffer,
+            // the application will crash. As a workaround, we bind the texture coordinate attribute to the vertex
+            // buffer as well. This way, Metal won't encounter any assertions, and the texture coordinates are
+            // not needed in this context anyway.
+            QRhiCommandBuffer::VertexInput vertexBindings[] = { { m_vertexBuffer, 0 }, { m_vertexBuffer, 0 } };
+            commandBuffer->setVertexInput(0, 2, vertexBindings);
         }
 
         if (m_clip) {
