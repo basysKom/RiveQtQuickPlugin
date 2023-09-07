@@ -678,12 +678,10 @@ QRhiGraphicsPipeline *RiveQSGRHIRenderNode::createClipPipeline(QRhi *rhi, QRhiRe
 
     QRhiVertexInputLayout inputLayout;
     inputLayout.setBindings({
-        { sizeof(QVector2D) },
-        { sizeof(QVector2D) },
+        { sizeof(QVector2D) }
     });
     inputLayout.setAttributes({
-        { 0, 0, QRhiVertexInputAttribute::Float2, 0 },
-        { 1, 1, QRhiVertexInputAttribute::Float2, 0 },
+        { 0, 0, QRhiVertexInputAttribute::Float2, 0 }
     });
 
     // Configure stencil operations for writing stencil values
