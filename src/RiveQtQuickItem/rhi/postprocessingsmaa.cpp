@@ -111,13 +111,13 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
 
     // maybe cleanup (check in method)
     m_targetSize = size;
-
     QRhiResourceUpdateBatch *resourceUpdates = rhi->nextResourceUpdateBatch();
 
     if (!m_common.quadVertexBuffer) {
         m_common.quadVertexBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, sizeof(vertexData));
         m_releasePool << m_common.quadVertexBuffer;
         m_common.quadVertexBuffer->create();
+        resourceUpdates->uploadStaticBuffer(m_common.quadVertexBuffer, 0, sizeof(vertexData), vertexData);
     }
 
     if (!m_common.quadIndexBuffer) {
@@ -130,10 +130,8 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
         m_common.quadUbuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, UBUFSIZE);
         m_releasePool << m_common.quadUbuffer;
         m_common.quadUbuffer->create();
+        resourceUpdates->uploadStaticBuffer(m_common.quadIndexBuffer, indexData);
     }
-
-    resourceUpdates->uploadStaticBuffer(m_common.quadVertexBuffer, 0, sizeof(vertexData), vertexData);
-    resourceUpdates->uploadStaticBuffer(m_common.quadIndexBuffer, indexData);
 
     if (!m_frameSampler) {
         m_frameSampler = rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None, QRhiSampler::ClampToEdge,
@@ -227,39 +225,41 @@ void PostprocessingSMAA::initializePostprocessingPipeline(QRhi *rhi, QRhiCommand
         m_lookup.areaTexture = rhi->newTexture(QRhiTexture::RGBA8, QSize(AREATEX_WIDTH, AREATEX_HEIGHT));
         m_releasePool << m_lookup.areaTexture;
         m_lookup.areaTexture->create();
+
+        if (!m_lookup.areaSampler) {
+            m_lookup.areaSampler = rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None, QRhiSampler::ClampToEdge,
+                                                QRhiSampler::ClampToEdge);
+            m_releasePool << m_lookup.areaSampler;
+            m_lookup.areaSampler->create();
+        }
+
+        const auto areaTextureData = loadAreaTextureAsRGBA8Array();
+
+        // QImage areaDebug(reinterpret_cast<const unsigned char*>(areaTextureData.constData()), AREATEX_WIDTH, AREATEX_HEIGHT,
+        // QImage::Format_RGBA8888); areaDebug.save("AreaTest.png"); qDebug() << "Area Texture size" << areaTextureData.size();
+
+        QRhiTextureUploadDescription areaTextureDesc({ 0, 0, { areaTextureData.constData(), quint32(areaTextureData.size()) } });
+        resourceUpdates->uploadTexture(m_lookup.areaTexture, areaTextureDesc);
     }
 
-    if (!m_lookup.areaSampler) {
-        m_lookup.areaSampler = rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None, QRhiSampler::ClampToEdge,
-                                               QRhiSampler::ClampToEdge);
-        m_releasePool << m_lookup.areaSampler;
-        m_lookup.areaSampler->create();
+    if (!m_lookup.searchTexture) {
+        m_lookup.searchTexture = rhi->newTexture(QRhiTexture::R8, QSize(SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT));
+        m_releasePool << m_lookup.searchTexture;
+        m_lookup.searchTexture->create();
+
+        if (!m_lookup.searchSampler) {
+            m_lookup.searchSampler =
+                rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge);
+            m_releasePool << m_lookup.searchSampler;
+            m_lookup.searchSampler->create();
+        }
+
+        const auto searchTextureData = loadSearchTextureAsR8Array();
+        // QImage searchDebug(reinterpret_cast<const unsigned char*>(searchTextureData.constData()), SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT,
+        // QImage::Format_Grayscale8); searchDebug.save("SearchTest.png"); qDebug() << "Search Texture size" << searchTextureData.size();
+        QRhiTextureUploadDescription searchTextureDesc({ 0, 0, { searchTextureData.constData(), quint32(searchTextureData.size()) } });
+        resourceUpdates->uploadTexture(m_lookup.searchTexture, searchTextureDesc);
     }
-
-    const auto areaTextureData = loadAreaTextureAsRGBA8Array();
-
-    // QImage areaDebug(reinterpret_cast<const unsigned char*>(areaTextureData.constData()), AREATEX_WIDTH, AREATEX_HEIGHT,
-    // QImage::Format_RGBA8888); areaDebug.save("AreaTest.png"); qDebug() << "Area Texture size" << areaTextureData.size();
-
-    QRhiTextureUploadDescription areaTextureDesc({ 0, 0, { areaTextureData.constData(), quint32(areaTextureData.size()) } });
-    resourceUpdates->uploadTexture(m_lookup.areaTexture, areaTextureDesc);
-
-    m_lookup.searchTexture = rhi->newTexture(QRhiTexture::R8, QSize(SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT));
-    m_releasePool << m_lookup.searchTexture;
-    m_lookup.searchTexture->create();
-
-    m_lookup.searchSampler =
-        rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge);
-    m_releasePool << m_lookup.searchSampler;
-    m_lookup.searchSampler->create();
-
-    const auto searchTextureData = loadSearchTextureAsR8Array();
-
-    // QImage searchDebug(reinterpret_cast<const unsigned char*>(searchTextureData.constData()), SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT,
-    // QImage::Format_Grayscale8); searchDebug.save("SearchTest.png"); qDebug() << "Search Texture size" << searchTextureData.size();
-
-    QRhiTextureUploadDescription searchTextureDesc({ 0, 0, { searchTextureData.constData(), quint32(searchTextureData.size()) } });
-    resourceUpdates->uploadTexture(m_lookup.searchTexture, searchTextureDesc);
 
     if (!m_weightsPass.weightsTarget) {
         // rendering pass for weights
