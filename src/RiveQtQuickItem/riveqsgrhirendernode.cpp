@@ -559,12 +559,12 @@ void RiveQSGRHIRenderNode::prepare()
             m_vertexBuffer = nullptr;
         }
 
-        m_verticesDirty = false;
-    }
-
-    if (m_postprocessing) {
-        m_postprocessing->initializePostprocessingPipeline(rhi, commandBuffer, QSize(m_rect.width(), m_rect.height()),
+        if (m_postprocessing) {
+            m_postprocessing->initializePostprocessingPipeline(rhi, commandBuffer, QSize(m_rect.width(), m_rect.height()),
                                                            m_renderSurfaceA.texture, m_renderSurfaceB.texture);
+        }
+
+        m_verticesDirty = false;
     }
 
     if (!m_vertexBuffer) {
