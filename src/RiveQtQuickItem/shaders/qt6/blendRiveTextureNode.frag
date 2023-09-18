@@ -18,6 +18,16 @@ layout(std140, binding = 0) uniform buf {
 layout(binding = 1) uniform sampler2D u_texture_src;
 layout(binding = 2) uniform sampler2D u_texture_dest;
 
+vec4 blendColor(vec4 color, vec4 src, vec4 dst) {
+    float blendColor = src.a * dst.a;
+    float blendSrc = src.a * (1.0 - dst.a);
+    float blendDst = dst.a * (1.0 - src.a);
+    // same as alpha = blencColor + blendSrc + blendDst
+    float alpha = src.a + dst.a - src.a * dst.a;
+    vec4 result = blendColor * color + blendSrc * src + blendDst * dst;
+    return vec4(result.r, result.g, result.b, alpha);
+}
+
 vec4 overlay(vec4 srcColor, vec4 destColor) {
     // not perfect matching the skia overlay blend still some visual differences...
     float luminance = dot(srcColor.rgb, vec3(0.2126f, 0.7152f, 0.0722f));
@@ -78,8 +88,7 @@ vec4 hardLight(vec4 srcColor, vec4 destColor) {
     result.r = (srcColor.r < 0.5) ? (2.0 * srcColor.r * destColor.r) : (1.0 - 2.0 * (1.0 - srcColor.r) * (1.0 - destColor.r));
     result.g = (srcColor.g < 0.5) ? (2.0 * srcColor.g * destColor.g) : (1.0 - 2.0 * (1.0 - srcColor.g) * (1.0 - destColor.g));
     result.b = (srcColor.b < 0.5) ? (2.0 * srcColor.b * destColor.b) : (1.0 - 2.0 * (1.0 - srcColor.b) * (1.0 - destColor.b));
-    result.a = srcColor.a + destColor.a - srcColor.a * destColor.a;
-    return result;
+    return blendColor(result, srcColor, destColor);
 }
 
 float D(float Cb) {
@@ -92,8 +101,7 @@ vec4 softLight(vec4 srcColor, vec4 destColor) {
     result.r = (destColor.r <= 0.5) ? srcColor.r - (1.0 - 2.0 * destColor.r) * srcColor.r * (1.0 - srcColor.r) : srcColor.r + (2.0 * destColor.r - 1.0) * (D(srcColor.r) - srcColor.r);
     result.g = (destColor.g <= 0.5) ? srcColor.g - (1.0 - 2.0 * destColor.g) * srcColor.g * (1.0 - srcColor.g) : srcColor.g + (2.0 * destColor.g - 1.0) * (D(srcColor.g) - srcColor.g);
     result.b = (destColor.b <= 0.5) ? srcColor.b - (1.0 - 2.0 * destColor.b) * srcColor.b * (1.0 - srcColor.b) : srcColor.b + (2.0 * destColor.b - 1.0) * (D(srcColor.b) - srcColor.b);
-    result.a = destColor.a + srcColor.a - destColor.a * srcColor.a;
-    return result;
+    return blendColor(result, srcColor, destColor);
 }
 
 vec4 exclusion(vec4 srcColor, vec4 destColor) {
