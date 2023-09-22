@@ -215,15 +215,9 @@ vec4 luminosity(vec4 srcColor, vec4 destColor) {
 
 
 vec4 screen(vec4 srcColor, vec4 destColor) {
-    if (destColor.a < 1.0f) {
-        vec3 result = 1.0 - (1.0 - destColor.rgb * (1.0f - srcColor.a)) * (1.0 - srcColor.rgb * (1.0f + destColor.a));
-        vec3 finalColor = mix(srcColor.rgb, result, destColor.a);
-        return vec4(finalColor, 1.0);
-    }
-    vec3 base = srcColor.rgb / srcColor.a;
-    vec3 blend = destColor.rgb / destColor.a;
-    vec3 result = 1.0 - (1.0 - base) * (1.0 - blend);
-    return vec4(result, 1.0);
+    vec4 result = destColor + srcColor - (destColor * srcColor);
+    // return blendColor(result, srcColor, destColor);
+    return result;
 }
 
 vec4 multiply(vec4 srcColor, vec4 destColor) {
