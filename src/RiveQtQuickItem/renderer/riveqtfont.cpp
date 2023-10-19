@@ -51,7 +51,7 @@ uint16_t RiveQtFont::getAxisCount() const
     return 0;
 }
 
-std::vector<rive::Font::Coord> RiveQtFont::getCoords() const
+/*std::vector<rive::Font::Coord> RiveQtFont::getCoords() const
 {
     // QFontDatabase db;
     QRawFont rawFont = QRawFont::fromFont(m_font);
@@ -60,13 +60,13 @@ std::vector<rive::Font::Coord> RiveQtFont::getCoords() const
     // TODO: IMPLEMENT?
 
     return {};
-}
+}*/
 
-rive::rcp<rive::Font> RiveQtFont::makeAtCoords(rive::Span<const Coord> coords) const
+/*rive::rcp<rive::Font> RiveQtFont::makeAtCoords(rive::Span<const Coord> coords) const
 {
     std::vector<rive::Font::Coord> coordVec(coords.begin(), coords.end());
     return rive::rcp<RiveQtFont>(new RiveQtFont(m_font, coordVec));
-}
+}*/
 
 rive::RawPath RiveQtFont::getPath(rive::GlyphID glyphId) const
 {

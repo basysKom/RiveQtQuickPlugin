@@ -39,25 +39,22 @@ RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr
 
 rive::rcp<rive::RenderBuffer> RiveQtFactory::makeBufferU16(rive::Span<const uint16_t> data)
 {
-    auto buffer = new RiveQtBufferU16(data.size());
-    std::vector<uint16_t> vecData(data.begin(), data.end());
-    buffer->setData(vecData);
-    return rive::rcp<rive::RenderBuffer>(buffer);
+    return nullptr;
 }
 
 rive::rcp<rive::RenderBuffer> RiveQtFactory::makeBufferU32(rive::Span<const uint32_t> data)
 {
-    auto buffer = new RiveQtBufferU32(data.size());
-    std::vector<uint32_t> vecData(data.begin(), data.end());
-    buffer->setData(vecData);
-    return rive::rcp<rive::RenderBuffer>(buffer);
+    return nullptr;
 }
 
 rive::rcp<rive::RenderBuffer> RiveQtFactory::makeBufferF32(rive::Span<const float> data)
 {
-    auto buffer = new RiveQtBufferF32(data.size());
-    std::vector<float> vecData(data.begin(), data.end());
-    buffer->setData(vecData);
+    return nullptr;
+}
+
+rive::rcp<rive::RenderBuffer> RiveQtFactory::makeRenderBuffer(rive::RenderBufferType renderBufferType, rive::RenderBufferFlags renderBufferFlags, size_t size)
+{
+    auto buffer = rive::make_rcp<rive::DataRenderBuffer>(renderBufferType, renderBufferFlags, size);;
     return rive::rcp<rive::RenderBuffer>(buffer);
 }
 

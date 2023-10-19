@@ -28,55 +28,29 @@ Qt::FillRule riveFillRuleToQt(rive::FillRule fillRule);
 QPainterPath transformPathWithMatrix4x4(const QPainterPath &path, const QMatrix4x4 &matrix);
 }
 
-class RiveQtBufferU16 : public rive::RenderBuffer
+class RiveQtBuffer : public rive::RenderBuffer
 {
 public:
-    RiveQtBufferU16(size_t count)
-        : rive::RenderBuffer(count)
-        , m_data(count)
+    RiveQtBuffer(rive::RenderBufferType renderBufferType, rive::RenderBufferFlags renderBufferFlags, size_t size)
+        : rive::RenderBuffer(renderBufferType, renderBufferFlags, size)
     {
     }
-    void setData(const std::vector<uint16_t> &data) { m_data = data; }
-    const uint16_t *data() const { return m_data.data(); }
-    const size_t size() const { return m_data.size() * sizeof(uint16_t); }
-    const uint count() const { return m_data.size(); }
 
-private:
-    std::vector<uint16_t> m_data;
+};
+
+class RiveQtBufferU16 : public rive::RenderBuffer
+{
+
 };
 
 class RiveQtBufferU32 : public rive::RenderBuffer
 {
-public:
-    RiveQtBufferU32(size_t count)
-        : rive::RenderBuffer(count)
-        , m_data(count)
-    {
-    }
-    void setData(const std::vector<uint32_t> &data) { m_data = data; }
-    const uint32_t *data() const { return m_data.data(); }
-    const size_t size() const { return m_data.size() * sizeof(uint32_t); }
-    const uint count() const { return m_data.size(); }
 
-private:
-    std::vector<uint32_t> m_data;
 };
 
 class RiveQtBufferF32 : public rive::RenderBuffer
 {
-public:
-    RiveQtBufferF32(size_t count)
-        : rive::RenderBuffer(count)
-        , m_data(count)
-    {
-    }
-    void setData(const std::vector<float> &data) { m_data = data; }
-    const float *data() const { return m_data.data(); }
-    const int size() const { return m_data.size() * sizeof(float); }
-    const uint count() const { return m_data.size(); }
 
-private:
-    std::vector<float> m_data;
 };
 
 class RiveQtImage : public rive::RenderImage

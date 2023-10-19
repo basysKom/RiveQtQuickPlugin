@@ -56,7 +56,12 @@ public:
 
     void setColor(const QColor &color);
     void setGradient(const QGradient *gradient);
-    void setTexture(const QImage &image, RiveQtBufferF32 *verticies, RiveQtBufferF32 *uv, RiveQtBufferU16 *indices,
+    void setTexture(const QImage &image,
+                    rive::rcp<rive::RenderBuffer> qtVertices,
+                    rive::rcp<rive::RenderBuffer> qtUvCoords,
+                    rive::rcp<rive::RenderBuffer> indices,
+                    uint32_t vertexCount, uint32_t indexCount,
+                    bool recreate,
                     const QMatrix4x4 &transform);
 
     int blendMode() const { return (int)m_blendMode; }

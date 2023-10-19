@@ -157,7 +157,8 @@ void RiveQtRhiRenderer::drawImage(const rive::RenderImage *image, rive::BlendMod
     node->setBlendMode(blendMode);
 
     node->setTexture(static_cast<const RiveQtImage *>(image)->image(), //
-                     nullptr, nullptr, nullptr,
+                     nullptr, nullptr, nullptr, /* recreate= */ true,
+                     0, 0,
                      transformMatrix()); //
 
 #if 0 // this allows to draw the clipping area which it usefull for debugging :)
@@ -172,8 +173,9 @@ void RiveQtRhiRenderer::drawImage(const rive::RenderImage *image, rive::BlendMod
 }
 
 void RiveQtRhiRenderer::drawImageMesh(const rive::RenderImage *image, rive::rcp<rive::RenderBuffer> vertices_f32,
-                                      rive::rcp<rive::RenderBuffer> uvCoords_f32, rive::rcp<rive::RenderBuffer> indices_u16,
-                                      rive::BlendMode blendMode, float opacity)
+                                         rive::rcp<rive::RenderBuffer> uvCoords_f32, rive::rcp<rive::RenderBuffer> indices_u16,
+                                         uint32_t vertexCount, uint32_t indexCount,
+                                         rive::BlendMode blendMode, float opacity)
 {
     TextureTargetNode *node = getRiveDrawTargetNode();
 
@@ -183,10 +185,12 @@ void RiveQtRhiRenderer::drawImageMesh(const rive::RenderImage *image, rive::rcp<
     node->setBlendMode(blendMode);
 
     node->setTexture(static_cast<const RiveQtImage *>(image)->image(), //
-                     static_cast<RiveQtBufferF32 *>(vertices_f32.get()), //
-                     static_cast<RiveQtBufferF32 *>(uvCoords_f32.get()), //
-                     static_cast<RiveQtBufferU16 *>(indices_u16.get()),
-                     transformMatrix()); //
+                     vertices_f32,
+                     uvCoords_f32,
+                     indices_u16,
+                    /* recreate= */ false,
+                    vertexCount, indexCount,
+                    transformMatrix()); //
 
 #if 0 // this allows to draw the clipping area which it usefull for debugging :)
   TextureTargetNode *drawClipping = getRiveDrawTargetNode();

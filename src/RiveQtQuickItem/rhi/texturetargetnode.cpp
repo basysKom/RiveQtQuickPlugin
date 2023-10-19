@@ -528,8 +528,13 @@ void TextureTargetNode::setGradient(const QGradient *gradient)
     }
 }
 
-void TextureTargetNode::setTexture(const QImage &image, RiveQtBufferF32 *qtVertices, RiveQtBufferF32 *qtUvCoords, RiveQtBufferU16 *indices,
-                                   const QMatrix4x4 &transform)
+void TextureTargetNode::setTexture(const QImage &image,
+                    rive::rcp<rive::RenderBuffer> qtVertices,
+                    rive::rcp<rive::RenderBuffer> qtUvCoords,
+                    rive::rcp<rive::RenderBuffer> indices,
+                    uint32_t vertexCount, uint32_t indexCount,
+                    bool recreate,
+                    const QMatrix4x4 &transform)
 {
     if (m_texture.size() != image.size()) {
         if (m_sampler) {
@@ -589,7 +594,7 @@ void TextureTargetNode::setTexture(const QImage &image, RiveQtBufferF32 *qtVerti
         m_indicesBuffer = nullptr;
     }
 
-    if (!qtVertices || !qtUvCoords || !indices) {
+    if (recreate) {
 
         QVector<QVector2D> quadVertices = {
             QVector2D(0.0f, 0.0f), // Bottom-left
@@ -633,7 +638,7 @@ void TextureTargetNode::setTexture(const QImage &image, RiveQtBufferF32 *qtVerti
 
     } else {
         // TODO COPY float std vector directly... this here is kind of the most stupid way to handle it...
-        QVector<QVector2D> quadVertices;
+        /*QVector<QVector2D> quadVertices;
         for (int i = 0; i < qtVertices->count(); i += 2) {
             quadVertices.append(QVector2D(qtVertices->data()[i], qtVertices->data()[i + 1]));
         }
@@ -667,7 +672,7 @@ void TextureTargetNode::setTexture(const QImage &image, RiveQtBufferF32 *qtVerti
             m_indicesBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::IndexBuffer, indexArray.count() * sizeof(uint16_t));
             m_cleanupList.append(m_indicesBuffer);
             m_indicesBuffer->create();
-        }
+        } */
     }
 }
 
