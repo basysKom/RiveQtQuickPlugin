@@ -580,6 +580,7 @@ void RiveQtOpenGLRenderer::drawImage(const rive::RenderImage *image, rive::Blend
 
 void RiveQtOpenGLRenderer::drawImageMesh(const rive::RenderImage *image, rive::rcp<rive::RenderBuffer> vertices_f32,
                                          rive::rcp<rive::RenderBuffer> uvCoords_f32, rive::rcp<rive::RenderBuffer> indices_u16,
+                                         uint32_t vertexCount, uint32_t indexCount,
                                          rive::BlendMode blendMode, float opacity)
 {
     const QImage &qImage = static_cast<const RiveQtImage *>(image)->image();
@@ -588,7 +589,7 @@ void RiveQtOpenGLRenderer::drawImageMesh(const rive::RenderImage *image, rive::r
     // Bind the texture
     texture.bind();
 
-    RiveQtBufferF32 *qtVertices = static_cast<RiveQtBufferF32 *>(vertices_f32.get());
+   /* RiveQtBufferF32 *qtVertices = static_cast<RiveQtBufferF32 *>(vertices_f32.get());
     RiveQtBufferF32 *qtUvCoords = static_cast<RiveQtBufferF32 *>(uvCoords_f32.get());
     RiveQtBufferU16 *qtIndices = static_cast<RiveQtBufferU16 *>(indices_u16.get());
 
@@ -625,7 +626,7 @@ void RiveQtOpenGLRenderer::drawImageMesh(const rive::RenderImage *image, rive::r
     m_imageMeshShaderProgram->release();
     m_meshVAO.release();
 
-    glDisable(GL_BLEND);
+    glDisable(GL_BLEND);*/
 }
 
 void RiveQtOpenGLRenderer::updateModelMatrix(const QMatrix4x4 &modelMatrix)

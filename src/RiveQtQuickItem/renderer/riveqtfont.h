@@ -33,9 +33,17 @@ public:
     rive::Font::Axis getAxis(uint16_t index) const override;
 
     uint16_t getAxisCount() const override;
-    std::vector<rive::Font::Coord> getCoords() const override;
+    //std::vector<rive::Font::Coord> getCoords() const override;
 
-    rive::rcp<rive::Font> makeAtCoords(rive::Span<const rive::Font::Coord> coords) const override;
+    //rive::rcp<rive::Font> makeAtCoords(rive::Span<const rive::Font::Coord> coords) const override;
+
+    float getAxisValue(uint32_t axisTag) const override { return 0.0f; }
+    rive::SimpleArray<uint32_t> features() const override { return rive::SimpleArray<uint32_t>(); }
+    bool hasGlyph(rive::Span<const rive::Unichar>) const override { return false; }
+    uint32_t getFeatureValue(uint32_t featureTag) const override { return 0; }
+
+    rive::rcp<rive::Font> withOptions(rive::Span<const rive::Font::Coord> variableAxes,
+                                      rive::Span<const rive::Font::Feature> features) const override { return nullptr; } 
 
     rive::RawPath getPath(rive::GlyphID glyphId) const override;
 

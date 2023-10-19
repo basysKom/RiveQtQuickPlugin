@@ -79,8 +79,13 @@ public:
     void drawPath(rive::RenderPath *path, rive::RenderPaint *paint) override;
     void clipPath(rive::RenderPath *path) override;
     void drawImage(const rive::RenderImage *image, rive::BlendMode blendMode, float opacity) override;
-    void drawImageMesh(const rive::RenderImage *image, rive::rcp<rive::RenderBuffer> vertices_f32,
-                       rive::rcp<rive::RenderBuffer> uvCoords_f32, rive::rcp<rive::RenderBuffer> indices_u16, rive::BlendMode blendMode,
+    void drawImageMesh(const rive::RenderImage *image,
+                       rive::rcp<rive::RenderBuffer> vertices_f32,
+                       rive::rcp<rive::RenderBuffer> uvCoords_f32,
+                       rive::rcp<rive::RenderBuffer> indices_u16,
+                       uint32_t vertexCount,
+                       uint32_t indexCount,
+                       rive::BlendMode blendMode,
                        float opacity) override;
 
 private:

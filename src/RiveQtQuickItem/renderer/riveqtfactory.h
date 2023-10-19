@@ -13,6 +13,7 @@
 #include <rive/file.hpp>
 #include <rive/renderer.hpp>
 #include <rive/span.hpp>
+#include <utils/factory_utils.hpp>
 
 #include "datatypes.h"
 #include "riveqsgrendernode.h"
@@ -40,9 +41,12 @@ public:
 
     RiveQSGRenderNode *renderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, const QRectF &geometry);
 
-    rive::rcp<rive::RenderBuffer> makeBufferU16(rive::Span<const uint16_t> data) override;
-    rive::rcp<rive::RenderBuffer> makeBufferU32(rive::Span<const uint32_t> data) override;
-    rive::rcp<rive::RenderBuffer> makeBufferF32(rive::Span<const float> data) override;
+    rive::rcp<rive::RenderBuffer> makeBufferU16(rive::Span<const uint16_t> data);
+    rive::rcp<rive::RenderBuffer> makeBufferU32(rive::Span<const uint32_t> data);
+    rive::rcp<rive::RenderBuffer> makeBufferF32(rive::Span<const float> data);
+
+    rive::rcp<rive::RenderBuffer> makeRenderBuffer(rive::RenderBufferType, rive::RenderBufferFlags, size_t) override;
+
     rive::rcp<rive::RenderShader> makeLinearGradient(float, float, float, float, const rive::ColorInt[], const float[], size_t) override;
     rive::rcp<rive::RenderShader> makeRadialGradient(float, float, float, const rive::ColorInt[], const float[], size_t) override;
     std::unique_ptr<rive::RenderPath> makeRenderPath(rive::RawPath &rawPath, rive::FillRule fillRule) override;
