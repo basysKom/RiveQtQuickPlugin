@@ -157,8 +157,9 @@ void RiveQtRhiRenderer::drawImage(const rive::RenderImage *image, rive::BlendMod
     node->setBlendMode(blendMode);
 
     node->setTexture(static_cast<const RiveQtImage *>(image)->image(), //
-                     nullptr, nullptr, nullptr, /* recreate= */ true,
+                     nullptr, nullptr, nullptr,
                      0, 0,
+                     /* recreate= */ true,
                      transformMatrix()); //
 
 #if 0 // this allows to draw the clipping area which it usefull for debugging :)
@@ -177,6 +178,7 @@ void RiveQtRhiRenderer::drawImageMesh(const rive::RenderImage *image, rive::rcp<
                                          uint32_t vertexCount, uint32_t indexCount,
                                          rive::BlendMode blendMode, float opacity)
 {
+
     TextureTargetNode *node = getRiveDrawTargetNode();
 
     m_rhiRenderStack.back().opacity = opacity;
@@ -188,8 +190,8 @@ void RiveQtRhiRenderer::drawImageMesh(const rive::RenderImage *image, rive::rcp<
                      vertices_f32,
                      uvCoords_f32,
                      indices_u16,
-                    /* recreate= */ false,
-                    vertexCount, indexCount,
+                     vertexCount, indexCount,
+                     /* recreate= */ false,
                     transformMatrix()); //
 
 #if 0 // this allows to draw the clipping area which it usefull for debugging :)

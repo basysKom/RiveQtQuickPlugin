@@ -54,8 +54,8 @@ rive::rcp<rive::RenderBuffer> RiveQtFactory::makeBufferF32(rive::Span<const floa
 
 rive::rcp<rive::RenderBuffer> RiveQtFactory::makeRenderBuffer(rive::RenderBufferType renderBufferType, rive::RenderBufferFlags renderBufferFlags, size_t size)
 {
-    auto buffer = rive::make_rcp<rive::DataRenderBuffer>(renderBufferType, renderBufferFlags, size);;
-    return rive::rcp<rive::RenderBuffer>(buffer);
+    qDebug() << "BKRE:::::::::::::: Make render buffer" << size;
+    return rive::make_rcp<rive::DataRenderBuffer>(renderBufferType, renderBufferFlags, size);;
 }
 
 rive::rcp<rive::RenderShader> RiveQtFactory::makeLinearGradient(float x1, float y1, float x2, float y2, const rive::ColorInt *colors,

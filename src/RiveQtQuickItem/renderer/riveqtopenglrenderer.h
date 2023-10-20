@@ -19,6 +19,7 @@
 
 #include <rive/renderer.hpp>
 #include <rive/math/raw_path.hpp>
+#include <utils/factory_utils.hpp>
 #include "riveqtpath.h"
 
 #include "qopenglframebufferobject.h"
