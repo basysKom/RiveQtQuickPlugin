@@ -8,6 +8,7 @@
 #include <rive/artboard.hpp>
 #include <rive/renderer.hpp>
 #include <rive/math/raw_path.hpp>
+#include <utils/factory_utils.hpp>
 
 #include <QPainterPath>
 #include <QSGRenderNode>

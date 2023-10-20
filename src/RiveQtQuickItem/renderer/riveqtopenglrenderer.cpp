@@ -583,15 +583,21 @@ void RiveQtOpenGLRenderer::drawImageMesh(const rive::RenderImage *image, rive::r
                                          uint32_t vertexCount, uint32_t indexCount,
                                          rive::BlendMode blendMode, float opacity)
 {
+
+
+    assert(vertices_f32->sizeInBytes() == vertexCount * 2 * sizeof(float));
+    assert(uvCoords_f32->sizeInBytes() == vertexCount * 2 * sizeof(float));
+    assert(indices_u16->sizeInBytes() == indexCount * sizeof(uint16_t));
+
     const QImage &qImage = static_cast<const RiveQtImage *>(image)->image();
     QOpenGLTexture texture(qImage);
 
     // Bind the texture
     texture.bind();
 
-   /* RiveQtBufferF32 *qtVertices = static_cast<RiveQtBufferF32 *>(vertices_f32.get());
-    RiveQtBufferF32 *qtUvCoords = static_cast<RiveQtBufferF32 *>(uvCoords_f32.get());
-    RiveQtBufferU16 *qtIndices = static_cast<RiveQtBufferU16 *>(indices_u16.get());
+    auto *vertexData = rive::DataRenderBuffer::Cast(vertices_f32.get())->f32s();
+    auto *uvData     = rive::DataRenderBuffer::Cast(uvCoords_f32.get())->f32s();
+    auto *indexData  = rive::DataRenderBuffer::Cast(indices_u16.get())->u16s();
 
     // Set the appropriate OpenGL blend functions
     setupBlendMode(blendMode);
@@ -605,9 +611,9 @@ void RiveQtOpenGLRenderer::drawImageMesh(const rive::RenderImage *image, rive::r
 
     m_meshVAO.bind();
     m_meshVertexBuffer.bind();
-    m_meshVertexBuffer.allocate(qtVertices->data(), qtVertices->size());
+    m_meshVertexBuffer.allocate(vertexData, vertices_f32->sizeInBytes());
     m_meshUvBuffer.bind();
-    m_meshUvBuffer.allocate(qtUvCoords->data(), qtUvCoords->size());
+    m_meshUvBuffer.allocate(uvData, uvCoords_f32->sizeInBytes());
 
     m_imageMeshShaderProgram->bind();
 
@@ -618,15 +624,15 @@ void RiveQtOpenGLRenderer::drawImageMesh(const rive::RenderImage *image, rive::r
     m_imageMeshShaderProgram->setUniformValue("u_opacity", opacity);
 
     m_meshIndexBuffer.bind();
-    m_meshIndexBuffer.allocate(qtIndices->data(), qtIndices->size());
+    m_meshIndexBuffer.allocate(indexData, indices_u16->sizeInBytes());
     // Issue the draw call with the indexed geometry
-    glDrawElements(GL_TRIANGLES, qtIndices->count(), GL_UNSIGNED_SHORT, nullptr);
+    glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_SHORT, nullptr);
 
     // Release the shader program and the VAO
     m_imageMeshShaderProgram->release();
     m_meshVAO.release();
 
-    glDisable(GL_BLEND);*/
+    glDisable(GL_BLEND);
 }
 
 void RiveQtOpenGLRenderer::updateModelMatrix(const QMatrix4x4 &modelMatrix)

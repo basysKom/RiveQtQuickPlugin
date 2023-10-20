@@ -28,31 +28,6 @@ Qt::FillRule riveFillRuleToQt(rive::FillRule fillRule);
 QPainterPath transformPathWithMatrix4x4(const QPainterPath &path, const QMatrix4x4 &matrix);
 }
 
-class RiveQtBuffer : public rive::RenderBuffer
-{
-public:
-    RiveQtBuffer(rive::RenderBufferType renderBufferType, rive::RenderBufferFlags renderBufferFlags, size_t size)
-        : rive::RenderBuffer(renderBufferType, renderBufferFlags, size)
-    {
-    }
-
-};
-
-class RiveQtBufferU16 : public rive::RenderBuffer
-{
-
-};
-
-class RiveQtBufferU32 : public rive::RenderBuffer
-{
-
-};
-
-class RiveQtBufferF32 : public rive::RenderBuffer
-{
-
-};
-
 class RiveQtImage : public rive::RenderImage
 {
 public:

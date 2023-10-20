@@ -529,13 +529,14 @@ void TextureTargetNode::setGradient(const QGradient *gradient)
 }
 
 void TextureTargetNode::setTexture(const QImage &image,
-                    rive::rcp<rive::RenderBuffer> qtVertices,
-                    rive::rcp<rive::RenderBuffer> qtUvCoords,
+                    rive::rcp<rive::RenderBuffer> vertices,
+                    rive::rcp<rive::RenderBuffer> uvCoords,
                     rive::rcp<rive::RenderBuffer> indices,
                     uint32_t vertexCount, uint32_t indexCount,
                     bool recreate,
                     const QMatrix4x4 &transform)
 {
+    
     if (m_texture.size() != image.size()) {
         if (m_sampler) {
             m_cleanupList.removeAll(m_sampler);
@@ -637,42 +638,35 @@ void TextureTargetNode::setTexture(const QImage &image,
         }
 
     } else {
-        // TODO COPY float std vector directly... this here is kind of the most stupid way to handle it...
-        /*QVector<QVector2D> quadVertices;
-        for (int i = 0; i < qtVertices->count(); i += 2) {
-            quadVertices.append(QVector2D(qtVertices->data()[i], qtVertices->data()[i + 1]));
-        }
 
-        QVector<QVector2D> textureCoords;
-        for (int i = 0; i < qtUvCoords->count(); i += 2) {
-            textureCoords.append(QVector2D(qtUvCoords->data()[i], qtUvCoords->data()[i + 1]));
-        }
+        assert(vertices->sizeInBytes() == vertexCount * 2 * sizeof(float));
+        assert(uvCoords->sizeInBytes() == vertexCount * 2 * sizeof(float));
+        assert(indices->sizeInBytes() == indexCount * sizeof(uint16_t));
 
-        QVector<uint16_t> indexArray;
-        for (int i = 0; i < indices->count(); i++) {
-            indexArray.append(indices->data()[i]);
-        }
+        auto *vertexData = rive::DataRenderBuffer::Cast(vertices.get())->f32s();
+        auto *uvData     = rive::DataRenderBuffer::Cast(uvCoords.get())->f32s();
+        auto *indexData  = rive::DataRenderBuffer::Cast(indices.get())->u16s();
 
-        m_geometryData.resize(quadVertices.count() * sizeof(QVector2D));
-        memcpy(m_geometryData.data(), quadVertices.constData(), quadVertices.count() * sizeof(QVector2D));
+        m_geometryData.resize(vertices->sizeInBytes());
+        memcpy(m_geometryData.data(), vertexData, vertices->sizeInBytes());
 
-        m_texCoordData.resize(textureCoords.count() * sizeof(QVector2D));
-        memcpy(m_texCoordData.data(), textureCoords.constData(), textureCoords.count() * sizeof(QVector2D));
+        m_texCoordData.resize(uvCoords->sizeInBytes());
+        memcpy(m_texCoordData.data(), uvData, uvCoords->sizeInBytes());
 
-        m_indicesData.resize(indexArray.count() * sizeof(uint16_t));
-        memcpy(m_indicesData.data(), indexArray.data(), indexArray.count() * sizeof(uint16_t));
+        m_indicesData.resize(indices->sizeInBytes());
+        memcpy(m_indicesData.data(), indexData, indices->sizeInBytes());
 
         if (!m_texCoordBuffer) {
-            m_texCoordBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, textureCoords.count() * sizeof(QVector2D));
+            m_texCoordBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, uvCoords->sizeInBytes());
             m_cleanupList.append(m_texCoordBuffer);
             m_texCoordBuffer->create();
         }
 
         if (!m_indicesBuffer) {
-            m_indicesBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::IndexBuffer, indexArray.count() * sizeof(uint16_t));
+            m_indicesBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::IndexBuffer, indices->sizeInBytes());
             m_cleanupList.append(m_indicesBuffer);
             m_indicesBuffer->create();
-        } */
+        }
     }
 }
 
