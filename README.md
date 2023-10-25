@@ -77,7 +77,7 @@ cmake -DCMAKE_PREFIX_PATH=~/.Qt/6.5.1/gcc_64 -S .. -B .
 make
 ```
 
-For more info on take a look at [BUILDING.md](https://github.com/madoodia/RiveQtQuickPlugin/blob/main/BUILDING.md).
+For more info, take a look at [BUILDING.md](https://github.com/madoodia/RiveQtQuickPlugin/blob/main/BUILDING.md).
 
 
 ## Usage
