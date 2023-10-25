@@ -25,8 +25,9 @@ target_include_directories(rive_cpp PUBLIC
     "${SHEENBIDI_SOURCE_DIR}/${SHEENBIDI_CPP_TARGET_DIR}/Headers"
 )
 
-target_link_libraries(rive_cpp PRIVATE harfbuzz)
-target_link_libraries(rive_cpp PRIVATE sheenbidi)
-
+if(${RQQRP_RIVE_TEXT_RENDERING})
+    target_link_libraries(rive_cpp PRIVATE harfbuzz)
+    target_link_libraries(rive_cpp PRIVATE sheenbidi)
+endif()
 
 file(COPY ${RIVE_CPP_SOURCE_DIR}/include DESTINATION ${CMAKE_BINARY_DIR}/output)

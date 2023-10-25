@@ -17,6 +17,7 @@ project(RiveQtQuickPlugin
 
 option(RQQRP_BUILD_EXAMPLES "Build demo applications." ON)
 option(RQQRP_DOWNLOAD_BUILD_DEPENDENCIES "Downloads and Builds dependencies." ON)
+option(RQQRP_RIVE_TEXT_RENDERING "Build text support (text support uses Rive text rendering based on Harfbuzz and SheenBidi)." ON)
 
 # Set up Qt configuration and enable C++17
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -25,6 +26,11 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if(${RQQRP_RIVE_TEXT_RENDERING})
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    add_compile_definitions(WITH_RIVE_TEXT)
+endif()
 
 # Find Qt package
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Qml Quick OpenGL )

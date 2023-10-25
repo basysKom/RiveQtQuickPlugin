@@ -15,6 +15,10 @@
 #include <rive/span.hpp>
 #include <utils/factory_utils.hpp>
 
+#ifdef WITH_RIVE_TEXT
+#include <rive/text/font_hb.hpp>
+#endif
+
 #include "datatypes.h"
 #include "riveqsgrendernode.h"
 
