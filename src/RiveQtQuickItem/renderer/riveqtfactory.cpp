@@ -54,7 +54,6 @@ rive::rcp<rive::RenderBuffer> RiveQtFactory::makeBufferF32(rive::Span<const floa
 
 rive::rcp<rive::RenderBuffer> RiveQtFactory::makeRenderBuffer(rive::RenderBufferType renderBufferType, rive::RenderBufferFlags renderBufferFlags, size_t size)
 {
-    qDebug() << "BKRE:::::::::::::: Make render buffer" << size;
     return rive::make_rcp<rive::DataRenderBuffer>(renderBufferType, renderBufferFlags, size);;
 }
 
@@ -132,20 +131,26 @@ std::unique_ptr<rive::RenderImage> RiveQtFactory::decodeImage(rive::Span<const u
 
 rive::rcp<rive::Font> RiveQtFactory::decodeFont(rive::Span<const uint8_t> span)
 {
-    QByteArray fontData(reinterpret_cast<const char *>(span.data()), static_cast<int>(span.size()));
+#ifdef WITH_RIVE_TEXT
+    return HBFont::Decode(span);
+#else
+    return nullptr;
+#endif
+    /*QByteArray fontData(reinterpret_cast<const char *>(span.data()), static_cast<int>(span.size()));
     int fontId = QFontDatabase::addApplicationFontFromData(fontData);
 
     if (fontId == -1) {
         return nullptr;
     }
 
-    QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
+    const QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
     if (fontFamilies.isEmpty()) {
         return nullptr;
     }
 
     QFont font(fontFamilies.first());
-    return rive::rcp<RiveQtFont>(new RiveQtFont(font, std::vector<rive::Font::Coord>()));
+    return rive::rcp<RiveQtFont>(new RiveQtFont(font));*/
+
 }
 
 unsigned int RiveQtFactory::levelOfDetail()

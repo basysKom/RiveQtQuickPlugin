@@ -5,13 +5,13 @@
   SPDX-License-Identifier: LGPL-3.0-or-later
 ]]
 
-project(sheenbidi VERSION 1.0.0 LANGUAGES CXX)
+project(sheenbidi VERSION 1.0.0 LANGUAGES C)
 
-set(SHEENBIDI_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../3rdParty/rive/cmake/rive-cpp-src/zip/sheenbidi/zip")
+set(SHEENBIDI_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/rive-cpp-src/zip/sheenbidi/zip")
 
 file(GLOB_RECURSE SHEENBIDI_SOURCES
-     "${SHEENBIDI_SOURCE_DIR}/*.cpp"
-     "${SHEENBIDI_SOURCE_DIR}/*.h"
+	"${SHEENBIDI_SOURCE_DIR}/Source/*.c"
+     "${SHEENBIDI_SOURCE_DIR}/Headers/*.h"
 )
 
 add_library(sheenbidi STATIC ${SHEENBIDI_SOURCES})
