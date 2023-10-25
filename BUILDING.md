@@ -110,5 +110,6 @@ copy %ROOT%\build\binary\examples\RiveQtQuickPlugin\RiveQtQuickSimpleViewer.exe 
 CALL %SDKS_LOCATION%\Qt6\bin\windeployqt.exe %ROOT%\deploy\RiveQtQuickSimpleViewer.exe --no-translations
 
 ```
+And copy `RiveQtQuickPlugin.dll` to deploy directory from `build\binary\RiveQtQuickPlugin\RiveQtQuickPlugin.dll`
 
 Please read the [README.md](https://github.com/madoodia/RiveQtQuickPlugin/blob/main/README.md) file.
