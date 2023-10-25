@@ -70,7 +70,7 @@ extract_zip("${RIVE_CPP_DOWNLOAD_DIR}/rive-cpp.zip" "${RIVE_CPP_SOURCE_DIR}" "${
 file(GLOB RIVE_CPP_SOURCE_DIR_SUBDIRS LIST_DIRECTORIES true "${RIVE_CPP_SOURCE_DIR}/*")
 list(GET RIVE_CPP_SOURCE_DIR_SUBDIRS 0 RIVE_CPP_SOURCE_DIR)
 
-set(HARFBUZZ_DOWNLOAD_URL "https://codeload.github.com/harfbuzz/harfbuzz/zip/858570b1d9912a1b746ab39fbe62a646c4f7a5b1")
+set(HARFBUZZ_DOWNLOAD_URL "https://github.com/harfbuzz/harfbuzz/archive/refs/tags/8.2.2.zip")
 set(HARFBUZZ_DOWNLOAD_DIR "${CMAKE_BINARY_DIR}/harfbuzz-src-download")
 set(HARFBUZZ_SOURCE_DIR "${RIVE_CPP_SOURCE_DIR}/harfbuzz/")
 set(HARFBUZZ_CPP_TARGET_DIR "zip")
@@ -78,7 +78,7 @@ set(HARFBUZZ_CPP_TARGET_DIR "zip")
 file(DOWNLOAD ${HARFBUZZ_DOWNLOAD_URL} "${HARFBUZZ_DOWNLOAD_DIR}/harfbuzz.zip" SHOW_PROGRESS)
 extract_zip("${HARFBUZZ_DOWNLOAD_DIR}/harfbuzz.zip" "${HARFBUZZ_SOURCE_DIR}" "${HARFBUZZ_CPP_TARGET_DIR}")
 
-set(SHEENBIDI_DOWNLOAD_URL "https://codeload.github.com/Tehreer/SheenBidi/zip/refs/tags/v2.6")
+set(SHEENBIDI_DOWNLOAD_URL "https://github.com/Tehreer/SheenBidi/archive/refs/tags/v2.6.zip")
 set(SHEENBIDI_DOWNLOAD_DIR "${CMAKE_BINARY_DIR}/sheenbidi-src-download")
 set(SHEENBIDI_SOURCE_DIR "${RIVE_CPP_SOURCE_DIR}/sheenbidi")
 set(SHEENBIDI_CPP_TARGET_DIR "zip")
