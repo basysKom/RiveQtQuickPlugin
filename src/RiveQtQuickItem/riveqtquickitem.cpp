@@ -485,6 +485,10 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
         return;
     }
 
+    if (m_currentArtboardInstance) {
+        m_currentArtboardInstance.reset();
+    }
+
     QByteArray fileData = file.readAll();
     file.close();
 
