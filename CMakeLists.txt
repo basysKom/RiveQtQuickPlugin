@@ -40,6 +40,10 @@ if(NOT WIN32)
     add_compile_options(-gdwarf-4)
 endif()
 
+
+# setting /MD for the project
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+
 # Add rive-cpp dependency if required
 if(${RQQRP_DOWNLOAD_BUILD_DEPENDENCIES})
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/rive/cmake)
