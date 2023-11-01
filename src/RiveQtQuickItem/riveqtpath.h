@@ -30,8 +30,8 @@ public:
     void addRenderPath(rive::RenderPath *path, const rive::Mat2D &transform) override;
 
     void setQPainterPath(QPainterPath path);
-    void intersectWith(const QPainterPath &other);
-    QPainterPath toQPainterPath() const { return m_qPainterPath; }
+    bool intersectWith(const QPainterPath &other);
+    QPainterPath toQPainterPath() { return m_qPainterPath; }
     QPainterPath toQPainterPaths(const QMatrix4x4 &t);
 
     void setLevelOfDetail(const unsigned lod);
@@ -39,8 +39,8 @@ public:
     QVector<QVector<QVector2D>> toVertices();
     QVector<QVector<QVector2D>> toVerticesLine(const QPen &pen);
 
+    void applyMatrix(QMatrix4x4 m);
 private:
-
 #if !defined(USE_QPAINTERPATH_STROKER)
     struct PathDataPoint
     {
@@ -57,7 +57,6 @@ private:
     QVector<QVector<PathDataPoint>> m_pathSegmentsOutlineData;
 #endif
 
-
     void updatePathSegmentsData();
     void updatePathOutlineVertices(const QPen &pen);
 
@@ -69,5 +68,4 @@ private:
     bool m_pathSegmentDataDirty { true };
     bool m_pathSegmentOutlineDataDirty { true };
     unsigned m_lod { 1 };
-
 };
