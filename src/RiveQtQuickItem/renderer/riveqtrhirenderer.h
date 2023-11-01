@@ -28,9 +28,8 @@ struct RhiRenderState
 {
     QMatrix4x4 transform;
     float opacity { 1.0 };
-    QPainterPath clipPath { };
-    QVector<QVector<QVector2D>> clippingGeometry;
-    QVector<TextureTargetNode *> stackNodes;
+
+    QVector<QPair<QPainterPath, QMatrix4x4>> m_allClipPainterPathesApplied;
 };
 
 class RiveQtRhiRenderer : public rive::Renderer
@@ -46,14 +45,9 @@ public:
     void drawPath(rive::RenderPath *path, rive::RenderPaint *paint) override;
     void clipPath(rive::RenderPath *path) override;
     void drawImage(const rive::RenderImage *image, rive::BlendMode blendMode, float opacity) override;
-    void drawImageMesh(const rive::RenderImage *image,
-                       rive::rcp<rive::RenderBuffer> vertices_f32,
-                       rive::rcp<rive::RenderBuffer> uvCoords_f32,
-                       rive::rcp<rive::RenderBuffer> indices_u16,
-                       uint32_t vertexCount,
-                       uint32_t indexCount,
-                       rive::BlendMode blendMode,
-                       float opacity) override;
+    void drawImageMesh(const rive::RenderImage *image, rive::rcp<rive::RenderBuffer> vertices_f32,
+                       rive::rcp<rive::RenderBuffer> uvCoords_f32, rive::rcp<rive::RenderBuffer> indices_u16, uint32_t vertexCount,
+                       uint32_t indexCount, rive::BlendMode blendMode, float opacity) override;
 
     void setProjectionMatrix(const QMatrix4x4 *projectionMatrix, const QMatrix4x4 *combinedMatrix);
     void updateArtboardSize(const QSize &artboardSize) { m_artboardSize = artboardSize; }

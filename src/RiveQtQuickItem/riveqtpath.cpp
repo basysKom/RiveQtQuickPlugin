@@ -117,6 +117,11 @@ void RiveQtPath::setQPainterPath(QPainterPath path)
     m_qPainterPath = path;
 }
 
+void RiveQtPath::applyMatrix(QMatrix4x4 m)
+{
+    m_qPainterPath = m_qPainterPath * m.toTransform();
+}
+
 void RiveQtPath::setLevelOfDetail(const unsigned lod)
 {
     if (lod == 0u) {
@@ -135,13 +140,21 @@ QVector<QVector<QVector2D>> RiveQtPath::toVertices()
     return m_pathVertices;
 }
 
-void RiveQtPath::intersectWith(const QPainterPath &other)
+bool RiveQtPath::intersectWith(const QPainterPath &other)
 {
-    if (!m_qPainterPath.isEmpty()) {
-        m_qPainterPath = m_qPainterPath.intersected(other);
-        m_pathSegmentDataDirty = true;
-        m_pathSegmentOutlineDataDirty = true;
+    if (!m_qPainterPath.isEmpty() && !other.isEmpty()) {
+        if (other.intersects(m_qPainterPath)) {
+            QPainterPath tempQPainterPath = other.intersected(m_qPainterPath);
+            if (!tempQPainterPath.isEmpty()) {
+                m_qPainterPath = tempQPainterPath;
+                m_pathSegmentDataDirty = true;
+                m_pathSegmentOutlineDataDirty = true;
+                return true;
+            }
+        }
     }
+    m_qPainterPath = other;
+    return false;
 }
 
 QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)
@@ -187,7 +200,6 @@ std::optional<QVector2D> calculateIntersection(const QVector2D &p1, const QVecto
     const float intersectY = (factor1 * (y3 - y4) - (y1 - y2) * factor2) / denominator;
     return QVector2D(intersectX, intersectY);
 }
-
 
 QPointF RiveQtPath::cubicBezier(const QPointF &startPoint, const QPointF &controlPoint1, const QPointF &controlPoint2,
                                 const QPointF &endPoint, qreal t)
