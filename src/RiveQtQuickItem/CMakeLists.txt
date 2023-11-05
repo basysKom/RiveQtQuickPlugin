@@ -11,8 +11,6 @@ cmake_minimum_required(VERSION 3.16)
 message("Build Type: ${CMAKE_BUILD_TYPE}")
 
 set(PROJECT_SOURCES
-    renderer/riveqtopenglrenderer.h
-    renderer/riveqtopenglrenderer.cpp
     renderer/riveqtutils.h
     renderer/riveqtutils.cpp
     renderer/riveqtfont.h

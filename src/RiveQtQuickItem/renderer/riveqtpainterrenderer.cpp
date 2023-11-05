@@ -116,9 +116,8 @@ void RiveQtPainterRenderer::drawImage(const rive::RenderImage *image, rive::Blen
 }
 
 void RiveQtPainterRenderer::drawImageMesh(const rive::RenderImage *image, rive::rcp<rive::RenderBuffer> vertices_f32,
-                                         rive::rcp<rive::RenderBuffer> uvCoords_f32, rive::rcp<rive::RenderBuffer> indices_u16,
-                                         uint32_t vertexCount, uint32_t indexCount,
-                                         rive::BlendMode blendMode, float opacity)
+                                          rive::rcp<rive::RenderBuffer> uvCoords_f32, rive::rcp<rive::RenderBuffer> indices_u16,
+                                          uint32_t vertexCount, uint32_t indexCount, rive::BlendMode blendMode, float opacity)
 {
     qCWarning(rqqpRendering) << "Draw image mesh is not implemented for qpainter approach";
 }

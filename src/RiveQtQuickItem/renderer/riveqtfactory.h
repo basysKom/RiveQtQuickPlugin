@@ -31,7 +31,6 @@ public:
     {
         None,
         QPainterRenderer,
-        QOpenGLRenderer,
         RHIRenderer
     };
 
