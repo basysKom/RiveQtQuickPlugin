@@ -141,7 +141,9 @@ void RiveQtQuickItem::updateInternalArtboard()
     if (m_currentArtboardIndex == -1) {
         m_currentArtboardInstance = m_riveFile->artboardDefault();
     } else {
-        m_currentArtboardInstance = m_riveFile->artboardAt(m_currentArtboardIndex);
+        if (!m_currentArtboardInstance || m_riveFile->artboardAt(m_currentArtboardIndex).get() != m_currentArtboardInstance->artboard()) {
+            m_currentArtboardInstance = m_riveFile->artboardAt(m_currentArtboardIndex);
+        }
     }
 
     if (!m_currentArtboardInstance) {
@@ -193,11 +195,13 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         // of course the calls to the stateMachineInterface wont do anything
 
         m_renderNode->updateArtboardInstance(std::weak_ptr<rive::ArtboardInstance>());
-
+        m_currentArtboardInstance.reset();
         // reset all
         m_riveFile = nullptr;
         m_scheduleArtboardChange = true;
         m_scheduleStateMachineChange = true;
+        m_currentArtboardIndex = -1;
+        m_initialArtboardIndex = -1;
 
         // now load the file from the main thread -> connected as Queued Connection to make sure its called in its owning thread
         emit loadFileAfterUnloading(m_fileSource);
@@ -483,10 +487,6 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
         m_loadingStatus = Error;
         emit loadingStatusChanged();
         return;
-    }
-
-    if (m_currentArtboardInstance) {
-        m_currentArtboardInstance.reset();
     }
 
     QByteArray fileData = file.readAll();

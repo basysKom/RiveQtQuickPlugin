@@ -18,20 +18,29 @@ layout(std140, binding = 0) uniform buf {
     float top;
     float bottom;
     int useTextureNumber;
+    int sampleCount;
 };
 
-layout(binding = 1) uniform sampler2D u_textureA;
-layout(binding = 2) uniform sampler2D u_textureB;
-layout(binding = 3) uniform sampler2D u_texturePP;
+layout(binding = 1) uniform sampler2DMS u_textureA;
+layout(binding = 2) uniform sampler2DMS u_textureB;
+layout(binding = 3) uniform sampler2DMS u_texturePP;
 
-vec4 drawTexture(sampler2D s_texture, vec2 texCoord) {
+vec4 drawTexture(sampler2DMS tex, vec2 texCoord) {
     if (texCoord.x >= left && texCoord.x <= right &&
         texCoord.y >= top && texCoord.y <= bottom) {
-        return texture(s_texture, texCoord);
+        ivec2 tc = ivec2(floor(vec2(textureSize(tex)) * texCoord));
+
+        vec4 c = vec4(0.0);
+        for (int i = 0; i < sampleCount; ++i) {
+            c += texelFetch(tex, tc, i);
+        }
+        c /= float(sampleCount);
+        return vec4(c.rgb * c.a, c.a);
     } else {
-        return vec4(0.0, 0.0, 0.0, 0.0);  // Return a transparent color for pixels outside the viewport
+        return vec4(0.0);  // Return a transparent color for pixels outside the viewport
     }
 }
+
 
 void main()
 {
