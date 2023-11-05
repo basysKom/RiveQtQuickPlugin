@@ -11,6 +11,7 @@
 #include "riveqsgrhirendernode.h"
 #include "riveqsgsoftwarerendernode.h"
 #include "riveqtpath.h"
+#include "rqqplogging.h"
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #    include "renderer/riveqtrhirenderer.h"
@@ -25,10 +26,20 @@ RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr
     case QSGRendererInterface::GraphicsApi::MetalRhi:
     case QSGRendererInterface::GraphicsApi::VulkanRhi:
     case QSGRendererInterface::GraphicsApi::Direct3D11Rhi: {
-        auto node = new RiveQSGRHIRenderNode(window, artboardInstance, geometry);
-        node->setFillMode(m_renderSettings.fillMode);
-        node->setPostprocessingMode(m_renderSettings.postprocessingMode);
-        return node;
+        QSGRendererInterface *renderInterface = window->rendererInterface();
+        QRhi *rhi = static_cast<QRhi *>(renderInterface->getResource(window, QSGRendererInterface::RhiResource));
+        if (rhi->isFeatureSupported(QRhi::MultisampleTexture) && rhi->isFeatureSupported(QRhi::MultisampleRenderBuffer)) {
+
+            auto node = new RiveQSGRHIRenderNode(window, artboardInstance, geometry);
+            node->setFillMode(m_renderSettings.fillMode);
+            node->setPostprocessingMode(m_renderSettings.postprocessingMode);
+            return node;
+        } else {
+            qCritical(rqqpFactory)
+                << "RiveQtQuickPlign requires multisample support. The hardware does not support multisampling. Switch to "
+                   "SoftwareRenderer.";
+            return nullptr;
+        }
     }
 #endif
     case QSGRendererInterface::GraphicsApi::Software:
@@ -63,15 +74,13 @@ std::unique_ptr<rive::RenderPath> RiveQtFactory::makeRenderPath(rive::RawPath &r
     case RiveQtRenderType::QPainterRenderer:
         return std::make_unique<RiveQtPainterPath>(rawPath, fillRule);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    case RiveQtRenderType::RHIRenderer:
-#else
-    case RiveQtRenderType::QOpenGLRenderer:
-#endif
-    {
+    case RiveQtRenderType::RHIRenderer: {
         std::unique_ptr<RiveQtPath> riveQtPath = std::make_unique<RiveQtPath>(rawPath, fillRule);
         riveQtPath->setLevelOfDetail(levelOfDetail());
         return riveQtPath;
     }
+#endif
+
     case RiveQtRenderType::None:
     default:
         return std::make_unique<RiveQtPainterPath>(rawPath, fillRule); // TODO Add Empty Path
@@ -84,15 +93,12 @@ std::unique_ptr<rive::RenderPath> RiveQtFactory::makeEmptyRenderPath()
     case RiveQtRenderType::QPainterRenderer:
         return std::make_unique<RiveQtPainterPath>();
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    case RiveQtRenderType::RHIRenderer:
-#else
-    case RiveQtRenderType::QOpenGLRenderer:
-#endif
-    {
+    case RiveQtRenderType::RHIRenderer: {
         std::unique_ptr<RiveQtPath> riveQtPath = std::make_unique<RiveQtPath>();
         riveQtPath->setLevelOfDetail(levelOfDetail());
         return riveQtPath;
     }
+#endif
     case RiveQtRenderType::None:
     default:
         return std::make_unique<RiveQtPainterPath>(); // TODO Add Empty Path
@@ -122,6 +128,10 @@ rive::rcp<rive::Font> RiveQtFactory::decodeFont(rive::Span<const uint8_t> span)
 #else
     return nullptr;
 #endif
+    // Todo: would be nice to use qt build in support for fonts
+    // however qt is missing an api to access AXIS data from a font; lets for now use the HBFont maintained by rivecpp and consider
+    // switching later using qt directy would maybe allow us to drop the direct dependency on harfbuzz ...
+
     /*QByteArray fontData(reinterpret_cast<const char *>(span.data()), static_cast<int>(span.size()));
     int fontId = QFontDatabase::addApplicationFontFromData(fontData);
 
@@ -160,9 +170,6 @@ RiveQtFactory::RiveQtRenderType RiveQtFactory::renderType()
     case QSGRendererInterface::GraphicsApi::MetalRhi:
     case QSGRendererInterface::GraphicsApi::VulkanRhi:
         return RiveQtFactory::RiveQtRenderType::RHIRenderer;
-#else
-    case QSGRendererInterface::GraphicsApi::OpenGL:
-        return RiveQtFactory::RiveQtRenderType::QOpenGLRenderer;
 #endif
     case QSGRendererInterface::GraphicsApi::Software:
     default:
