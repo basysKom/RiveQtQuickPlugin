@@ -37,24 +37,10 @@ RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr
     }
 }
 
-rive::rcp<rive::RenderBuffer> RiveQtFactory::makeBufferU16(rive::Span<const uint16_t> data)
+rive::rcp<rive::RenderBuffer> RiveQtFactory::makeRenderBuffer(rive::RenderBufferType renderBufferType,
+                                                              rive::RenderBufferFlags renderBufferFlags, size_t size)
 {
-    return nullptr;
-}
-
-rive::rcp<rive::RenderBuffer> RiveQtFactory::makeBufferU32(rive::Span<const uint32_t> data)
-{
-    return nullptr;
-}
-
-rive::rcp<rive::RenderBuffer> RiveQtFactory::makeBufferF32(rive::Span<const float> data)
-{
-    return nullptr;
-}
-
-rive::rcp<rive::RenderBuffer> RiveQtFactory::makeRenderBuffer(rive::RenderBufferType renderBufferType, rive::RenderBufferFlags renderBufferFlags, size_t size)
-{
-    return rive::make_rcp<rive::DataRenderBuffer>(renderBufferType, renderBufferFlags, size);;
+    return rive::make_rcp<rive::DataRenderBuffer>(renderBufferType, renderBufferFlags, size);
 }
 
 rive::rcp<rive::RenderShader> RiveQtFactory::makeLinearGradient(float x1, float y1, float x2, float y2, const rive::ColorInt *colors,
@@ -150,7 +136,6 @@ rive::rcp<rive::Font> RiveQtFactory::decodeFont(rive::Span<const uint8_t> span)
 
     QFont font(fontFamilies.first());
     return rive::rcp<RiveQtFont>(new RiveQtFont(font));*/
-
 }
 
 unsigned int RiveQtFactory::levelOfDetail()

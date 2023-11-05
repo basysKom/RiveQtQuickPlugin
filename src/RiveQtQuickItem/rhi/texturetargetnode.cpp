@@ -453,9 +453,11 @@ void TextureTargetNode::renderBlend(QRhiCommandBuffer *cb)
     QMatrix4x4 mvp = (*m_projectionMatrix);
     mvp.translate(-m_rect.x(), -m_rect.y());
     int flipped = rhi->isYUpInFramebuffer() ? 1 : 0;
+    int sampleCount = m_node->currentBlendTarget()->sampleCount();
     m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 0, 64, mvp.constData());
     m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 64, 4, &m_blendMode);
     m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 68, 4, &flipped);
+    m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 72, 4, &sampleCount);
 
     auto *currentDisplayBufferTarget = m_node->currentBlendTarget();
     auto *blendPipeline = m_node->currentBlendPipeline();
@@ -528,15 +530,10 @@ void TextureTargetNode::setGradient(const QGradient *gradient)
     }
 }
 
-void TextureTargetNode::setTexture(const QImage &image,
-                    rive::rcp<rive::RenderBuffer> vertices,
-                    rive::rcp<rive::RenderBuffer> uvCoords,
-                    rive::rcp<rive::RenderBuffer> indices,
-                    uint32_t vertexCount, uint32_t indexCount,
-                    bool recreate,
-                    const QMatrix4x4 &transform)
+void TextureTargetNode::setTexture(const QImage &image, rive::rcp<rive::RenderBuffer> vertices, rive::rcp<rive::RenderBuffer> uvCoords,
+                                   rive::rcp<rive::RenderBuffer> indices, uint32_t vertexCount, uint32_t indexCount, bool recreate,
+                                   const QMatrix4x4 &transform)
 {
-    
     if (m_texture.size() != image.size()) {
         if (m_sampler) {
             m_cleanupList.removeAll(m_sampler);
@@ -644,8 +641,8 @@ void TextureTargetNode::setTexture(const QImage &image,
         assert(indices->sizeInBytes() == indexCount * sizeof(uint16_t));
 
         auto *vertexData = rive::DataRenderBuffer::Cast(vertices.get())->f32s();
-        auto *uvData     = rive::DataRenderBuffer::Cast(uvCoords.get())->f32s();
-        auto *indexData  = rive::DataRenderBuffer::Cast(indices.get())->u16s();
+        auto *uvData = rive::DataRenderBuffer::Cast(uvCoords.get())->f32s();
+        auto *indexData = rive::DataRenderBuffer::Cast(indices.get())->u16s();
 
         m_geometryData.resize(vertices->sizeInBytes());
         memcpy(m_geometryData.data(), vertexData, vertices->sizeInBytes());
