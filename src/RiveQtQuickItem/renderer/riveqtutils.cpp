@@ -168,6 +168,9 @@ void RiveQtPaint::shader(rive::rcp<rive::RenderShader> shader)
 
         if (!m_qtGradient.isNull()) {
             m_Brush = QBrush(*m_qtGradient);
+            if (m_paintStyle == rive::RenderPaintStyle::stroke) {
+                m_Pen.setBrush(m_Brush);
+            }
         } else {
             m_Brush = QBrush(m_color);
         }

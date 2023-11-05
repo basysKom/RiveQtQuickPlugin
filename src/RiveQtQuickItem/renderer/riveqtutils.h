@@ -107,8 +107,8 @@ private:
     rive::BlendMode m_BlendMode;
 
     QColor m_color;
-    QBrush m_Brush;
-    QPen m_Pen;
+    QBrush m_Brush { Qt::NoBrush };
+    QPen m_Pen { Qt::NoPen };
     float m_opacity { 1.0 };
 
     rive::rcp<rive::RenderShader> m_shader;
