@@ -50,6 +50,7 @@ layout(location = 2) out vec4 vOffset[3];
 layout(std140, binding = 0) uniform buf {
     vec2 resolution;
     int flip;
+    int sampleCount;
 } ubuf;
 
 void main() {
@@ -60,7 +61,7 @@ void main() {
     v_texcoord.y = 1.0 - v_texcoord.y;
 
   vPixCoord = v_texcoord * SMAA_RT_METRICS.zw;
-  
+
   // We will use these offsets for the searches later on (see @PSEUDO_GATHER4):
   vOffset[0] = mad(SMAA_RT_METRICS.xyxy, vec4(-0.25, -0.125,  1.25, -0.125), v_texcoord.xyxy);
   vOffset[1] = mad(SMAA_RT_METRICS.xyxy, vec4(-0.125, -0.25, -0.125,  1.25), v_texcoord.xyxy);

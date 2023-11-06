@@ -28,15 +28,18 @@ RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr
     case QSGRendererInterface::GraphicsApi::Direct3D11Rhi: {
         QSGRendererInterface *renderInterface = window->rendererInterface();
         QRhi *rhi = static_cast<QRhi *>(renderInterface->getResource(window, QSGRendererInterface::RhiResource));
-        if (rhi->isFeatureSupported(QRhi::MultisampleTexture) && rhi->isFeatureSupported(QRhi::MultisampleRenderBuffer)) {
 
+        auto sampleCounts = rhi->supportedSampleCounts();
+
+        if (rhi->isFeatureSupported(QRhi::MultisampleTexture) && rhi->isFeatureSupported(QRhi::MultisampleRenderBuffer)
+            && sampleCounts.contains(RiveQSGRenderNode::MULTISAMPLE_COUNT)) {
             auto node = new RiveQSGRHIRenderNode(window, artboardInstance, geometry);
             node->setFillMode(m_renderSettings.fillMode);
             node->setPostprocessingMode(m_renderSettings.postprocessingMode);
             return node;
         } else {
             qCritical(rqqpFactory)
-                << "RiveQtQuickPlign requires multisample support. The hardware does not support multisampling. Switch to "
+                << "RiveQtQuickPlign requires 4x multisample support. The hardware does not support 4x multisampling. Switch to "
                    "SoftwareRenderer.";
             return nullptr;
         }
