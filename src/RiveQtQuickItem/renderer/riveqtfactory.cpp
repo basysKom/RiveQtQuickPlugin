@@ -110,7 +110,7 @@ std::unique_ptr<rive::RenderPaint> RiveQtFactory::makeRenderPaint()
     return std::make_unique<RiveQtPaint>();
 }
 
-std::unique_ptr<rive::RenderImage> RiveQtFactory::decodeImage(rive::Span<const uint8_t> span)
+rive::rcp<rive::RenderImage> RiveQtFactory::decodeImage(rive::Span<const uint8_t> span)
 {
     QByteArray imageData(reinterpret_cast<const char *>(span.data()), static_cast<int>(span.size()));
     QImage image = QImage::fromData(imageData);
@@ -118,7 +118,7 @@ std::unique_ptr<rive::RenderImage> RiveQtFactory::decodeImage(rive::Span<const u
     if (image.isNull()) {
         return nullptr;
     }
-    return std::make_unique<RiveQtImage>(image);
+    return rive::rcp<RiveQtImage>(new RiveQtImage(image));
 }
 
 rive::rcp<rive::Font> RiveQtFactory::decodeFont(rive::Span<const uint8_t> span)
