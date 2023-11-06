@@ -51,7 +51,7 @@ public:
     std::unique_ptr<rive::RenderPath> makeRenderPath(rive::RawPath &rawPath, rive::FillRule fillRule) override;
     std::unique_ptr<rive::RenderPath> makeEmptyRenderPath() override;
     std::unique_ptr<rive::RenderPaint> makeRenderPaint() override;
-    std::unique_ptr<rive::RenderImage> decodeImage(rive::Span<const uint8_t> span) override;
+    rive::rcp<rive::RenderImage> decodeImage(rive::Span<const uint8_t> span) override;
     rive::rcp<rive::Font> decodeFont(rive::Span<const uint8_t> span) override;
 
 private:
