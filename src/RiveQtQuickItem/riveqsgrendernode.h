@@ -28,7 +28,7 @@ public:
 
     virtual void setArtboardRect(const QRectF &bounds);
 
-    static const int MULTISAMPLE_COUNT { 4 };
+    static const int MULTISAMPLE_COUNT;
 
 protected:
     std::weak_ptr<rive::ArtboardInstance> m_artboardInstance;
