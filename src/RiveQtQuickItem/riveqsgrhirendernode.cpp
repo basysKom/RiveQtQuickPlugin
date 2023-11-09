@@ -15,6 +15,8 @@
 
 #include "rhi/postprocessingsmaa.h"
 
+const int RiveQSGBaseNode::MULTISAMPLE_COUNT = 4;
+
 RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance,
                                            const QRectF &geometry)
     : RiveQSGRenderNode(window, artboardInstance, geometry)
