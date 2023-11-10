@@ -19,18 +19,21 @@ https://user-images.githubusercontent.com/1797537/233192955-7360403b-b51b-422a-8
 ## State of Implementation
 | Platform            | OpenGL                 | Direct3D    |Vulkan    |Metal    |SoftwareRendering    |
 |----------------     |-----------             |-----------  |-----------|-----------|-----------|
-| Qt5.15.2 Windows    | ❌   |❌|❌|❌|✅(no texture meshes)
-| Qt5.15.2 Linux      | ❌   |❌|❌|❌|✅(no texture meshes)
-| Qt5.15.2 macOS      | ❌   |❌|❌|❌|✅(no texture meshes)
-| Qt6.5 Windows    | ✅   |✅|✅|❌|✅(no texture meshes)
-| Qt6.5 Linux      | ✅   |❌|✅|❌|✅(no texture meshes)
-| Qt6.5 macOS      | ✅   |❌|❌|✅|✅(no texture meshes)
+| Qt5.15.2 Windows    | -   |-|-|-|✅(no texture meshes)
+| Qt5.15.2 Linux      | -   |-|-|-|✅(no texture meshes)
+| Qt5.15.2 macOS      | -   |-|-|-|✅(no texture meshes)
+| Qt6.5+ Windows    | ✅   |✅|✅|-|✅(no texture meshes)
+| Qt6.5+ Linux      | ✅   |-|✅|-|✅(no texture meshes)
+| Qt6.5+ macOS      | ✅   |-|-|✅|✅(no texture meshes)
 
+Lines noted with - are not implemented (and wont be) since they are not possible (like Direct3D on Mac). As for Qt5 support, this is maintained by keeping the Software Rendering compatible, but there wont be any extra effort to have native opengl rendering in Qt5.
 
 ## Features
 
 - Display Rive animations in QML
-- OpenGL Rendering
+- All Rive Features are supported. (State November 2023)
+- Windows, Linux, MacOS
+- Hardware Rendering in OpenGL, Metal, Vulkan, Direct3D
 - Software Rendering
 - Interactive animations with support for user input and triggers
 - Data bindings for reading and writing data to and from Rive animations
@@ -39,9 +42,9 @@ https://user-images.githubusercontent.com/1797537/233192955-7360403b-b51b-422a-8
 ## Compatibility
 The plugin has been tested on:
 
-- Windows using the MSVC 2019 compiler and Qt 5.15.2
+- Windows using the MSVC 2019 compiler and Qt 5.15.2+, Qt6.5+
 
-- Linux (Ubuntu 22.04 LTS) and Qt 5.15.2, Qt 6.5.0
+- Linux (Ubuntu 22.04 LTS) and Qt 5.15.2+, Qt 6.5+ 
   - Clang14 and gcc 11.4 (or newer versions) are supported
 
   - If you are using Clang14, ensure that all clang dependencies are installed 
@@ -55,7 +58,7 @@ We recommend to build the plugin with Clang14, as it includes the Clang vector b
 
 ## Dependencies
 
-- Qt 5.15.2 or Qt 6.5.0
+- Qt 5.15.2+ or Qt 6.5+
 - Rive C++ Runtime (available at [https://github.com/rive-app/rive-cpp](https://github.com/rive-app/rive-cpp))
   * **Hint:** You don't have to compile the it from the repo. Cmake will download rive-cpp and its dependencies and build them using cmake. The result is a static lib the plugin links against.
 
@@ -78,6 +81,8 @@ make
 ```
 
 ## Usage
+
+The QML API Documentation can be found here: https://basyskom.github.io/RiveQtQuickPlugin/index.html
 
 Here's a short example of how to use the RiveQtQuickItem in your QML code:
 
@@ -106,13 +111,15 @@ RiveQtQuickItem {
 There are 4 logging categories, so it is easy to filter relevant output:
 
 - **rqqpItem:** Logs related to the RiveQtQuickItem, like file loading, properties, etc.
+- **rqqpFactory:** Logs related to the Rive Factory Wrapper classes
 - **rqqpRendering:** Logs related to rendering and the rendering classes
 - **rqqpInspection:** Logs related to the content of the rive file like artboards, animations, statemachine info.
 - **rqqpInteraction:** Logs related to user interaction with the item and rive content
 
-### Example Project
+### Examples
 
 Check out the "example" folder in this repository for a complete example project demonstrating how to use the `RiveQtQuickPlugin`.
+Also take a look in our blog at https://blog.basyskom.com 
 
 ### Linux
 
