@@ -122,21 +122,29 @@ $(document).ready(function(){initNavTree('riveqtfont_8h_source.html',''); initRe
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    rive::Font::Axis getAxis(uint16_t index) <span class="keyword">const override</span>;</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    uint16_t getAxisCount() <span class="keyword">const override</span>;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    std::vector&lt;rive::Font::Coord&gt; getCoords() <span class="keyword">const override</span>;</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <span class="comment">//std::vector&lt;rive::Font::Coord&gt; getCoords() const override;</span></div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160; </div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    rive::rcp&lt;rive::Font&gt; makeAtCoords(rive::Span&lt;const rive::Font::Coord&gt; coords) <span class="keyword">const override</span>;</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <span class="comment">//rive::rcp&lt;rive::Font&gt; makeAtCoords(rive::Span&lt;const rive::Font::Coord&gt; coords) const override;</span></div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    rive::RawPath getPath(rive::GlyphID glyphId) <span class="keyword">const override</span>;</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160; </div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    rive::SimpleArray&lt;rive::Paragraph&gt; onShapeText(rive::Span&lt;const rive::Unichar&gt; text,</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;                                                   rive::Span&lt;const rive::TextRun&gt; runs) <span class="keyword">const override</span>;</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    <span class="keywordtype">float</span> getAxisValue(uint32_t axisTag)<span class="keyword"> const override </span>{ <span class="keywordflow">return</span> 0.0f; }</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    rive::SimpleArray&lt;uint32_t&gt; features()<span class="keyword"> const override </span>{ <span class="keywordflow">return</span> rive::SimpleArray&lt;uint32_t&gt;(); }</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <span class="keywordtype">bool</span> hasGlyph(rive::Span&lt;const rive::Unichar&gt;)<span class="keyword"> const override </span>{ <span class="keywordflow">return</span> <span class="keyword">false</span>; }</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    uint32_t getFeatureValue(uint32_t featureTag)<span class="keyword"> const override </span>{ <span class="keywordflow">return</span> 0; }</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    rive::Font::LineMetrics calculateLineMetrics(<span class="keyword">const</span> QFont &amp;font);</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    rive::rcp&lt;rive::Font&gt; withOptions(rive::Span&lt;const rive::Font::Coord&gt; variableAxes,</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;                                      rive::Span&lt;const rive::Font::Feature&gt; features)<span class="keyword"> const override </span>{ <span class="keywordflow">return</span> <span class="keyword">nullptr</span>; } </div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    QFont m_font;</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    std::vector&lt;rive::Font::Coord&gt; m_coords;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;};</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    rive::RawPath getPath(rive::GlyphID glyphId) <span class="keyword">const override</span>;</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160; </div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    rive::SimpleArray&lt;rive::Paragraph&gt; onShapeText(rive::Span&lt;const rive::Unichar&gt; text,</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;                                                   rive::Span&lt;const rive::TextRun&gt; runs) <span class="keyword">const override</span>;</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    rive::Font::LineMetrics calculateLineMetrics(<span class="keyword">const</span> QFont &amp;font);</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160; </div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    QFont m_font;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    std::vector&lt;rive::Font::Coord&gt; m_coords;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;};</div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
