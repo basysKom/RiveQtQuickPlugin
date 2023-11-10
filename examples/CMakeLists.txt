@@ -5,5 +5,8 @@
   SPDX-License-Identifier: LGPL-3.0-or-later
 ]]
 
-add_subdirectory(hellorive)
+if (${QT_VERSION_MAJOR} EQUAL 6)
+    add_subdirectory(hellorive)
+endif()
+
 add_subdirectory(SimpleViewer)
