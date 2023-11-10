@@ -6,6 +6,8 @@
 #include "riveqsgrendernode.h"
 #include "riveqtquickitem.h"
 
+const int RiveQSGBaseNode::MULTISAMPLE_COUNT = 4;
+
 QRectF RiveQSGRenderNode::rect() const
 {
     return m_rect;
