@@ -16,7 +16,7 @@
 #include <utils/factory_utils.hpp>
 
 #ifdef WITH_RIVE_TEXT
-#    include <rive/text/font_hb.hpp>
+#include <rive/text/font_hb.hpp>
 #endif
 
 #include "datatypes.h"
@@ -43,6 +43,10 @@ public:
     void setRenderSettings(const RiveRenderSettings &renderSettings) { m_renderSettings = renderSettings; }
 
     RiveQSGRenderNode *renderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, const QRectF &geometry);
+
+    rive::rcp<rive::RenderBuffer> makeBufferU16(rive::Span<const uint16_t> data);
+    rive::rcp<rive::RenderBuffer> makeBufferU32(rive::Span<const uint32_t> data);
+    rive::rcp<rive::RenderBuffer> makeBufferF32(rive::Span<const float> data);
 
     rive::rcp<rive::RenderBuffer> makeRenderBuffer(rive::RenderBufferType, rive::RenderBufferFlags, size_t) override;
 

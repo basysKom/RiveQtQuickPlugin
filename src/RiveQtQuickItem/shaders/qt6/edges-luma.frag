@@ -57,31 +57,19 @@ layout(location = 0) out vec4 fragColor;
 layout(std140, binding = 0) uniform buf {
     vec2 resolution;
     int flip;
-    int sampleCount;
 } ubuf;
 
-layout(binding = 1) uniform sampler2DMS colorTex;
-
-vec4 textureColor(sampler2DMS tex, vec2 texCoord) {
-    ivec2 tc = ivec2(floor(vec2(textureSize(tex)) * texCoord));
-
-    vec4 c = vec4(0.0);
-    for (int i = 0; i < ubuf.sampleCount; ++i) {
-        c += texelFetch(tex, tc, i);
-    }
-    c /= float(ubuf.sampleCount);
-    return vec4(c.rgb * c.a, c.a);
-}
+layout(binding = 1) uniform sampler2D colorTex;
 
 void main() {
   vec2 threshold = vec2(SMAA_THRESHOLD);
 
   // Calculate lumas:
   vec3 weights = vec3(0.2126, 0.7152, 0.0722);
-  float L = dot(textureColor(colorTex, v_texcoord).rgb, weights);
+  float L = dot(texture(colorTex, v_texcoord).rgb, weights);
 
-  float Lleft = dot(textureColor(colorTex, vOffset[0].xy).rgb, weights);
-  float Ltop  = dot(textureColor(colorTex, vOffset[0].zw).rgb, weights);
+  float Lleft = dot(texture(colorTex, vOffset[0].xy).rgb, weights);
+  float Ltop  = dot(texture(colorTex, vOffset[0].zw).rgb, weights);
 
   // We do the usual threshold:
   vec4 delta;
@@ -93,16 +81,16 @@ void main() {
       discard;
 
   // Calculate right and bottom deltas:
-  float Lright = dot(textureColor(colorTex, vOffset[1].xy).rgb, weights);
-  float Lbottom  = dot(textureColor(colorTex, vOffset[1].zw).rgb, weights);
+  float Lright = dot(texture(colorTex, vOffset[1].xy).rgb, weights);
+  float Lbottom  = dot(texture(colorTex, vOffset[1].zw).rgb, weights);
   delta.zw = abs(L - vec2(Lright, Lbottom));
 
   // Calculate the maximum delta in the direct neighborhood:
   vec2 maxDelta = max(delta.xy, delta.zw);
 
   // Calculate left-left and top-top deltas:
-  float Lleftleft = dot(textureColor(colorTex, vOffset[2].xy).rgb, weights);
-  float Ltoptop = dot(textureColor(colorTex, vOffset[2].zw).rgb, weights);
+  float Lleftleft = dot(texture(colorTex, vOffset[2].xy).rgb, weights);
+  float Ltoptop = dot(texture(colorTex, vOffset[2].zw).rgb, weights);
   delta.zw = abs(vec2(Lleft, Ltop) - vec2(Lleftleft, Ltoptop));
 
   // Calculate the final maximum delta:

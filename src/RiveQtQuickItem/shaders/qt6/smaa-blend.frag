@@ -44,11 +44,10 @@ layout(location = 0) out vec4 fragColor;
 layout(std140, binding = 0) uniform buf {
     vec2 resolution;
     int flip;
-    int sampleCount;
 } ubuf;
 
-layout(binding = 1) uniform sampler2DMS colorTex;
-layout(binding = 2) uniform sampler2DMS blendTex;
+layout(binding = 1) uniform sampler2D colorTex;
+layout(binding = 2) uniform sampler2D blendTex;
 
 /**
  * Conditional move:
@@ -63,30 +62,19 @@ void SMAAMovc(bvec4 cond, inout vec4 variable, vec4 value) {
   SMAAMovc(cond.zw, variable.zw, value.zw);
 }
 
-vec4 textureColor(sampler2DMS tex, vec2 texCoord) {
-    ivec2 tc = ivec2(floor(vec2(textureSize(tex)) * texCoord));
-
-    vec4 c = vec4(0.0);
-    for (int i = 0; i < ubuf.sampleCount; ++i) {
-        c += texelFetch(tex, tc, i);
-    }
-    c /= float(ubuf.sampleCount);
-    return vec4(c.rgb * c.a, c.a);
-}
-
 void main() {
   vec4 SMAA_RT_METRICS = vec4(1.0 / ubuf.resolution.x, 1.0 / ubuf.resolution.y, ubuf.resolution.x, ubuf.resolution.y);
   vec4 color;
 
   // Fetch the blending weights for current pixel:
   vec4 a;
-  a.x = textureColor(blendTex, vOffset.xy).a; // Right
-  a.y = textureColor(blendTex, vOffset.zw).g; // Top
-  a.wz = textureColor(blendTex, v_texcoord).xz; // Bottom / Left
+  a.x = texture(blendTex, vOffset.xy).a; // Right
+  a.y = texture(blendTex, vOffset.zw).g; // Top
+  a.wz = texture(blendTex, v_texcoord).xz; // Bottom / Left
 
   // Is there any blending weight with a value greater than 0.0?
   if (dot(a, vec4(1.0, 1.0, 1.0, 1.0)) <= 1e-5) {
-    color = textureColor(colorTex, v_texcoord); // LinearSampler
+    color = texture(colorTex, v_texcoord); // LinearSampler
   } else {
     bool h = max(a.x, a.z) > max(a.y, a.w); // max(horizontal) > max(vertical)
 
@@ -102,8 +90,8 @@ void main() {
 
     // We exploit bilinear filtering to mix current pixel with the chosen
     // neighbor:
-    color = blendingWeight.x * textureColor(colorTex, blendingCoord.xy); // LinearSampler
-    color += blendingWeight.y * textureColor(colorTex, blendingCoord.zw); // LinearSampler
+    color = blendingWeight.x * texture(colorTex, blendingCoord.xy); // LinearSampler
+    color += blendingWeight.y * texture(colorTex, blendingCoord.zw); // LinearSampler
   }
 
   fragColor = color;

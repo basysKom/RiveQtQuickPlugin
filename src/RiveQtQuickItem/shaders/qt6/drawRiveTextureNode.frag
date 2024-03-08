@@ -45,6 +45,7 @@ vec4 getGradientColor( float gradientCoord) {
     return gradientColor;
 }
 
+
 void main()
 {
     if (useTexture == 1) {

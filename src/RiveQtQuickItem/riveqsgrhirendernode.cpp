@@ -19,11 +19,6 @@ RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(QQuickWindow *window, std::weak_ptr<r
                                            const QRectF &geometry)
     : RiveQSGRenderNode(window, artboardInstance, geometry)
 {
-    QSGRendererInterface *renderInterface = m_window->rendererInterface();
-    QRhi *rhi = static_cast<QRhi *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiResource));
-    auto sampleCounts = rhi->supportedSampleCounts();
-    m_samples = sampleCounts.last();
-
     QFile file;
     file.setFileName(":/shaders/qt6/finalDraw.vert.qsb");
     file.open(QFile::ReadOnly);
@@ -208,8 +203,6 @@ void RiveQSGRHIRenderNode::render(const RenderState *state)
 
     commandBuffer->setGraphicsPipeline(m_finalDrawPipeline);
     QSize renderTargetSize = QSGRenderNodePrivate::get(this)->m_rt.rt->pixelSize();
-    m_pixelRatio = QSGRenderNodePrivate::get(this)->m_rt.rt->devicePixelRatio();
-
     commandBuffer->setViewport(QRhiViewport(0, 0, renderTargetSize.width(), renderTargetSize.height()));
 
     commandBuffer->setShaderResources(m_finalDrawResourceBindings);
@@ -348,17 +341,14 @@ void RiveQSGRHIRenderNode::prepare()
     QRhiCommandBuffer *commandBuffer = swapChain->currentFrameCommandBuffer();
 
     if (!m_stencilClippingBuffer) {
-        m_stencilClippingBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil,
-                                                       QSize(m_rect.width() * m_pixelRatio, m_rect.height() * m_pixelRatio), m_samples);
+        m_stencilClippingBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, QSize(m_rect.width(), m_rect.height()), 1);
         m_stencilClippingBuffer->create();
         m_cleanupList.append(m_stencilClippingBuffer);
     }
 
-    bool textureCreated = m_renderSurfaceA.create(rhi, m_samples, QSize(m_rect.width() * m_pixelRatio, m_rect.height() * m_pixelRatio),
-                                                  m_stencilClippingBuffer);
-    m_renderSurfaceB.create(rhi, m_samples, QSize(m_rect.width() * m_pixelRatio, m_rect.height() * m_pixelRatio), m_stencilClippingBuffer);
-    m_renderSurfaceIntern.create(rhi, m_samples, QSize(m_rect.width() * m_pixelRatio, m_rect.height() * m_pixelRatio),
-                                 m_stencilClippingBuffer, {});
+    bool textureCreated = m_renderSurfaceA.create(rhi, QSize(m_rect.width(), m_rect.height()), m_stencilClippingBuffer);
+    m_renderSurfaceB.create(rhi, QSize(m_rect.width(), m_rect.height()), m_stencilClippingBuffer);
+    m_renderSurfaceIntern.create(rhi, QSize(m_rect.width(), m_rect.height()), m_stencilClippingBuffer, {});
 
     // only set the renderSurface to A in case we created a new texture
     if (textureCreated) {
@@ -386,7 +376,7 @@ void RiveQSGRHIRenderNode::prepare()
     }
 
     if (!m_sampler) {
-        m_sampler = rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None, QRhiSampler::ClampToEdge,
+        m_sampler = rhi->newSampler(QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None, QRhiSampler::ClampToEdge,
                                     QRhiSampler::ClampToEdge);
         m_sampler->create();
         m_cleanupList.append(m_sampler);
@@ -401,7 +391,7 @@ void RiveQSGRHIRenderNode::prepare()
 
     // only for bindings
     if (!m_dummyTexture) {
-        m_dummyTexture = rhi->newTexture(QRhiTexture::BGRA8, QSize(1, 1), m_samples);
+        m_dummyTexture = rhi->newTexture(QRhiTexture::BGRA8, QSize(1, 1), 1);
         m_cleanupList.append(m_dummyTexture);
         m_dummyTexture->create();
     }
@@ -453,12 +443,12 @@ void RiveQSGRHIRenderNode::prepare()
     }
 
     if (!m_drawPipeline) {
-        m_drawPipeline = createDrawPipeline(rhi, m_samples, true, true, m_renderSurfaceA.desc, QRhiGraphicsPipeline::Triangles,
-                                            m_pathShader, m_drawPipelineResourceBindings);
+        m_drawPipeline = createDrawPipeline(rhi, true, true, m_renderSurfaceA.desc, QRhiGraphicsPipeline::Triangles, m_pathShader,
+                                            m_drawPipelineResourceBindings);
     }
 
     if (!m_drawPipelineIntern) {
-        m_drawPipelineIntern = createDrawPipeline(rhi, m_samples, false, true, m_renderSurfaceIntern.desc, QRhiGraphicsPipeline::Triangles,
+        m_drawPipelineIntern = createDrawPipeline(rhi, false, true, m_renderSurfaceIntern.desc, QRhiGraphicsPipeline::Triangles,
                                                   m_pathShader, m_drawPipelineResourceBindings);
     }
 
@@ -570,9 +560,8 @@ void RiveQSGRHIRenderNode::prepare()
         }
 
         if (m_postprocessing) {
-            m_postprocessing->initializePostprocessingPipeline(rhi, commandBuffer, m_samples,
-                                                               QSize(m_rect.width() * m_pixelRatio, m_rect.height() * m_pixelRatio),
-                                                               m_renderSurfaceA.texture, m_renderSurfaceB.texture);
+            m_postprocessing->initializePostprocessingPipeline(rhi, commandBuffer, QSize(m_rect.width(), m_rect.height()),
+                                                           m_renderSurfaceA.texture, m_renderSurfaceB.texture);
         }
 
         m_verticesDirty = false;
@@ -603,7 +592,7 @@ void RiveQSGRHIRenderNode::prepare()
     }
 
     if (!m_finalDrawUniformBuffer) {
-        m_finalDrawUniformBuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 96);
+        m_finalDrawUniformBuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 92);
         m_finalDrawUniformBuffer->create();
         m_cleanupList.append(m_finalDrawUniformBuffer);
     }
@@ -632,7 +621,7 @@ void RiveQSGRHIRenderNode::prepare()
     }
 
     if (!m_finalDrawPipeline) {
-        m_finalDrawPipeline = createDrawPipeline(rhi, m_samples, true, false, QSGRenderNodePrivate::get(this)->m_rt.rpDesc,
+        m_finalDrawPipeline = createDrawPipeline(rhi, true, false, QSGRenderNodePrivate::get(this)->m_rt.rpDesc,
                                                  QRhiGraphicsPipeline::TriangleStrip, m_finalDrawShader, m_finalDrawResourceBindings);
     }
 
@@ -647,7 +636,6 @@ void RiveQSGRHIRenderNode::prepare()
     int flipped = rhi->isYUpInFramebuffer() ? 1 : 0;
 
     int useTextureNumber = 0;
-    int sampleCount = m_samples;
 
     if (!isCurrentRenderBufferA()) {
         useTextureNumber = 1;
@@ -665,7 +653,6 @@ void RiveQSGRHIRenderNode::prepare()
     resourceUpdates->updateDynamicBuffer(m_finalDrawUniformBuffer, 80, 4, &top);
     resourceUpdates->updateDynamicBuffer(m_finalDrawUniformBuffer, 84, 4, &bottom);
     resourceUpdates->updateDynamicBuffer(m_finalDrawUniformBuffer, 88, 4, &useTextureNumber);
-    resourceUpdates->updateDynamicBuffer(m_finalDrawUniformBuffer, 92, 4, &sampleCount);
 
     commandBuffer->resourceUpdate(resourceUpdates);
 
@@ -690,8 +677,12 @@ QRhiGraphicsPipeline *RiveQSGRHIRenderNode::createClipPipeline(QRhi *rhi, QRhiRe
     clipPipeLine->setTargetBlends({ disabledColorWrite });
 
     QRhiVertexInputLayout inputLayout;
-    inputLayout.setBindings({ { sizeof(QVector2D) } });
-    inputLayout.setAttributes({ { 0, 0, QRhiVertexInputAttribute::Float2, 0 } });
+    inputLayout.setBindings({
+        { sizeof(QVector2D) }
+    });
+    inputLayout.setAttributes({
+        { 0, 0, QRhiVertexInputAttribute::Float2, 0 }
+    });
 
     // Configure stencil operations for writing stencil values
     QRhiGraphicsPipeline::StencilOpState stencilOpState = { QRhiGraphicsPipeline::Keep, QRhiGraphicsPipeline::Keep,
@@ -703,7 +694,6 @@ QRhiGraphicsPipeline *RiveQSGRHIRenderNode::createClipPipeline(QRhi *rhi, QRhiRe
     clipPipeLine->setTopology(QRhiGraphicsPipeline::Triangles);
     clipPipeLine->setVertexInputLayout(inputLayout);
     clipPipeLine->setRenderPassDescriptor(renderPassDescriptor);
-    clipPipeLine->setSampleCount(m_samples);
 
     clipPipeLine->setShaderResourceBindings(bindings);
     clipPipeLine->create();
@@ -712,7 +702,7 @@ QRhiGraphicsPipeline *RiveQSGRHIRenderNode::createClipPipeline(QRhi *rhi, QRhiRe
     return clipPipeLine;
 }
 
-QRhiGraphicsPipeline *RiveQSGRHIRenderNode::createDrawPipeline(QRhi *rhi, int samples, bool srcOverBlend, bool stencilBuffer,
+QRhiGraphicsPipeline *RiveQSGRHIRenderNode::createDrawPipeline(QRhi *rhi, bool srcOverBlend, bool stencilBuffer,
                                                                QRhiRenderPassDescriptor *renderPassDescriptor,
                                                                QRhiGraphicsPipeline::Topology t, const QList<QRhiShaderStage> &shader,
                                                                QRhiShaderResourceBindings *bindings)
@@ -728,7 +718,6 @@ QRhiGraphicsPipeline *RiveQSGRHIRenderNode::createDrawPipeline(QRhi *rhi, int sa
     drawPipeLine->setFrontFace(rhi->isYUpInFramebuffer() ? QRhiGraphicsPipeline::CW : QRhiGraphicsPipeline::CCW);
     drawPipeLine->setCullMode(QRhiGraphicsPipeline::None);
     drawPipeLine->setTopology(t);
-    drawPipeLine->setSampleCount(samples);
 
     if (srcOverBlend) {
         QRhiGraphicsPipeline::TargetBlend blend;
@@ -791,7 +780,7 @@ QRhiGraphicsPipeline *RiveQSGRHIRenderNode::createBlendPipeline(QRhi *rhi, QRhiR
     blendPipeLine->setStencilTest(false);
     blendPipeLine->setShaderResourceBindings(bindings);
     blendPipeLine->setShaderStages(m_blendShaders.cbegin(), m_blendShaders.cend());
-    blendPipeLine->setSampleCount(m_samples);
+
     QRhiVertexInputLayout inputLayout;
     inputLayout.setBindings({
         { sizeof(QVector2D) },
@@ -838,13 +827,12 @@ void RiveQSGRHIRenderNode::RenderSurface::cleanUp()
     }
 }
 
-bool RiveQSGRHIRenderNode::RenderSurface::create(QRhi *rhi, int samples, const QSize &surfaceSize, QRhiRenderBuffer *stencilClippingBuffer,
+bool RiveQSGRHIRenderNode::RenderSurface::create(QRhi *rhi, const QSize &surfaceSize, QRhiRenderBuffer *stencilClippingBuffer,
                                                  QRhiTextureRenderTarget::Flags flags)
 {
-
     bool textureCreated = false;
     if (!texture) {
-        texture = rhi->newTexture(QRhiTexture::RGBA8, surfaceSize, samples, QRhiTexture::RenderTarget);
+        texture = rhi->newTexture(QRhiTexture::RGBA8, surfaceSize, 1, QRhiTexture::RenderTarget);
         texture->create();
         textureCreated = true;
     }

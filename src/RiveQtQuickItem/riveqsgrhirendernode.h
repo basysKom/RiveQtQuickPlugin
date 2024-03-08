@@ -73,7 +73,6 @@ protected:
         QRhiRenderPassDescriptor *blendDesc { nullptr };
         QRhiTextureRenderTarget *target { nullptr };
         QRhiTextureRenderTarget *blendTarget { nullptr };
-        QRhiTexture *resolveTexture { nullptr };
 
         ~RenderSurface() { cleanUp(); }
 
@@ -82,7 +81,7 @@ protected:
         bool valid() { return texture != nullptr; }
 
         // this creates all resources needed to have a texture to draw on
-        bool create(QRhi *rhi, int samples, const QSize &surfaceSize, QRhiRenderBuffer *stencilClippingBuffer,
+        bool create(QRhi *rhi, const QSize &surfaceSize, QRhiRenderBuffer *stencilClippingBuffer,
                     QRhiTextureRenderTarget::Flags flags = QRhiTextureRenderTarget::PreserveColorContents);
     };
 
@@ -159,14 +158,11 @@ protected:
 
     PostprocessingSMAA *m_postprocessing { nullptr };
 
-
 private:
-    float m_pixelRatio { 1.0f };
-    int m_samples { 4 };
     QRhiGraphicsPipeline *createBlendPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPass, QRhiShaderResourceBindings *bindings);
     QRhiGraphicsPipeline *createClipPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPassDescriptor,
                                              QRhiShaderResourceBindings *bindings);
-    QRhiGraphicsPipeline *createDrawPipeline(QRhi *rhi, int samples, bool srcOverBlend, bool stencilBuffer,
+    QRhiGraphicsPipeline *createDrawPipeline(QRhi *rhi, bool srcOverBlend, bool stencilBuffer,
                                              QRhiRenderPassDescriptor *renderPassDescriptor, QRhiGraphicsPipeline::Topology t,
                                              const QList<QRhiShaderStage> &shader, QRhiShaderResourceBindings *bindings);
 };
