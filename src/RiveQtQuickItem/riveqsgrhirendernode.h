@@ -159,11 +159,10 @@ protected:
 
     PostprocessingSMAA *m_postprocessing { nullptr };
 
+
 private:
-    void resetResources();
-
     float m_pixelRatio { 1.0f };
-
+    int m_samples { 4 };
     QRhiGraphicsPipeline *createBlendPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPass, QRhiShaderResourceBindings *bindings);
     QRhiGraphicsPipeline *createClipPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPassDescriptor,
                                              QRhiShaderResourceBindings *bindings);

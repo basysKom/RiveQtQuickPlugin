@@ -41,7 +41,6 @@ layout(location = 1) out vec4 vOffset;
 layout(std140, binding = 0) uniform buf {
     vec2 resolution;
     int flip;
-    int sampleCount;
 } ubuf;
 
 out gl_PerVertex { vec4 gl_Position; };
