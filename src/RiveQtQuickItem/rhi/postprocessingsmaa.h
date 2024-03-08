@@ -23,8 +23,8 @@ public:
     bool isInitialized() const { return m_isInitialized; }
 
     // void initializePostprocessingPipeline(QRhi *rhi, const QSizeF &size, std::weak_ptr<QRhiTexture> frameTexture);
-    void initializePostprocessingPipeline(QRhi *rhi, QRhiCommandBuffer *commandBuffer, int samples, const QSize &size,
-                                          QRhiTexture *frameTextureA, QRhiTexture *frameTextureB);
+    void initializePostprocessingPipeline(QRhi *rhi, QRhiCommandBuffer *commandBuffer, const QSize &size, QRhiTexture *frameTextureA,
+                                          QRhiTexture *frameTextureB);
     void postprocess(QRhi *rhi, QRhiCommandBuffer *commandBuffer, bool useTextureBufferA);
     void cleanup();
 
@@ -105,6 +105,4 @@ private:
     QRhiTexture *m_postprocessingRenderTexture { nullptr };
 
     QSGRendererInterface::GraphicsApi m_api;
-
-    int m_samples { 4 };
 };

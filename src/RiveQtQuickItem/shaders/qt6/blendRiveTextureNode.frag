@@ -13,11 +13,10 @@ layout(std140, binding = 0) uniform buf {
     mat4 qt_Matrix;
     int blendMode;
     int flipped;
-    int sampleCount;
 };
 
-layout(binding = 1) uniform sampler2DMS u_texture_src;
-layout(binding = 2) uniform sampler2DMS u_texture_dest;
+layout(binding = 1) uniform sampler2D u_texture_src;
+layout(binding = 2) uniform sampler2D u_texture_dest;
 
 vec4 blendColor(vec4 color, vec4 src, vec4 dst) {
     float blendColor = src.a * dst.a;
@@ -331,22 +330,10 @@ vec4 blend(vec4 srcColor, vec4 destColor, int blendMode) {
     return blendedColor;
 }
 
-vec4 textureColor(sampler2DMS tex, vec2 texCoord) {
-
-    ivec2 tc = ivec2(floor(vec2(textureSize(tex)) * texCoord));
-
-    vec4 c = vec4(0.0);
-    for (int i = 0; i < sampleCount; ++i) {
-        c += texelFetch(tex, tc, i);
-    }
-    c /= float(sampleCount);
-    return vec4(c.rgb * c.a, c.a);
-}
-
 void main()
 {
-    vec4 srcColor = textureColor(u_texture_src, texCoord);
-    vec4 destColor = textureColor(u_texture_dest, texCoord);
+    vec4 srcColor = texture(u_texture_src, texCoord);
+    vec4 destColor = texture(u_texture_dest, texCoord);
 
     vec4 finalColor = blend(srcColor, destColor, blendMode);
 
