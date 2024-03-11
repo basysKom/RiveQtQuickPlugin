@@ -97,27 +97,29 @@ void RiveQtRhiRenderer::drawPath(rive::RenderPath *path, rive::RenderPaint *pain
     }
 
     RiveQtPath clipResult;
-    QPair<QPainterPath, QMatrix4x4> firstLevel = m_rhiRenderStack.back().m_allClipPainterPathesApplied.first();
+    if (!m_rhiRenderStack.back().m_allClipPainterPathesApplied.empty()) {
+        QPair<QPainterPath, QMatrix4x4> firstLevel = m_rhiRenderStack.back().m_allClipPainterPathesApplied.first();
 
-    clipResult.setQPainterPath(firstLevel.first);
-    clipResult.applyMatrix(firstLevel.second);
+        clipResult.setQPainterPath(firstLevel.first);
+        clipResult.applyMatrix(firstLevel.second);
 
-    for (int i = 1; i < m_rhiRenderStack.back().m_allClipPainterPathesApplied.count(); ++i) {
-        RiveQtPath a;
-        const auto &entry = m_rhiRenderStack.back().m_allClipPainterPathesApplied[i];
-        a.setQPainterPath(entry.first);
-        a.applyMatrix(entry.second);
-        clipResult.intersectWith(a.toQPainterPath());
+        for (int i = 1; i < m_rhiRenderStack.back().m_allClipPainterPathesApplied.count(); ++i) {
+            RiveQtPath a;
+            const auto &entry = m_rhiRenderStack.back().m_allClipPainterPathesApplied[i];
+            a.setQPainterPath(entry.first);
+            a.applyMatrix(entry.second);
+            clipResult.intersectWith(a.toQPainterPath());
+        }
+
+        // #if 0 // this allows to draw the clipping area which it useful for debugging :)
+        //    TextureTargetNode *drawClipping = getRiveDrawTargetNode();
+        //    drawClipping->setOpacity(currentOpacity()); // inherit the opacity from the parent
+        //    drawClipping->setColor(QColor(255, 0, 0, 29));
+        //    drawClipping->updateGeometry(clipResult.toVertices(), QMatrix4x4());
+        //  #endif
+
+        node->updateClippingGeometry(clipResult.toVertices());
     }
-
-    // #if 0 // this allows to draw the clipping area which it useful for debugging :)
-    //    TextureTargetNode *drawClipping = getRiveDrawTargetNode();
-    //    drawClipping->setOpacity(currentOpacity()); // inherit the opacity from the parent
-    //    drawClipping->setColor(QColor(255, 0, 0, 29));
-    //    drawClipping->updateGeometry(clipResult.toVertices(), QMatrix4x4());
-    //  #endif
-
-    node->updateClippingGeometry(clipResult.toVertices());
 
     node->updateGeometry(pathData, transformMatrix());
 }

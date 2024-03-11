@@ -48,21 +48,6 @@ RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr
     }
 }
 
-rive::rcp<rive::RenderBuffer> RiveQtFactory::makeBufferU16(rive::Span<const uint16_t> data)
-{
-    return nullptr;
-}
-
-rive::rcp<rive::RenderBuffer> RiveQtFactory::makeBufferU32(rive::Span<const uint32_t> data)
-{
-    return nullptr;
-}
-
-rive::rcp<rive::RenderBuffer> RiveQtFactory::makeBufferF32(rive::Span<const float> data)
-{
-    return nullptr;
-}
-
 rive::rcp<rive::RenderBuffer> RiveQtFactory::makeRenderBuffer(rive::RenderBufferType renderBufferType, rive::RenderBufferFlags renderBufferFlags, size_t size)
 {
     return rive::make_rcp<rive::DataRenderBuffer>(renderBufferType, renderBufferFlags, size);;
