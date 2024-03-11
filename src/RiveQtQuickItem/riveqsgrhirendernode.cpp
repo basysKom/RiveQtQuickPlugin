@@ -6,7 +6,12 @@
 #include <QQuickWindow>
 #include <QFile>
 
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
+#include <QOpenGLExtraFunctions>
+
 #include <private/qrhi_p.h>
+#include <private/qrhigles2_p.h>
 #include <private/qsgrendernode_p.h>
 
 #include "riveqsgrhirendernode.h"
@@ -325,6 +330,23 @@ bool RiveQSGRHIRenderNode::isCurrentRenderBufferA()
     return m_currentRenderSurface == &m_renderSurfaceA;
 }
 
+#ifdef OPENGL_DEBUG
+void GLAPIENTRY
+    MessageCallback( GLenum source,
+                 GLenum type,
+                 GLuint id,
+                 GLenum severity,
+                 GLsizei length,
+                 const GLchar* message,
+                 const void* userParam )
+{
+    fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+        ( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ),
+        type, severity, message );
+}
+#endif
+
+
 void RiveQSGRHIRenderNode::prepare()
 {
     if (!m_window) {
@@ -338,17 +360,31 @@ void RiveQSGRHIRenderNode::prepare()
     Q_ASSERT(swapChain);
     Q_ASSERT(rhi);
 
+#ifdef OPENGL_DEBUG
+    if (rhi->backend() == QRhi::OpenGLES2) {
+        const QRhiGles2NativeHandles* native = static_cast<const QRhiGles2NativeHandles*>(rhi->nativeHandles());
+        const auto context = native->context;
+        if (context) {
+            const auto gl = context->functions();
+            const auto extra = context->extraFunctions();
+            gl->glEnable              ( GL_DEBUG_OUTPUT );
+            extra->glDebugMessageCallback( MessageCallback, 0 );
+        }
+    }
+#endif
+
     QRhiCommandBuffer *commandBuffer = swapChain->currentFrameCommandBuffer();
 
     if (!m_stencilClippingBuffer) {
-        m_stencilClippingBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, QSize(m_rect.width(), m_rect.height()), 1);
+        m_stencilClippingBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, QSize(m_rect.width(), m_rect.height()), m_sampleCount);
         m_stencilClippingBuffer->create();
         m_cleanupList.append(m_stencilClippingBuffer);
     }
 
-    bool textureCreated = m_renderSurfaceA.create(rhi, QSize(m_rect.width(), m_rect.height()), m_stencilClippingBuffer);
-    m_renderSurfaceB.create(rhi, QSize(m_rect.width(), m_rect.height()), m_stencilClippingBuffer);
-    m_renderSurfaceIntern.create(rhi, QSize(m_rect.width(), m_rect.height()), m_stencilClippingBuffer, {});
+    m_sampleCount = swapChain->sampleCount();
+    bool textureCreated = m_renderSurfaceA.create(rhi, m_sampleCount, QSize(m_rect.width(), m_rect.height()), m_stencilClippingBuffer);
+    m_renderSurfaceB.create(rhi, m_sampleCount, QSize(m_rect.width(), m_rect.height()), m_stencilClippingBuffer);
+    m_renderSurfaceIntern.create(rhi, m_sampleCount, QSize(m_rect.width(), m_rect.height()), m_stencilClippingBuffer, {});
 
     // only set the renderSurface to A in case we created a new texture
     if (textureCreated) {
@@ -539,7 +575,9 @@ void RiveQSGRHIRenderNode::prepare()
     artboardInstance->draw(m_renderer);
 
     if (!m_cleanUpTextureTarget) {
-        QRhiColorAttachment colorAttachment(m_renderSurfaceA.texture);
+        QRhiColorAttachment colorAttachment(m_renderSurfaceA.buffer);
+        colorAttachment.setResolveTexture(m_renderSurfaceA.texture);
+
         QRhiTextureRenderTargetDescription desc(colorAttachment);
         m_cleanUpTextureTarget = rhi->newTextureRenderTarget(desc);
         QRhiRenderPassDescriptor *renderPassDescriptor = m_cleanUpTextureTarget->newCompatibleRenderPassDescriptor();
@@ -800,6 +838,12 @@ QRhiGraphicsPipeline *RiveQSGRHIRenderNode::createBlendPipeline(QRhi *rhi, QRhiR
 
 void RiveQSGRHIRenderNode::RenderSurface::cleanUp()
 {
+    if (buffer) {
+        buffer->destroy();
+        buffer->deleteLater();
+        buffer = nullptr;
+    }
+
     if (texture) {
         texture->destroy();
         texture->deleteLater();
@@ -827,17 +871,25 @@ void RiveQSGRHIRenderNode::RenderSurface::cleanUp()
     }
 }
 
-bool RiveQSGRHIRenderNode::RenderSurface::create(QRhi *rhi, const QSize &surfaceSize, QRhiRenderBuffer *stencilClippingBuffer,
+bool RiveQSGRHIRenderNode::RenderSurface::create(QRhi *rhi, int samples, const QSize &surfaceSize, QRhiRenderBuffer *stencilClippingBuffer,
                                                  QRhiTextureRenderTarget::Flags flags)
 {
     bool textureCreated = false;
+
+    if (!buffer) {
+        buffer = rhi->newRenderBuffer(QRhiRenderBuffer::Color, surfaceSize, samples);
+        buffer->create();
+    }
+
     if (!texture) {
         texture = rhi->newTexture(QRhiTexture::RGBA8, surfaceSize, 1, QRhiTexture::RenderTarget);
         texture->create();
         textureCreated = true;
     }
     if (!target) {
-        QRhiColorAttachment colorAttachment(texture);
+        QRhiColorAttachment colorAttachment(buffer);
+        colorAttachment.setResolveTexture(texture);
+
         QRhiTextureRenderTargetDescription textureTargetDesc(colorAttachment);
         textureTargetDesc.setDepthStencilBuffer(stencilClippingBuffer);
         target = rhi->newTextureRenderTarget(textureTargetDesc, flags);
@@ -846,12 +898,36 @@ bool RiveQSGRHIRenderNode::RenderSurface::create(QRhi *rhi, const QSize &surface
         target->create();
     }
     if (!blendTarget) {
-        QRhiColorAttachment colorAttachment(texture);
+        QRhiColorAttachment colorAttachment(buffer);
+        colorAttachment.setResolveTexture(texture);
+
         QRhiTextureRenderTargetDescription textureTargetDesc(colorAttachment);
         blendTarget = rhi->newTextureRenderTarget(textureTargetDesc);
         blendDesc = blendTarget->newCompatibleRenderPassDescriptor();
         blendTarget->setRenderPassDescriptor(blendDesc);
         blendTarget->create();
     }
+
+#ifdef OPENGL_DEBUG
+    if (textureCreated && rhi->backend() == QRhi::OpenGLES2) {
+        const QRhiGles2NativeHandles* native = static_cast<const QRhiGles2NativeHandles*>(rhi->nativeHandles());
+        const auto context = native->context;
+        if (context) {
+            const auto format = context->format();
+            qDebug() << "QSurfaceFormat is" << format;
+            qDebug() << "is supported: QRhi::MultisampleTexture" << rhi->isFeatureSupported(QRhi::MultisampleTexture);
+            qDebug() << "is supported: QRhi::MultisampleRenderBuffer" << rhi->isFeatureSupported(QRhi::MultisampleRenderBuffer);
+            const auto gl = context->functions();
+            GLenum err;
+            while((err = glGetError()) != GL_NO_ERROR)
+            {
+                qDebug() << "Got an OpenGL error:" << err;
+
+            }
+        }
+
+    }
+#endif
+
     return textureCreated;
 }

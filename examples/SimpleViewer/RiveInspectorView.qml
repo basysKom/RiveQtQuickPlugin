@@ -154,7 +154,7 @@ Item {
                     currentStateMachineIndex: -1
 
                     renderQuality: RiveQtQuickItem.Medium
-                    postprocessingMode: RiveQtQuickItem.SMAA
+                    postprocessingMode: RiveQtQuickItem.None
                     fillMode: RiveQtQuickItem.PreserveAspectFit
 
                     onStateMachineStringInterfaceChanged: {

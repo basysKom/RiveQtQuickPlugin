@@ -68,6 +68,7 @@ public:
 protected:
     struct RenderSurface
     {
+        QRhiRenderBuffer *buffer { nullptr };
         QRhiTexture *texture { nullptr };
         QRhiRenderPassDescriptor *desc { nullptr };
         QRhiRenderPassDescriptor *blendDesc { nullptr };
@@ -81,7 +82,7 @@ protected:
         bool valid() { return texture != nullptr; }
 
         // this creates all resources needed to have a texture to draw on
-        bool create(QRhi *rhi, const QSize &surfaceSize, QRhiRenderBuffer *stencilClippingBuffer,
+        bool create(QRhi *rhi, int samples, const QSize &surfaceSize, QRhiRenderBuffer *stencilClippingBuffer,
                     QRhiTextureRenderTarget::Flags flags = QRhiTextureRenderTarget::PreserveColorContents);
     };
 
@@ -157,6 +158,8 @@ protected:
     RiveRenderSettings::FillMode m_fillMode;
 
     PostprocessingSMAA *m_postprocessing { nullptr };
+
+    int m_sampleCount { 1 };
 
 private:
     QRhiGraphicsPipeline *createBlendPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPass, QRhiShaderResourceBindings *bindings);
