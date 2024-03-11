@@ -12,9 +12,13 @@
 int main(int argc, char *argv[])
 {
 
+    QSurfaceFormat f;
+    f.setSamples(4);
+    QSurfaceFormat::setDefaultFormat(f);
+
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     // Force OpenGL
-   // QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 #endif
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
