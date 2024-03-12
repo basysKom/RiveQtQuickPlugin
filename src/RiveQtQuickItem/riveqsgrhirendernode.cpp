@@ -19,6 +19,7 @@
 #include "renderer/riveqtrhirenderer.h"
 
 #include "rhi/postprocessingsmaa.h"
+#include "rqqplogging.h"
 
 RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance,
                                            const QRectF &geometry)
@@ -575,8 +576,15 @@ void RiveQSGRHIRenderNode::prepare()
     artboardInstance->draw(m_renderer);
 
     if (!m_cleanUpTextureTarget) {
-        QRhiColorAttachment colorAttachment(m_renderSurfaceA.buffer);
-        colorAttachment.setResolveTexture(m_renderSurfaceA.texture);
+        const bool isMetal = rhi->backend() == QRhi::Metal;
+        const bool renderInMsaaBuffer = swapChain->sampleCount() > 1 && !isMetal;
+        QRhiColorAttachment colorAttachment;
+        if (renderInMsaaBuffer) {
+            colorAttachment.setRenderBuffer(m_renderSurfaceA.buffer);
+            colorAttachment.setResolveTexture(m_renderSurfaceA.texture);
+        } else {
+            colorAttachment.setTexture(m_renderSurfaceA.texture);
+        }
 
         QRhiTextureRenderTargetDescription desc(colorAttachment);
         m_cleanUpTextureTarget = rhi->newTextureRenderTarget(desc);
@@ -874,9 +882,17 @@ void RiveQSGRHIRenderNode::RenderSurface::cleanUp()
 bool RiveQSGRHIRenderNode::RenderSurface::create(QRhi *rhi, int samples, const QSize &surfaceSize, QRhiRenderBuffer *stencilClippingBuffer,
                                                  QRhiTextureRenderTarget::Flags flags)
 {
+    
+    const bool isMetal = rhi->backend() == QRhi::Metal;
+    const bool renderInMsaaBuffer = samples > 1 && !isMetal;
+
+    if (isMetal && samples > 1) {
+        qWarning(rqqpRendering) << "MSAA on RHI Metal is not supported yet; If you need AA, set postprocessingMode to RiveQtQuickItem.SMAA";
+    }
+
     bool textureCreated = false;
 
-    if (!buffer) {
+    if (!buffer && renderInMsaaBuffer) {
         buffer = rhi->newRenderBuffer(QRhiRenderBuffer::Color, surfaceSize, samples);
         buffer->create();
     }
@@ -887,8 +903,13 @@ bool RiveQSGRHIRenderNode::RenderSurface::create(QRhi *rhi, int samples, const Q
         textureCreated = true;
     }
     if (!target) {
-        QRhiColorAttachment colorAttachment(buffer);
-        colorAttachment.setResolveTexture(texture);
+        QRhiColorAttachment colorAttachment;
+        if (renderInMsaaBuffer) {
+            colorAttachment.setRenderBuffer(buffer);
+            colorAttachment.setResolveTexture(texture);
+        } else {
+            colorAttachment.setTexture(texture);
+        }
 
         QRhiTextureRenderTargetDescription textureTargetDesc(colorAttachment);
         textureTargetDesc.setDepthStencilBuffer(stencilClippingBuffer);
@@ -898,8 +919,13 @@ bool RiveQSGRHIRenderNode::RenderSurface::create(QRhi *rhi, int samples, const Q
         target->create();
     }
     if (!blendTarget) {
-        QRhiColorAttachment colorAttachment(buffer);
-        colorAttachment.setResolveTexture(texture);
+        QRhiColorAttachment colorAttachment;
+        if (renderInMsaaBuffer) {
+            colorAttachment.setResolveTexture(texture);
+            colorAttachment.setRenderBuffer(buffer);
+        } else {
+            colorAttachment.setTexture(texture);
+        }
 
         QRhiTextureRenderTargetDescription textureTargetDesc(colorAttachment);
         blendTarget = rhi->newTextureRenderTarget(textureTargetDesc);
