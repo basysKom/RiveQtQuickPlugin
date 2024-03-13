@@ -51,7 +51,7 @@ function(extract_zip zip_file output_dir target_name)
 endfunction()
 
 # use the version that fixes gcc compilation 
-set(RIVE_CPP_DOWNLOAD_URL "https://github.com/rive-app/rive-cpp/archive/898cfd547df855faaeef95ec45dc15673181b7dd.zip")
+set(RIVE_CPP_DOWNLOAD_URL "https://github.com/rive-app/rive-cpp/archive/16d32220e76f40fe6492cbc575c80e9545707873.zip")
 
 set(RIVE_CPP_DOWNLOAD_DIR "${CMAKE_BINARY_DIR}/rive-cpp-src-download")
 set(RIVE_CPP_SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdParty/rive/cmake/rive-cpp-src")
@@ -63,7 +63,7 @@ extract_zip("${RIVE_CPP_DOWNLOAD_DIR}/rive-cpp.zip" "${RIVE_CPP_SOURCE_DIR}" "${
 file(GLOB RIVE_CPP_SOURCE_DIR_SUBDIRS LIST_DIRECTORIES true "${RIVE_CPP_SOURCE_DIR}/*")
 list(GET RIVE_CPP_SOURCE_DIR_SUBDIRS 0 RIVE_CPP_SOURCE_DIR)
 
-set(HARFBUZZ_DOWNLOAD_URL "https://codeload.github.com/harfbuzz/harfbuzz/zip/858570b1d9912a1b746ab39fbe62a646c4f7a5b1")
+set(HARFBUZZ_DOWNLOAD_URL "https://github.com/harfbuzz/harfbuzz/archive/refs/tags/8.3.0.zip")
 set(HARFBUZZ_DOWNLOAD_DIR "${CMAKE_BINARY_DIR}/harfbuzz-src-download")
 set(HARFBUZZ_SOURCE_DIR "${RIVE_CPP_SOURCE_DIR}/harfbuzz/")
 set(HARFBUZZ_CPP_TARGET_DIR "zip")
