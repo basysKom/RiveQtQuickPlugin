@@ -51,7 +51,7 @@ function(extract_zip zip_file output_dir target_name)
 endfunction()
 
 # use the version that fixes gcc compilation 
-set(RIVE_CPP_DOWNLOAD_URL "https://github.com/basysKom/rive-cpp/archive/refs/heads/upstream_20231106.zip")
+set(RIVE_CPP_DOWNLOAD_URL "https://github.com/rive-app/rive-cpp/archive/898cfd547df855faaeef95ec45dc15673181b7dd.zip")
 
 set(RIVE_CPP_DOWNLOAD_DIR "${CMAKE_BINARY_DIR}/rive-cpp-src-download")
 set(RIVE_CPP_SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdParty/rive/cmake/rive-cpp-src")

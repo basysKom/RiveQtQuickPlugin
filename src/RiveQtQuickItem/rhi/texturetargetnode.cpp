@@ -537,6 +537,11 @@ void TextureTargetNode::setTexture(const QImage &image,
                     const QMatrix4x4 &transform)
 {
     
+
+    LITE_RTTI_CAST_OR_RETURN(cgIndices,  rive::DataRenderBuffer*, indices.get());
+    LITE_RTTI_CAST_OR_RETURN(cgVertices, rive::DataRenderBuffer*, vertices.get());
+    LITE_RTTI_CAST_OR_RETURN(cgUvCoords, rive::DataRenderBuffer*, uvCoords.get());
+
     if (m_texture.size() != image.size()) {
         if (m_sampler) {
             m_cleanupList.removeAll(m_sampler);
@@ -639,31 +644,31 @@ void TextureTargetNode::setTexture(const QImage &image,
 
     } else {
 
-        assert(vertices->sizeInBytes() == vertexCount * 2 * sizeof(float));
-        assert(uvCoords->sizeInBytes() == vertexCount * 2 * sizeof(float));
-        assert(indices->sizeInBytes() == indexCount * sizeof(uint16_t));
+        assert(cgVertices->sizeInBytes() == vertexCount * 2 * sizeof(float));
+        assert(cgUvCoords->sizeInBytes() == vertexCount * 2 * sizeof(float));
+        assert(cgIndices->sizeInBytes() == indexCount * sizeof(uint16_t));
 
-        auto *vertexData = rive::DataRenderBuffer::Cast(vertices.get())->f32s();
-        auto *uvData     = rive::DataRenderBuffer::Cast(uvCoords.get())->f32s();
-        auto *indexData  = rive::DataRenderBuffer::Cast(indices.get())->u16s();
+        auto *vertexData = cgVertices->f32s();
+        auto *uvData = cgUvCoords->f32s();
+        auto *indexData = cgIndices->u16s();
 
-        m_geometryData.resize(vertices->sizeInBytes());
-        memcpy(m_geometryData.data(), vertexData, vertices->sizeInBytes());
+        m_geometryData.resize(cgVertices->sizeInBytes());
+        memcpy(m_geometryData.data(), vertexData, cgVertices->sizeInBytes());
 
-        m_texCoordData.resize(uvCoords->sizeInBytes());
-        memcpy(m_texCoordData.data(), uvData, uvCoords->sizeInBytes());
+        m_texCoordData.resize(cgUvCoords->sizeInBytes());
+        memcpy(m_texCoordData.data(), uvData, cgUvCoords->sizeInBytes());
 
-        m_indicesData.resize(indices->sizeInBytes());
-        memcpy(m_indicesData.data(), indexData, indices->sizeInBytes());
+        m_indicesData.resize(cgIndices->sizeInBytes());
+        memcpy(m_indicesData.data(), indexData, cgIndices->sizeInBytes());
 
         if (!m_texCoordBuffer) {
-            m_texCoordBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, uvCoords->sizeInBytes());
+            m_texCoordBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, cgUvCoords->sizeInBytes());
             m_cleanupList.append(m_texCoordBuffer);
             m_texCoordBuffer->create();
         }
 
         if (!m_indicesBuffer) {
-            m_indicesBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::IndexBuffer, indices->sizeInBytes());
+            m_indicesBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::IndexBuffer, cgIndices->sizeInBytes());
             m_cleanupList.append(m_indicesBuffer);
             m_indicesBuffer->create();
         }

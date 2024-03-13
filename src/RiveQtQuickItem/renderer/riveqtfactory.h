@@ -47,9 +47,9 @@ public:
 
     rive::rcp<rive::RenderShader> makeLinearGradient(float, float, float, float, const rive::ColorInt[], const float[], size_t) override;
     rive::rcp<rive::RenderShader> makeRadialGradient(float, float, float, const rive::ColorInt[], const float[], size_t) override;
-    std::unique_ptr<rive::RenderPath> makeRenderPath(rive::RawPath &rawPath, rive::FillRule fillRule) override;
-    std::unique_ptr<rive::RenderPath> makeEmptyRenderPath() override;
-    std::unique_ptr<rive::RenderPaint> makeRenderPaint() override;
+    rive::rcp<rive::RenderPath> makeRenderPath(rive::RawPath &rawPath, rive::FillRule fillRule) override;
+    rive::rcp<rive::RenderPath> makeEmptyRenderPath() override;
+    rive::rcp<rive::RenderPaint> makeRenderPaint() override;
     rive::rcp<rive::RenderImage> decodeImage(rive::Span<const uint8_t> span) override;
     rive::rcp<rive::Font> decodeFont(rive::Span<const uint8_t> span) override;
 
