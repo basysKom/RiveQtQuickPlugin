@@ -71,14 +71,14 @@ rive::rcp<rive::RenderShader> RiveQtFactory::makeRadialGradient(float centerX, f
     return rive::rcp<rive::RenderShader>(shader);
 }
 
-std::unique_ptr<rive::RenderPath> RiveQtFactory::makeRenderPath(rive::RawPath &rawPath, rive::FillRule fillRule)
+rive::rcp<rive::RenderPath> RiveQtFactory::makeRenderPath(rive::RawPath &rawPath, rive::FillRule fillRule)
 {
     switch (renderType()) {
     case RiveQtRenderType::QPainterRenderer:
-        return std::make_unique<RiveQtPainterPath>(rawPath, fillRule);
+        return rive::make_rcp<RiveQtPainterPath>(rawPath, fillRule);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     case RiveQtRenderType::RHIRenderer: {
-        std::unique_ptr<RiveQtPath> riveQtPath = std::make_unique<RiveQtPath>(rawPath, fillRule);
+        rive::rcp<RiveQtPath> riveQtPath = rive::make_rcp<RiveQtPath>(rawPath, fillRule);
         riveQtPath->setLevelOfDetail(levelOfDetail());
         return riveQtPath;
     }
@@ -86,31 +86,31 @@ std::unique_ptr<rive::RenderPath> RiveQtFactory::makeRenderPath(rive::RawPath &r
 
     case RiveQtRenderType::None:
     default:
-        return std::make_unique<RiveQtPainterPath>(rawPath, fillRule); // TODO Add Empty Path
+        return rive::make_rcp<RiveQtPainterPath>(rawPath, fillRule); // TODO Add Empty Path
     }
 }
 
-std::unique_ptr<rive::RenderPath> RiveQtFactory::makeEmptyRenderPath()
+rive::rcp<rive::RenderPath> RiveQtFactory::makeEmptyRenderPath()
 {
     switch (renderType()) {
     case RiveQtRenderType::QPainterRenderer:
-        return std::make_unique<RiveQtPainterPath>();
+        return rive::make_rcp<RiveQtPainterPath>();
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     case RiveQtRenderType::RHIRenderer: {
-        std::unique_ptr<RiveQtPath> riveQtPath = std::make_unique<RiveQtPath>();
+        rive::rcp<RiveQtPath> riveQtPath = rive::make_rcp<RiveQtPath>();
         riveQtPath->setLevelOfDetail(levelOfDetail());
         return riveQtPath;
     }
 #endif
     case RiveQtRenderType::None:
     default:
-        return std::make_unique<RiveQtPainterPath>(); // TODO Add Empty Path
+        return rive::make_rcp<RiveQtPainterPath>(); // TODO Add Empty Path
     }
 }
 
-std::unique_ptr<rive::RenderPaint> RiveQtFactory::makeRenderPaint()
+rive::rcp<rive::RenderPaint> RiveQtFactory::makeRenderPaint()
 {
-    return std::make_unique<RiveQtPaint>();
+    return rive::make_rcp<RiveQtPaint>();
 }
 
 rive::rcp<rive::RenderImage> RiveQtFactory::decodeImage(rive::Span<const uint8_t> span)
