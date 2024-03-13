@@ -28,20 +28,22 @@ RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr
     case QSGRendererInterface::GraphicsApi::Direct3D11Rhi: {
         QSGRendererInterface *renderInterface = window->rendererInterface();
         QRhi *rhi = static_cast<QRhi *>(renderInterface->getResource(window, QSGRendererInterface::RhiResource));
+        const QRhiSwapChain *swapChain =
+            static_cast<QRhiSwapChain *>(renderInterface->getResource(window, QSGRendererInterface::RhiSwapchainResource));
 
         auto sampleCounts = rhi->supportedSampleCounts();
-        auto requestedSamplesFromFormat = window->format().samples();
+        auto sampleCount = swapChain->sampleCount();
 
-        if (requestedSamplesFromFormat == 1 || (requestedSamplesFromFormat > 1 
+        if (sampleCount == 1 || (sampleCount > 1 
             && rhi->isFeatureSupported(QRhi::MultisampleRenderBuffer)
-            && sampleCounts.contains(requestedSamplesFromFormat))) {
+            && sampleCounts.contains(sampleCount))) {
             auto node = new RiveQSGRHIRenderNode(window, artboardInstance, geometry);
             node->setFillMode(m_renderSettings.fillMode);
             node->setPostprocessingMode(m_renderSettings.postprocessingMode);
             return node;
         } else {
             qCritical(rqqpFactory)
-                << "MSAA requested, but requested sample size is not supported - requested sample size:" << requestedSamplesFromFormat;
+                << "MSAA requested, but requested sample size is not supported - requested sample size:" << sampleCount;
             return nullptr;
         }
     }
