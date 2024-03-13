@@ -157,12 +157,12 @@ $(document).ready(function(){initNavTree('riveqsgrhirendernode_8h_source.html','
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="keyword">protected</span>:</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="keyword">struct </span>RenderSurface</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    {</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        QRhiTexture *texture { <span class="keyword">nullptr</span> };</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        QRhiRenderPassDescriptor *desc { <span class="keyword">nullptr</span> };</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        QRhiRenderPassDescriptor *blendDesc { <span class="keyword">nullptr</span> };</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        QRhiTextureRenderTarget *target { <span class="keyword">nullptr</span> };</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;        QRhiTextureRenderTarget *blendTarget { <span class="keyword">nullptr</span> };</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;        QRhiTexture *resolveTexture { <span class="keyword">nullptr</span> };</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        QRhiRenderBuffer *buffer { <span class="keyword">nullptr</span> };</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        QRhiTexture *texture { <span class="keyword">nullptr</span> };</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        QRhiRenderPassDescriptor *desc { <span class="keyword">nullptr</span> };</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        QRhiRenderPassDescriptor *blendDesc { <span class="keyword">nullptr</span> };</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;        QRhiTextureRenderTarget *target { <span class="keyword">nullptr</span> };</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;        QRhiTextureRenderTarget *blendTarget { <span class="keyword">nullptr</span> };</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160; </div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;        ~RenderSurface() { cleanUp(); }</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160; </div>
@@ -248,18 +248,16 @@ $(document).ready(function(){initNavTree('riveqsgrhirendernode_8h_source.html','
 <div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160; </div>
 <div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    PostprocessingSMAA *m_postprocessing { <span class="keyword">nullptr</span> };</div>
 <div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160; </div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;    <span class="keywordtype">void</span> resetResources();</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160; </div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;    <span class="keywordtype">float</span> m_pixelRatio { 1.0f };</div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160; </div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;    QRhiGraphicsPipeline *createBlendPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPass, QRhiShaderResourceBindings *bindings);</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;    QRhiGraphicsPipeline *createClipPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPassDescriptor,</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;                                             QRhiShaderResourceBindings *bindings);</div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;    QRhiGraphicsPipeline *createDrawPipeline(QRhi *rhi, <span class="keywordtype">int</span> samples, <span class="keywordtype">bool</span> srcOverBlend, <span class="keywordtype">bool</span> stencilBuffer,</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;                                             QRhiRenderPassDescriptor *renderPassDescriptor, QRhiGraphicsPipeline::Topology t,</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;                                             <span class="keyword">const</span> QList&lt;QRhiShaderStage&gt; &amp;shader, QRhiShaderResourceBindings *bindings);</div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;};</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;    <span class="keywordtype">int</span> m_sampleCount { 1 };</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160; </div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;    QRhiGraphicsPipeline *createBlendPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPass, QRhiShaderResourceBindings *bindings);</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;    QRhiGraphicsPipeline *createClipPipeline(QRhi *rhi, QRhiRenderPassDescriptor *renderPassDescriptor,</div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;                                             QRhiShaderResourceBindings *bindings);</div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;    QRhiGraphicsPipeline *createDrawPipeline(QRhi *rhi, <span class="keywordtype">bool</span> srcOverBlend, <span class="keywordtype">bool</span> stencilBuffer,</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;                                             QRhiRenderPassDescriptor *renderPassDescriptor, QRhiGraphicsPipeline::Topology t,</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;                                             <span class="keyword">const</span> QList&lt;QRhiShaderStage&gt; &amp;shader, QRhiShaderResourceBindings *bindings);</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;};</div>
 <div class="ttc" id="aclassRiveQtQuickItem_html"><div class="ttname"><a href="classRiveQtQuickItem.html">RiveQtQuickItem</a></div><div class="ttdoc">A quick item for Rive-based animations.</div><div class="ttdef"><b>Definition:</b> riveqtquickitem.h:50</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->

@@ -112,8 +112,8 @@ $(document).ready(function(){initNavTree('postprocessingsmaa_8h_source.html','')
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keywordtype">bool</span> isInitialized()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> m_isInitialized; }</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="comment">// void initializePostprocessingPipeline(QRhi *rhi, const QSizeF &amp;size, std::weak_ptr&lt;QRhiTexture&gt; frameTexture);</span></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <span class="keywordtype">void</span> initializePostprocessingPipeline(QRhi *rhi, QRhiCommandBuffer *commandBuffer, <span class="keywordtype">int</span> samples, <span class="keyword">const</span> QSize &amp;size,</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;                                          QRhiTexture *frameTextureA, QRhiTexture *frameTextureB);</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <span class="keywordtype">void</span> initializePostprocessingPipeline(QRhi *rhi, QRhiCommandBuffer *commandBuffer, <span class="keyword">const</span> QSize &amp;size, QRhiTexture *frameTextureA,</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;                                          QRhiTexture *frameTextureB);</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    <span class="keywordtype">void</span> postprocess(QRhi *rhi, QRhiCommandBuffer *commandBuffer, <span class="keywordtype">bool</span> useTextureBufferA);</div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <span class="keywordtype">void</span> cleanup();</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
@@ -194,9 +194,7 @@ $(document).ready(function(){initNavTree('postprocessingsmaa_8h_source.html','')
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    QRhiTexture *m_postprocessingRenderTexture { <span class="keyword">nullptr</span> };</div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160; </div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    QSGRendererInterface::GraphicsApi m_api;</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160; </div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    <span class="keywordtype">int</span> m_samples { 4 };</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;};</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;};</div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
