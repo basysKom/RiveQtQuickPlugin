@@ -10,75 +10,14 @@ project(rive_cpp VERSION 1.0.0 LANGUAGES CXX)
 
 set(BUILD_SHARED_LIBS OFF)
 
-function(extract_zip zip_file output_dir target_name)
-  if (WIN32)
-    # Remove the output directory if it already exists
-    set(PS_REMOVE_DIR_SCRIPT "if (Test-Path '${output_dir}') { Remove-Item '${output_dir}' -Recurse -Force }")
-    execute_process(COMMAND powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "${PS_REMOVE_DIR_SCRIPT}")
-
-		message("Add-Type -A System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('${zip_file}', '${output_dir}')")
-    # Extract the zip file
-		set(PS_SCRIPT "Add-Type -A System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('${zip_file}', '${output_dir}')")
-    execute_process(COMMAND powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "${PS_SCRIPT}")
-  else()
-    # Remove the output directory if it already exists
-    execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory "${output_dir}")
-
-    # Extract the zip file
-    message(STATUS "EXTRACT directory content: ${zip_file} to ${output_dir}")
-    execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory "${output_dir}")
-    execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf "${zip_file}" WORKING_DIRECTORY "${output_dir}")
-  endif()
-
-  if(target_name)
-      file(GLOB SUBDIR LIST_DIRECTORIES true "${output_dir}/*")
-
-      # Add diagnostic messages
-      message(STATUS "Output directory content: ${output_dir}")
-      message(STATUS "SUBDIR variable content: ${SUBDIR}")
-
-      # List all files and directories in the output_dir
-      file(GLOB ALL_CONTENT "${output_dir}/*")
-      message(STATUS "All content inside output_dir: ${ALL_CONTENT}")
-
-      if (SUBDIR)
-        list(GET SUBDIR 0 FIRST_SUBDIR)
-        file(RENAME "${FIRST_SUBDIR}" "${output_dir}/${target_name}")
-      else()
-        message(FATAL_ERROR "No subdirectories found in ${output_dir}")
-      endif()
-    endif()
-endfunction()
-
-# use the version that fixes gcc compilation 
-set(RIVE_CPP_DOWNLOAD_URL "https://github.com/rive-app/rive-cpp/archive/16d32220e76f40fe6492cbc575c80e9545707873.zip")
-
-set(RIVE_CPP_DOWNLOAD_DIR "${CMAKE_BINARY_DIR}/rive-cpp-src-download")
-set(RIVE_CPP_SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdParty/rive/cmake/rive-cpp-src")
-set(RIVE_CPP_TARGET_DIR "zip")
-
-file(DOWNLOAD ${RIVE_CPP_DOWNLOAD_URL} "${RIVE_CPP_DOWNLOAD_DIR}/rive-cpp.zip" SHOW_PROGRESS)
-extract_zip("${RIVE_CPP_DOWNLOAD_DIR}/rive-cpp.zip" "${RIVE_CPP_SOURCE_DIR}" "${RIVE_CPP_TARGET_DIR}")
+set(RIVE_CPP_SOURCE_DIR  "${CMAKE_SOURCE_DIR}/3rdParty/rive/cmake/rive-cpp")
+set(RIVE_CPP_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/3rdParty/rive/cmake/rive-cpp/include")
 
 file(GLOB RIVE_CPP_SOURCE_DIR_SUBDIRS LIST_DIRECTORIES true "${RIVE_CPP_SOURCE_DIR}/*")
 list(GET RIVE_CPP_SOURCE_DIR_SUBDIRS 0 RIVE_CPP_SOURCE_DIR)
 
-set(HARFBUZZ_DOWNLOAD_URL "https://github.com/harfbuzz/harfbuzz/archive/refs/tags/8.3.0.zip")
-set(HARFBUZZ_DOWNLOAD_DIR "${CMAKE_BINARY_DIR}/harfbuzz-src-download")
-set(HARFBUZZ_SOURCE_DIR "${RIVE_CPP_SOURCE_DIR}/harfbuzz/")
-set(HARFBUZZ_CPP_TARGET_DIR "zip")
-
-file(DOWNLOAD ${HARFBUZZ_DOWNLOAD_URL} "${HARFBUZZ_DOWNLOAD_DIR}/harfbuzz.zip" SHOW_PROGRESS)
-extract_zip("${HARFBUZZ_DOWNLOAD_DIR}/harfbuzz.zip" "${HARFBUZZ_SOURCE_DIR}" "${HARFBUZZ_CPP_TARGET_DIR}")
-
-set(SHEENBIDI_DOWNLOAD_URL "https://codeload.github.com/Tehreer/SheenBidi/zip/refs/tags/v2.6")
-set(SHEENBIDI_DOWNLOAD_DIR "${CMAKE_BINARY_DIR}/sheenbidi-src-download")
-set(SHEENBIDI_SOURCE_DIR "${RIVE_CPP_SOURCE_DIR}/sheenbidi")
-set(SHEENBIDI_CPP_TARGET_DIR "zip")
-
-file(DOWNLOAD ${SHEENBIDI_DOWNLOAD_URL} "${SHEENBIDI_DOWNLOAD_DIR}/sheenbidi.zip" SHOW_PROGRESS)
-extract_zip("${SHEENBIDI_DOWNLOAD_DIR}/sheenbidi.zip" "${SHEENBIDI_SOURCE_DIR}" "${SHEENBIDI_CPP_TARGET_DIR}")
-
+set(HARFBUZZ_SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdParty/rive/cmake/harfbuzz")
+set(SHEENBIDI_SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdParty/rive/cmake/sheenbidi/SheenBidi")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -89,7 +28,7 @@ elseif(CMAKE_BUILD_TYPE MATCHES Release)
     add_definitions(-D_RELEASE)
 endif()
 
-include_directories("${RIVE_CPP_SOURCE_DIR}/include")
+include_directories("${RIVE_CPP_INCLUDE_DIR}")
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
