@@ -64,6 +64,8 @@ We recommend to build the plugin with Clang14, as it includes the Clang vector b
 
 ## Building
 
+- `git clone git@github.com:basysKom/RiveQtQuickPlugin.git`
+- `git submodule update --init --recursive`
 - Install missing dependencies (`libxkbcommon-dev` might be missing on Ubuntu 22.04)
 - Building using cmake and make should work just fine
 
