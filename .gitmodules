@@ -1,0 +1,9 @@
+[submodule "3rdParty/rive/cmake/rive-cpp"]
+	path = 3rdParty/rive/cmake/rive-cpp
+	url = https://github.com/rive-app/rive-cpp.git
+[submodule "3rdParty/rive/cmake/harfbuzz"]
+	path = 3rdParty/rive/cmake/harfbuzz
+	url = https://github.com/harfbuzz/harfbuzz.git
+[submodule "3rdParty/rive/cmake/sheenbidi/SheenBidi"]
+	path = 3rdParty/rive/cmake/sheenbidi/SheenBidi
+	url = https://github.com/Tehreer/SheenBidi.git

@@ -5,7 +5,7 @@
   SPDX-License-Identifier: LGPL-3.0-or-later
 ]]
 
-file(GLOB_RECURSE RIVE_CPP_SOURCES "${RIVE_CPP_SOURCE_DIR}/src/*.cpp")
+file(GLOB_RECURSE RIVE_CPP_SOURCES "${CMAKE_SOURCE_DIR}/3rdParty/rive/cmake/rive-cpp/src/*.cpp")
 
 if(BUILD_SHARED_LIBS)
   add_library(rive_cpp SHARED ${RIVE_CPP_SOURCES})
@@ -20,7 +20,7 @@ set_target_properties(rive_cpp PROPERTIES
 )
 
 target_include_directories(rive_cpp PUBLIC
-    "${RIVE_CPP_SOURCE_DIR}/include"
+    "${RIVE_CPP_INCLUDE_DIR}"
     "${HARFBUZZ_SOURCE_DIR}/${HARFBUZZ_CPP_TARGET_DIR}/src"
     "${SHEENBIDI_SOURCE_DIR}/${SHEENBIDI_CPP_TARGET_DIR}/Headers"
 )
@@ -30,4 +30,4 @@ if(${RQQRP_RIVE_TEXT_RENDERING})
     target_link_libraries(rive_cpp PRIVATE sheenbidi)
 endif()
 
-file(COPY ${RIVE_CPP_SOURCE_DIR}/include DESTINATION ${CMAKE_BINARY_DIR}/output)
+file(COPY ${RIVE_CPP_INCLUDE_DIR} DESTINATION ${CMAKE_BINARY_DIR}/output)

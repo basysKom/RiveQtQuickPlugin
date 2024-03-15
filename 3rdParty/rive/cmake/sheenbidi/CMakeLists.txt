@@ -7,7 +7,7 @@
 
 project(sheenbidi VERSION 1.0.0 LANGUAGES C)
 
-set(SHEENBIDI_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/rive-cpp-src/zip/sheenbidi/zip")
+set(SHEENBIDI_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/SheenBidi")
 
 file(GLOB_RECURSE SHEENBIDI_SOURCES
 	"${SHEENBIDI_SOURCE_DIR}/Source/*.c"
