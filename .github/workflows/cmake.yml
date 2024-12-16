@@ -37,6 +37,12 @@ jobs:
             compiler: clang
             host: linux
             modules: 'qtshadertools'
+          - os: windows-latest
+            qt-version: 6.8
+            arch: win64_msvc2022_64
+            compiler: msvc
+            host: windows
+            modules: 'qtshadertools'
 
     steps:
       - name: Checkout
@@ -45,7 +51,7 @@ jobs:
           submodules: 'true'
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v3.2.1
+        uses: jurplel/install-qt-action@v4.1.1
         with:
           version: ${{ matrix.qt-version }}
           arch: ${{ matrix.arch }}
