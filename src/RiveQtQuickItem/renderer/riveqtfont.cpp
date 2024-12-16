@@ -103,8 +103,12 @@ rive::RawPath RiveQtFont::getPath(rive::GlyphID glyphId) const
     return rivePath;
 }
 
-rive::SimpleArray<rive::Paragraph> RiveQtFont::onShapeText(rive::Span<const rive::Unichar> text, rive::Span<const rive::TextRun> runs) const
+rive::SimpleArray<rive::Paragraph> RiveQtFont::onShapeText(rive::Span<const rive::Unichar> text, rive::Span<const rive::TextRun> runs,
+                                                           int textDirectionFlag) const
 {
+    // TODO: support text direction Flag
+    Q_UNUSED(textDirectionFlag);
+
     QString qText = QString::fromUcs4(reinterpret_cast<const char32_t *>(text.begin()), text.size());
     std::vector<rive::Paragraph> tempParagraphs;
 

@@ -140,8 +140,9 @@ void RiveQtQuickItem::updateInternalArtboard()
 
     if (m_currentArtboardIndex == -1) {
         m_currentArtboardInstance = m_riveFile->artboardDefault();
-    } else if (!m_currentArtboardInstance || m_riveFile->artboardAt(m_currentArtboardIndex).get() != m_currentArtboardInstance->artboard()) {
-            m_currentArtboardInstance = m_riveFile->artboardAt(m_currentArtboardIndex);
+    } else if (!m_currentArtboardInstance
+               || m_riveFile->artboardAt(m_currentArtboardIndex).get() != m_currentArtboardInstance->artboard()) {
+        m_currentArtboardInstance = m_riveFile->artboardAt(m_currentArtboardIndex);
     }
 
     if (!m_currentArtboardInstance) {
@@ -201,7 +202,6 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         m_scheduleStateMachineChange = true;
         m_currentArtboardIndex = -1;
         m_initialArtboardIndex = -1;
-
 
         // now load the file from the main thread -> connected as Queued Connection to make sure its called in its owning thread
         emit loadFileAfterUnloading(m_fileSource);
@@ -290,7 +290,6 @@ QSGNode *RiveQtQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         }
         m_currentArtboardInstance->updateComponents();
         m_currentArtboardInstance->advance(deltaTime);
-        m_currentArtboardInstance->update(rive::ComponentDirt::Filthy);
     }
 
     if (m_renderNode) {

@@ -1,4 +1,5 @@
 <!--
+// SPDX-FileCopyrightText: 2024 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 Jonas Kalinka <jonas.kalinka@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
@@ -25,6 +26,9 @@ https://user-images.githubusercontent.com/1797537/233192955-7360403b-b51b-422a-8
 | Qt6.5+ Windows    | ✅   |✅|✅|-|✅(no texture meshes)
 | Qt6.5+ Linux      | ✅   |-|✅|-|✅(no texture meshes)
 | Qt6.5+ macOS      | ✅   |-|-|✅|✅(no texture meshes)
+| Qt6.8+ Windows    | ✅   |✅|✅|-|✅(no texture meshes)
+| Qt6.8+ Linux      | ✅   |-|✅|-|✅(no texture meshes)
+| Qt6.8+ macOS      | ✅   |-|-|✅|✅(no texture meshes)
 
 Lines noted with - are not implemented (and wont be) since they are not possible (like Direct3D on Mac). As for Qt5 support, this is maintained by keeping the Software Rendering compatible, but there wont be any extra effort to have native opengl rendering in Qt5.
 
@@ -42,9 +46,9 @@ Lines noted with - are not implemented (and wont be) since they are not possible
 ## Compatibility
 The plugin has been tested on:
 
-- Windows using the MSVC 2019 compiler and Qt 5.15.2+, Qt6.5+
+- Windows using the MSVC 2019 compiler and Qt 5.15.2+, Qt6.5+, Qt6.8+
 
-- Linux (Ubuntu 22.04 LTS) and Qt 5.15.2+, Qt 6.5+ 
+- Linux (Ubuntu 22.04 LTS) and Qt 5.15.2+, Qt 6.5+, Qt6.8+ 
   - Clang14 and gcc 11.4 (or newer versions) are supported
 
   - If you are using Clang14, ensure that all clang dependencies are installed 
@@ -58,9 +62,9 @@ We recommend to build the plugin with Clang14, as it includes the Clang vector b
 
 ## Dependencies
 
-- Qt 5.15.2+ or Qt 6.5+
-- Rive C++ Runtime (available at [https://github.com/rive-app/rive-cpp](https://github.com/rive-app/rive-cpp))
-  * **Hint:** You don't have to compile the it from the repo. Cmake will download rive-cpp and its dependencies and build them using cmake. The result is a static lib the plugin links against.
+- Qt 5.15.2+ or Qt 6.5+, or Qt6.8+
+- Rive C++ Runtime (available at [https://github.com/rive-app/rive-cpp](https://github.com/rive-app/rive-runtime))
+  * **Hint:** You don't have to compile the it from the repo. Rive-runtime and its dependencies are added as Git-Submodules and you build them using cmake. The result is a static lib the plugin links against.
 
 ## Building
 
@@ -131,7 +135,7 @@ Qt 5.15.2:
 
 `export QML2_IMPORT_PATH=YOUR/BUILD/DIR/binary/`
 
-Qt 6.5.0:
+Qt 6.5.x, Qt 6.8.x:
 
 `export QML_IMPORT_PATH=YOUR/BUILD/DIR/binary/`
 

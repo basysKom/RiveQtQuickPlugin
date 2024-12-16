@@ -48,7 +48,7 @@ endif()
 
 # Add rive-cpp dependency if required
 if(${RQQRP_DOWNLOAD_BUILD_DEPENDENCIES})
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/rive/cmake)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/3rdParty)
 endif()
 
 set(PLUGIN_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/RiveQtQuickItem)
