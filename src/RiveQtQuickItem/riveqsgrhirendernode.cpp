@@ -199,13 +199,22 @@ void RiveQSGRHIRenderNode::render(const RenderState *state)
         return;
     }
 
+    QRhiCommandBuffer *commandBuffer = nullptr;
     QSGRendererInterface *renderInterface = m_window->rendererInterface();
     QRhiSwapChain *swapChain =
         static_cast<QRhiSwapChain *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiSwapchainResource));
-    Q_ASSERT(swapChain);
 
-    QRhiCommandBuffer *commandBuffer = swapChain->currentFrameCommandBuffer();
-    Q_ASSERT(commandBuffer);
+    if (swapChain) {
+        commandBuffer = swapChain->currentFrameCommandBuffer();
+    } else {
+        commandBuffer =
+            static_cast<QRhiCommandBuffer *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiRedirectCommandBuffer));
+    }
+
+    if (!commandBuffer) {
+        qCritical(rqqpFactory) << "Render: No command buffer available";
+        return;
+    }
 
     commandBuffer->setGraphicsPipeline(m_finalDrawPipeline);
     QSize renderTargetSize = QSGRenderNodePrivate::get(this)->m_rt.rt->pixelSize();
@@ -355,11 +364,32 @@ void RiveQSGRHIRenderNode::prepare()
     }
 
     QSGRendererInterface *renderInterface = m_window->rendererInterface();
+    QRhi *rhi = static_cast<QRhi *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiResource));
+    Q_ASSERT(rhi);
+
+    auto sampleCount = 1;
     QRhiSwapChain *swapChain =
         static_cast<QRhiSwapChain *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiSwapchainResource));
-    QRhi *rhi = static_cast<QRhi *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiResource));
-    Q_ASSERT(swapChain);
-    Q_ASSERT(rhi);
+
+    QRhiCommandBuffer *commandBuffer = nullptr;
+    if (swapChain) {
+        sampleCount = swapChain->sampleCount();
+        commandBuffer = swapChain->currentFrameCommandBuffer();
+    } else {
+        // window has no swap chain; find a different way to request sample count
+        const auto redirectRenderTarget =
+            static_cast<QRhiTextureRenderTarget *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiRedirectRenderTarget));
+        if (redirectRenderTarget) {
+            sampleCount = redirectRenderTarget->sampleCount();
+        }
+        commandBuffer =
+            static_cast<QRhiCommandBuffer *>(renderInterface->getResource(m_window, QSGRendererInterface::RhiRedirectCommandBuffer));
+    }
+
+    if (!commandBuffer) {
+        qCritical(rqqpFactory) << "Prepare: No command buffer available";
+        return;
+    }
 
 #ifdef OPENGL_DEBUG
     if (rhi->backend() == QRhi::OpenGLES2) {
@@ -374,15 +404,13 @@ void RiveQSGRHIRenderNode::prepare()
     }
 #endif
 
-    QRhiCommandBuffer *commandBuffer = swapChain->currentFrameCommandBuffer();
-
     if (!m_stencilClippingBuffer) {
         m_stencilClippingBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, QSize(m_rect.width(), m_rect.height()), m_sampleCount);
         m_stencilClippingBuffer->create();
         m_cleanupList.append(m_stencilClippingBuffer);
     }
 
-    m_sampleCount = swapChain->sampleCount();
+    m_sampleCount = sampleCount;
     bool textureCreated = m_renderSurfaceA.create(rhi, m_sampleCount, QSize(m_rect.width(), m_rect.height()), m_stencilClippingBuffer);
     m_renderSurfaceB.create(rhi, m_sampleCount, QSize(m_rect.width(), m_rect.height()), m_stencilClippingBuffer);
     m_renderSurfaceIntern.create(rhi, m_sampleCount, QSize(m_rect.width(), m_rect.height()), m_stencilClippingBuffer, {});
@@ -577,7 +605,7 @@ void RiveQSGRHIRenderNode::prepare()
 
     if (!m_cleanUpTextureTarget) {
         const bool isMetal = rhi->backend() == QRhi::Metal;
-        const bool renderInMsaaBuffer = swapChain->sampleCount() > 1 && !isMetal;
+        const bool renderInMsaaBuffer = sampleCount > 1 && !isMetal;
         QRhiColorAttachment colorAttachment;
         if (renderInMsaaBuffer) {
             colorAttachment.setRenderBuffer(m_renderSurfaceA.buffer);

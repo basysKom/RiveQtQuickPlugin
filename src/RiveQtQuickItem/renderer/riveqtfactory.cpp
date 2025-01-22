@@ -26,13 +26,30 @@ RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr
     case QSGRendererInterface::GraphicsApi::MetalRhi:
     case QSGRendererInterface::GraphicsApi::VulkanRhi:
     case QSGRendererInterface::GraphicsApi::Direct3D11Rhi: {
+        auto sampleCount = 1;
         QSGRendererInterface *renderInterface = window->rendererInterface();
         QRhi *rhi = static_cast<QRhi *>(renderInterface->getResource(window, QSGRendererInterface::RhiResource));
         const QRhiSwapChain *swapChain =
             static_cast<QRhiSwapChain *>(renderInterface->getResource(window, QSGRendererInterface::RhiSwapchainResource));
 
         auto sampleCounts = rhi->supportedSampleCounts();
-        auto sampleCount = swapChain->sampleCount();
+
+        if (swapChain) {
+            auto sampleCount = swapChain->sampleCount();
+        } else {
+            // maybe an offscreen render target is active;
+            // this is the case if the Rive scene is rendered
+            // inside an QQuickWidget
+            // try a different way to fetch the sample count
+            const auto redirectRenderTarget =
+                static_cast<QRhiTextureRenderTarget *>(renderInterface->getResource(window, QSGRendererInterface::RhiRedirectRenderTarget));
+            if (redirectRenderTarget) {
+                sampleCount = redirectRenderTarget->sampleCount();
+            } else {
+                qCritical(rqqpFactory)
+                    << "Swap chain or offscreen render target not found for given window: rendering may be faulty.";
+            }
+        }
 
         if (sampleCount == 1 || (sampleCount > 1 
             && rhi->isFeatureSupported(QRhi::MultisampleRenderBuffer)
