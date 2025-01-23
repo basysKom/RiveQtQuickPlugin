@@ -35,7 +35,7 @@ RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr
         auto sampleCounts = rhi->supportedSampleCounts();
 
         if (swapChain) {
-            auto sampleCount = swapChain->sampleCount();
+            sampleCount = swapChain->sampleCount();
         } else {
             // maybe an offscreen render target is active;
             // this is the case if the Rive scene is rendered
