@@ -32,6 +32,8 @@ if(${RQQRP_RIVE_TEXT_RENDERING})
     add_compile_definitions(WITH_RIVE_TEXT)
 endif()
 
+include(FeatureSummary)
+
 # Find Qt package
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Qml Quick OpenGL )
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Qml Gui Quick OpenGL)
@@ -63,3 +65,4 @@ if(RQQRP_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
+feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
