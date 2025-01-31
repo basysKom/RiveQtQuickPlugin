@@ -473,8 +473,13 @@ void RiveQtQuickItem::loadRiveFile(const QString &source)
     }
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    connect(currentWindow, &QQuickWindow::beforeFrameBegin, this, &RiveQtQuickItem::renderOffscreen,
-            static_cast<Qt::ConnectionType>(Qt::DirectConnection | Qt::UniqueConnection));
+    if (currentWindow->rendererInterface()->graphicsApi() ==  QSGRendererInterface::GraphicsApi::Software) {
+        connect(currentWindow, &QQuickWindow::beforeRendering, this, &RiveQtQuickItem::renderOffscreen,
+                static_cast<Qt::ConnectionType>(Qt::DirectConnection | Qt::UniqueConnection));
+    } else {
+        connect(currentWindow, &QQuickWindow::beforeFrameBegin, this, &RiveQtQuickItem::renderOffscreen,
+                static_cast<Qt::ConnectionType>(Qt::DirectConnection | Qt::UniqueConnection));
+    }
 #endif
     connect(currentWindow, &QQuickWindow::beforeSynchronizing, this, &RiveQtQuickItem::updateStateMachineValues,
             static_cast<Qt::ConnectionType>(Qt::DirectConnection | Qt::UniqueConnection));
