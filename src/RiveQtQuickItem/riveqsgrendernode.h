@@ -5,13 +5,14 @@
 
 #pragma once
 
-#include <QElapsedTimer>
-#include <QQuickItem>
-#include <QQuickPaintedItem>
-#include <QSGRenderNode>
-#include <QSGTextureProvider>
-
 #include <rive/artboard.hpp>
+
+#include <QSGRenderNode>
+#include <QSGRendererInterface>
+
+#include "datatypes.h"
+
+class QQuickWindow;
 
 class RiveQSGBaseNode
 {
@@ -24,7 +25,7 @@ public:
     virtual float scaleFactorX() const;
     virtual float scaleFactorY() const;
 
-    virtual void updateArtboardInstance(std::weak_ptr<rive::ArtboardInstance> artboardInstance) { m_artboardInstance = artboardInstance; }
+    virtual void updateArtboardInstance(std::weak_ptr<rive::ArtboardInstance> artboardInstance);
 
     virtual void setArtboardRect(const QRectF &bounds);
 
@@ -33,7 +34,7 @@ protected:
     QRectF m_rect;
     QPointF m_topLeftRivePosition { 0.f, 0.f };
     QSizeF m_riveSize { 0.f, 0.f };
-    QQuickWindow *m_window;
+    QQuickWindow *m_window { nullptr };
 
     float m_scaleFactorX { 1.0f };
     float m_scaleFactorY { 1.0f };
@@ -44,7 +45,7 @@ class RiveQSGRenderNode : public QSGRenderNode, public RiveQSGBaseNode
 public:
     RiveQSGRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, const QRectF &geometry);
 
-    StateFlags changedStates() const override { return QSGRenderNode::BlendState; }
-    RenderingFlags flags() const override { return QSGRenderNode::BoundedRectRendering | QSGRenderNode::DepthAwareRendering; }
+    StateFlags changedStates() const override;
+    RenderingFlags flags() const override;
     QRectF rect() const override;
 };

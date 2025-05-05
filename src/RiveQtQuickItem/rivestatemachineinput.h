@@ -2,16 +2,18 @@
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
+
 #pragma once
 
-#include "qqmlcontext.h"
-#include <QQuickItem>
-
-#include <rive/core.hpp>
-#include <rive/animation/state_machine_instance.hpp>
+#include <QObject>
+#include <QQmlParserStatus>
+#include <QJSValue>
+#include <QVariant>
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-#    include <QtQml/qqmlregistration.h>
+#include <QtQml/qqmlregistration.h>
+#else
+#include <QtQml/qqml.h>
 #endif
 
 /**
@@ -122,7 +124,6 @@ class DynamicPropertyHolder : public QObject
 
 private:
     QVariant m_value;
-
     QJSValue m_toString;
 
 public:
@@ -145,15 +146,18 @@ signals:
     void valueChanged();
 };
 
-class QQmlEngine;
+namespace rive {
+    class StateMachineInstance;
+    class SMIInput;
+}
+
 class RiveStateMachineInput : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
+    Q_PROPERTY(QVariantList riveInputs READ riveInputs NOTIFY riveInputsChanged)
     Q_INTERFACES(QQmlParserStatus)
-
     QML_NAMED_ELEMENT(RiveStateMachineInput)
 
-    Q_PROPERTY(QVariantList riveInputs READ riveInputs NOTIFY riveInputsChanged)
 public:
     enum class RivePropertyType : short
     {
@@ -196,22 +200,9 @@ protected:
 
 private:
     QString cleanUpRiveName(const QString &name);
-
-    // we ignore properties with those names as they will
-    // conflict with JS/QML environment
-    const QStringList reservedWords = { "await",      "break",   "case",     "catch",
-                                        "class",      "const",   "continue", "debugger",
-                                        "default",    "delete",  "do",       "else",
-                                        "export",     "extends", "finally",  "for",
-                                        "function",   "if",      "import",   "in",
-                                        "instanceof", "new",     "return",   "super",
-                                        "switch",     "this",    "throw",    "try",
-                                        "typeof",     "var",     "void",     "while",
-                                        "with",       "yield",   "enum",     "implements",
-                                        "interface",  "let",     "package",  "private",
-                                        "protected",  "public",  "static",   "riveQtArtboardName",
-                                        "riveInputs" };
     void connectStateMachineToProperties();
+    QPair<bool, QVariant> updateProperty(const QString &propertyName, const QVariant &propertyValue);
+
     rive::StateMachineInstance *m_stateMachineInstance { nullptr };
     QMap<QString, rive::SMIInput *> m_inputMap;
 
@@ -221,8 +212,6 @@ private:
 
     QVariantMap m_generatedRivePropertyMap;
     QMap<QString, DynamicPropertyHolder *> m_dynamicProperties;
-
-    QPair<bool, QVariant> updateProperty(const QString &propertyName, const QVariant &propertyValue);
 };
 
 Q_DECLARE_METATYPE(RiveStateMachineInput::RivePropertyType)

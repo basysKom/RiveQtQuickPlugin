@@ -153,10 +153,6 @@ Item {
                     text: riveItem.frameRate
                     font.pixelSize: 30
                 }
-
-                onStateMachineStringInterfaceChanged: {
-                    dynamicProperties.model = riveItem.stateMachineInterface.riveInputs
-                }
             }
         }
     }

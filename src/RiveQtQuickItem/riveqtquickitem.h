@@ -5,22 +5,25 @@
 
 #pragma once
 
-#include <QElapsedTimer>
 #include <QQuickItem>
-#include <QQuickPaintedItem>
 #include <QSGRenderNode>
 #include <QSGTextureProvider>
-#include <QImage>
-#include <QPainter>
-#include <QTimer>
-#include <QtCore/QtGlobal>
-
-#include <rive/artboard.hpp>
-#include <rive/listener_type.hpp>
+#include <QElapsedTimer>
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#include <QQuickPaintedItem>
+#define RiveQtQuickItemBase QQuickPaintedItem
+#else
+#define RiveQtQuickItemBase QQuickItem
+#endif
 
 #include "rivestatemachineinput.h"
 #include "datatypes.h"
 #include "renderer/riveqtfactory.h"
+
+#include <rive/listener_type.hpp>
+#include <rive/animation/state_machine_instance.hpp>
+#include <rive/animation/linear_animation_instance.hpp>
+#include <rive/animation/animation_state_instance.hpp>
 
 #if defined(RIVEQTQUICKITEM_LIBRARY)
 #    define RIVEQTQUICKITEM_EXPORT Q_DECL_EXPORT
@@ -29,11 +32,6 @@
 #endif
 
 class RiveQSGRenderNode;
-class RiveQSGRHIRenderNode;
-
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-class RiveQSGSoftwareRenderNode;
-#endif
 /**
  * \class RiveQtQuickItem
  * \brief A quick item for Rive-based animations.
@@ -42,11 +40,7 @@ class RiveQSGSoftwareRenderNode;
  * \author Jeremias Bosch, Jonas Kalinka, basysKom GmbH
  * \date 2023/08/01
  */
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-class RiveQtQuickItem : public QQuickPaintedItem
-#else
-class RiveQtQuickItem : public QQuickItem
-#endif
+class RiveQtQuickItem : public RiveQtQuickItemBase
 {
     Q_OBJECT
 
@@ -390,29 +384,29 @@ public:
 
     int currentAnimationIndex() const;
     int currentArtboardIndex() const;
-    void setCurrentArtboardIndex(const int newCurrentArtboardIndex);
+    void setCurrentArtboardIndex(int index);
 
     const QVector<ArtBoardInfo> &artboards() const;
     const QVector<StateMachineInfo> &stateMachines() const;
     const QVector<AnimationInfo> &animations() const;
 
     int currentStateMachineIndex() const;
-    void setCurrentStateMachineIndex(const int newCurrentStateMachineIndex);
+    void setCurrentStateMachineIndex(int index);
 
     RiveStateMachineInput *stateMachineInterface() const;
     void setStateMachineInterface(RiveStateMachineInput *stateMachineInterface);
 
     bool interactive() const;
-    void setInteractive(bool newInteractive);
+    void setInteractive(bool interactive);
 
     RiveRenderSettings::PostprocessingMode postprocessingMode() const;
-    void setPostprocessingMode(const RiveRenderSettings::PostprocessingMode mode);
+    void setPostprocessingMode(RiveRenderSettings::PostprocessingMode mode);
 
     RiveRenderSettings::RenderQuality renderQuality() const;
-    void setRenderQuality(const RiveRenderSettings::RenderQuality quality);
+    void setRenderQuality(RiveRenderSettings::RenderQuality quality);
 
     RiveRenderSettings::FillMode fillMode() const;
-    void setFillMode(const RiveRenderSettings::FillMode fillMode);
+    void setFillMode(RiveRenderSettings::FillMode fillMode);
 
     int frameRate();
 
@@ -458,7 +452,6 @@ protected:
 
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
-
     void hoverMoveEvent(QHoverEvent *event) override;
     void hoverEnterEvent(QHoverEvent *event) override;
     void hoverLeaveEvent(QHoverEvent *event) override;
@@ -471,14 +464,18 @@ private:
     void updateStateMachines();
     void updateCurrentArtboardIndex();
     void updateCurrentStateMachineIndex();
+    void updateStateMachineValues();
 
     QRectF artboardRect();
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     void renderOffscreen();
-#endif
 
     bool hitTest(const QPointF &pos, const rive::ListenerType &type);
+
+    RiveQSGRenderNode *createRenderNode(const RiveRenderSettings &renderSettings,
+                                        QQuickWindow *window,
+                                        std::weak_ptr<rive::ArtboardInstance> artboardInstance,
+                                        const QRectF &geometry);
 
     QVector<ArtBoardInfo> m_artboardInfoList;
     QVector<AnimationInfo> m_animationList;
@@ -521,10 +518,6 @@ private:
     int m_frameRate { 0 };
 
     RiveQSGRenderNode *m_renderNode { nullptr };
-    void updateStateMachineValues();
 
     bool m_loadingGuard { false };
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    RiveQSGSoftwareRenderNode *softwareRenderNode;
-#endif
 };

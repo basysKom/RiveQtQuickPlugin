@@ -4,13 +4,10 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "texturetargetnode.h"
-
-#include <QFile>
-#include <QQuickItem>
-#include <QQuickWindow>
-#include <QSGRendererInterface>
 #include "riveqsgrhirendernode.h"
 
+#include <QQuickWindow>
+#include <QSGRendererInterface>
 #include <private/qrhi_p.h>
 #include <private/qsgrendernode_p.h>
 
@@ -209,13 +206,6 @@ void TextureTargetNode::prepareRender()
         m_cleanupList.append(m_drawPipelineResourceBindings);
     }
 
-    auto *uniformBuffer = m_drawUniformBuffer;
-
-    // now we setup the shader to draw the path
-    float opacity = m_opacity;
-
-    int useTexture = m_qImageTexture != nullptr && m_useTexture; // 76
-
     // note: the clipping path is provided in global coordinates, not local like the geometry
     // thats why we need to bind another matrix (without the transform) and thats why we have another UniformBuffer here!
     m_resourceUpdates->updateDynamicBuffer(m_clippingUniformBuffer, 0, 64, (*m_combinedMatrix).constData());
@@ -223,16 +213,15 @@ void TextureTargetNode::prepareRender()
 
     m_resourceUpdates->updateDynamicBuffer(m_drawUniformBuffer, 0, 64, (*m_combinedMatrix).constData());
     m_resourceUpdates->updateDynamicBuffer(m_drawUniformBuffer, 784, 64, m_transform.constData());
-    m_resourceUpdates->updateDynamicBuffer(m_drawUniformBuffer, 64, 4, &opacity);
-    m_resourceUpdates->updateDynamicBuffer(m_drawUniformBuffer, 76, 4, &useTexture);
 
+    float opacity = m_opacity;
+    m_resourceUpdates->updateDynamicBuffer(m_drawUniformBuffer, 64, 4, &opacity);
     int useGradient = m_gradient != nullptr ? 1 : 0; // 72
     m_resourceUpdates->updateDynamicBuffer(m_drawUniformBuffer, 72, 4, &useGradient);
+    int useTexture = m_qImageTexture != nullptr && m_useTexture; // 76
+    m_resourceUpdates->updateDynamicBuffer(m_drawUniformBuffer, 76, 4, &useTexture);
 
     if (m_gradient) {
-        QVector<QColor> gradientColors; // 144
-        QVector<QVector2D> gradientPositions; // 464
-        m_resourceUpdates->updateDynamicBuffer(m_drawUniformBuffer, 116, 4, &m_gradientData.gradientType);
         m_resourceUpdates->updateDynamicBuffer(m_drawUniformBuffer, 68, 4, &m_gradientData.gradientRadius);
         m_resourceUpdates->updateDynamicBuffer(m_drawUniformBuffer, 80, 4, &m_gradientData.gradientFocalPointX);
         m_resourceUpdates->updateDynamicBuffer(m_drawUniformBuffer, 84, 4, &m_gradientData.gradientFocalPointY);
@@ -243,6 +232,7 @@ void TextureTargetNode::prepareRender()
         m_resourceUpdates->updateDynamicBuffer(m_drawUniformBuffer, 104, 4, &m_gradientData.endPointX);
         m_resourceUpdates->updateDynamicBuffer(m_drawUniformBuffer, 108, 4, &m_gradientData.endPointY);
         m_resourceUpdates->updateDynamicBuffer(m_drawUniformBuffer, 112, 4, &m_gradientData.numberOfStops);
+        m_resourceUpdates->updateDynamicBuffer(m_drawUniformBuffer, 116, 4, &m_gradientData.gradientType);
 
         int startStopColorsOffset = 144;
         int gradientPositionsOffset = 464;
@@ -453,8 +443,10 @@ void TextureTargetNode::renderBlend(QRhiCommandBuffer *cb)
     QMatrix4x4 mvp = (*m_projectionMatrix);
     mvp.translate(-m_rect.x(), -m_rect.y());
     int flipped = rhi->isYUpInFramebuffer() ? 1 : 0;
+    // NOTE: cast is required, since rive::BlendMode is 1 byte
+    int blendMode = static_cast<int>(m_blendMode);
     m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 0, 64, mvp.constData());
-    m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 64, 4, &m_blendMode);
+    m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 64, 4, &blendMode);
     m_blendResourceUpdates->updateDynamicBuffer(m_blendUniformBuffer, 68, 4, &flipped);
 
     auto *currentDisplayBufferTarget = m_node->currentBlendTarget();
@@ -497,11 +489,10 @@ void TextureTargetNode::setClipping(const bool clip)
 void TextureTargetNode::setGradient(const QGradient *gradient)
 {
     m_gradient = gradient;
-    m_gradientData.gradientColors.clear();
-    m_gradientData.gradientPositions.clear();
+    m_gradientData = {};
 
     QGradientStops gradientStops = gradient->stops();
-    for (const auto &stop : gradientStops) {
+    for (const auto &stop : std::as_const(gradientStops)) {
         QColor color = stop.second;
         m_gradientData.gradientColors.append(color);
         m_gradientData.gradientPositions.append(QVector2D(stop.first, 0.0f));
@@ -536,8 +527,6 @@ void TextureTargetNode::setTexture(const QImage &image,
                     bool recreate,
                     const QMatrix4x4 &transform)
 {
-    
-
     LITE_RTTI_CAST_OR_RETURN(cgIndices,  rive::DataRenderBuffer*, indices.get());
     LITE_RTTI_CAST_OR_RETURN(cgVertices, rive::DataRenderBuffer*, vertices.get());
     LITE_RTTI_CAST_OR_RETURN(cgUvCoords, rive::DataRenderBuffer*, uvCoords.get());

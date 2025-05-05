@@ -7,11 +7,9 @@
 
 #include <QVector>
 #include <QSizeF>
-
+#include <QSGRendererInterface>
 #include <private/qrhi_p.h>
 #include <private/qsgrendernode_p.h>
-
-#include <QSGRendererInterface>
 
 class PostprocessingSMAA
 {

@@ -65,7 +65,6 @@ public:
                     bool recreate,
                     const QMatrix4x4 &transform);
 
-    int blendMode() const { return (int)m_blendMode; }
     void setBlendMode(rive::BlendMode blendMode);
 
     void updateGeometry(const QVector<QVector<QVector2D>> &geometry, const QMatrix4x4 &transform);
@@ -159,17 +158,17 @@ private:
 
     struct GradientData
     {
-        float gradientRadius; // 68
-        float gradientFocalPointX; // 80
-        float gradientFocalPointY; // 84
-        float gradientCenterX; // 88
-        float gradientCenterY; // 92
-        float startPointX; // 96
-        float startPointY; // 100
-        float endPointX; // 104
-        float endPointY; // 108
-        int numberOfStops; // 112
-        int gradientType; // 116
+        float gradientRadius = 0.0; // 68
+        float gradientFocalPointX = 0.0; // 80
+        float gradientFocalPointY = 0.0; // 84
+        float gradientCenterX = 0.0; // 88
+        float gradientCenterY = 0.0; // 92
+        float startPointX = 0.0; // 96
+        float startPointY = 0.0; // 100
+        float endPointX = 0.0; // 104
+        float endPointY = 0.0; // 108
+        int numberOfStops = 0; // 112
+        int gradientType = -1; // 116
 
         QVector<QColor> gradientColors; // 144
         QVector<QVector2D> gradientPositions; // 464

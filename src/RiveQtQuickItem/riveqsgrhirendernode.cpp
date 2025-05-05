@@ -3,23 +3,18 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include <QQuickWindow>
-#include <QFile>
-
-#include <QOpenGLContext>
-#include <QOpenGLFunctions>
-#include <QOpenGLExtraFunctions>
-
-#include <private/qrhi_p.h>
-#include <private/qrhigles2_p.h>
-#include <private/qsgrendernode_p.h>
-
 #include "riveqsgrhirendernode.h"
 #include "riveqtquickitem.h"
 #include "renderer/riveqtrhirenderer.h"
-
 #include "rhi/postprocessingsmaa.h"
 #include "rqqplogging.h"
+
+#include <QQuickWindow>
+#include <QFile>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
+#include <QOpenGLExtraFunctions>
+#include <private/qrhigles2_p.h>
 
 RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance,
                                            const QRectF &geometry)
@@ -212,7 +207,7 @@ void RiveQSGRHIRenderNode::render(const RenderState *state)
     }
 
     if (!commandBuffer) {
-        qCritical(rqqpFactory) << "Render: No command buffer available";
+        qCCritical(rqqpFactory) << "Render: No command buffer available";
         return;
     }
 
@@ -340,6 +335,50 @@ bool RiveQSGRHIRenderNode::isCurrentRenderBufferA()
     return m_currentRenderSurface == &m_renderSurfaceA;
 }
 
+RiveQSGRHIRenderNode *RiveQSGRHIRenderNode::create(const RiveRenderSettings &renderSettings,
+                                                   QQuickWindow *window,
+                                                   std::weak_ptr<rive::ArtboardInstance> artboardInstance,
+                                                   const QRectF &geometry)
+{
+    auto sampleCount = 1;
+    QSGRendererInterface *renderInterface = window->rendererInterface();
+    QRhi *rhi = static_cast<QRhi *>(renderInterface->getResource(window, QSGRendererInterface::RhiResource));
+    const QRhiSwapChain *swapChain =
+        static_cast<QRhiSwapChain *>(renderInterface->getResource(window, QSGRendererInterface::RhiSwapchainResource));
+
+    auto sampleCounts = rhi->supportedSampleCounts();
+
+    if (swapChain) {
+        sampleCount = swapChain->sampleCount();
+    } else {
+        // maybe an offscreen render target is active;
+        // this is the case if the Rive scene is rendered
+        // inside an QQuickWidget
+        // try a different way to fetch the sample count
+        const auto redirectRenderTarget =
+            static_cast<QRhiTextureRenderTarget *>(renderInterface->getResource(window, QSGRendererInterface::RhiRedirectRenderTarget));
+        if (redirectRenderTarget) {
+            sampleCount = redirectRenderTarget->sampleCount();
+        } else {
+            qCCritical(rqqpFactory)
+            << "Swap chain or offscreen render target not found for given window: rendering may be faulty.";
+        }
+    }
+
+    if (sampleCount == 1 || (sampleCount > 1
+                             && rhi->isFeatureSupported(QRhi::MultisampleRenderBuffer)
+                             && sampleCounts.contains(sampleCount))) {
+        auto node = new RiveQSGRHIRenderNode(window, artboardInstance, geometry);
+        node->setFillMode(renderSettings.fillMode);
+        node->setPostprocessingMode(renderSettings.postprocessingMode);
+        return node;
+    } else {
+        qCCritical(rqqpFactory)
+        << "MSAA requested, but requested sample size is not supported - requested sample size:" << sampleCount;
+        return nullptr;
+    }
+}
+
 #ifdef OPENGL_DEBUG
 void GLAPIENTRY
     MessageCallback( GLenum source,
@@ -387,7 +426,7 @@ void RiveQSGRHIRenderNode::prepare()
     }
 
     if (!commandBuffer) {
-        qCritical(rqqpFactory) << "Prepare: No command buffer available";
+        qCCritical(rqqpFactory) << "Prepare: No command buffer available";
         return;
     }
 
@@ -533,7 +572,7 @@ void RiveQSGRHIRenderNode::prepare()
     auto artboardInstance = m_artboardInstance.lock();
 
     if (!m_renderer) {
-        qWarning() << "Renderer is null";
+        qCWarning(rqqpRendering) << "Renderer is null";
         return;
     }
 
@@ -915,7 +954,7 @@ bool RiveQSGRHIRenderNode::RenderSurface::create(QRhi *rhi, int samples, const Q
     const bool renderInMsaaBuffer = samples > 1 && !isMetal;
 
     if (isMetal && samples > 1) {
-        qWarning(rqqpRendering) << "MSAA on RHI Metal is not supported yet; If you need AA, set postprocessingMode to RiveQtQuickItem.SMAA";
+        qCWarning(rqqpRendering) << "MSAA on RHI Metal is not supported yet; If you need AA, set postprocessingMode to RiveQtQuickItem.SMAA";
     }
 
     bool textureCreated = false;

@@ -3,16 +3,14 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include <QFile>
-
-#include <private/qrhi_p.h>
-#include <private/qsgrendernode_p.h>
-
 #include "postprocessingsmaa.h"
-
 // lookup textures
 #include "textures/AreaTex.h"
 #include "textures/SearchTex.h"
+
+#include <QFile>
+#include <private/qrhi_p.h>
+#include <private/qsgrendernode_p.h>
 
 // quad for our onscreen texture
 static float vertexData[] = { // Y up, CCW

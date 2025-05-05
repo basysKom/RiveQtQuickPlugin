@@ -1,25 +1,24 @@
-
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include <QVector4D>
+#include "renderer/riveqtutils.h"
+#include "rqqplogging.h"
+
 #include <QMatrix4x4>
+#include <QVector4D>
 
 #include <rive/shapes/paint/color.hpp>
 #include <rive/renderer.hpp>
 #include <rive/command_path.hpp>
 
-#include "rqqplogging.h"
-#include "renderer/riveqtutils.h"
-
-QColor RiveQtUtils::riveColorToQt(rive::ColorInt value)
+QColor RiveQtUtils::convert(rive::ColorInt value)
 {
     return QColor::fromRgb(rive::colorRed(value), rive::colorGreen(value), rive::colorBlue(value), rive::colorAlpha(value));
 }
 
-Qt::PenJoinStyle RiveQtUtils::riveStrokeJoinToQt(rive::StrokeJoin join)
+Qt::PenJoinStyle RiveQtUtils::convert(rive::StrokeJoin join)
 {
     switch (join) {
     case rive::StrokeJoin::miter:
@@ -32,7 +31,7 @@ Qt::PenJoinStyle RiveQtUtils::riveStrokeJoinToQt(rive::StrokeJoin join)
     return Qt::PenJoinStyle::MiterJoin;
 }
 
-Qt::PenCapStyle RiveQtUtils::riveStrokeCapToQt(rive::StrokeCap cap)
+Qt::PenCapStyle RiveQtUtils::convert(rive::StrokeCap cap)
 {
     switch (cap) {
     case rive::StrokeCap::butt:
@@ -45,13 +44,7 @@ Qt::PenCapStyle RiveQtUtils::riveStrokeCapToQt(rive::StrokeCap cap)
     return Qt::PenCapStyle::FlatCap;
 }
 
-QMatrix4x4 RiveQtUtils::riveMat2DToQt(const rive::Mat2D &riveMatrix)
-{
-    return QMatrix4x4(riveMatrix[0], riveMatrix[1], 0, riveMatrix[4], riveMatrix[2], riveMatrix[3], 0, riveMatrix[5], 0, 0, 1, 0, 0, 0, 0,
-                      1);
-}
-
-Qt::FillRule RiveQtUtils::riveFillRuleToQt(rive::FillRule fillRule)
+Qt::FillRule RiveQtUtils::convert(rive::FillRule fillRule)
 {
     switch (fillRule) {
     case rive::FillRule::evenOdd:
@@ -62,80 +55,80 @@ Qt::FillRule RiveQtUtils::riveFillRuleToQt(rive::FillRule fillRule)
     }
 }
 
-QPainterPath RiveQtUtils::transformPathWithMatrix4x4(const QPainterPath &path, const QMatrix4x4 &matrix)
+QPainter::CompositionMode RiveQtUtils::convert(rive::BlendMode blendMode)
 {
-    QPainterPath transformedPath;
-
-    int count = path.elementCount();
-    for (int i = 0; i < count; ++i) {
-        QPainterPath::Element element = path.elementAt(i);
-        QVector4D point(element.x, element.y, 0, 1);
-        QVector4D transformedPoint = matrix * point;
-
-        switch (element.type) {
-        case QPainterPath::MoveToElement:
-            transformedPath.moveTo(transformedPoint.x(), transformedPoint.y());
-            break;
-        case QPainterPath::LineToElement:
-            transformedPath.lineTo(transformedPoint.x(), transformedPoint.y());
-            break;
-        case QPainterPath::CurveToElement: {
-            QPainterPath::Element controlPoint1 = element;
-            QPainterPath::Element controlPoint2 = path.elementAt(++i);
-            QPainterPath::Element endPoint = path.elementAt(++i);
-
-            QVector4D ctrlPt1(controlPoint1.x, controlPoint1.y, 0, 1);
-            QVector4D ctrlPt2(controlPoint2.x, controlPoint2.y, 0, 1);
-            QVector4D endPt(endPoint.x, endPoint.y, 0, 1);
-
-            QVector4D transformedCtrlPt1 = matrix * ctrlPt1;
-            QVector4D transformedCtrlPt2 = matrix * ctrlPt2;
-            QVector4D transformedEndPt = matrix * endPt;
-
-            transformedPath.cubicTo(transformedCtrlPt1.x(), transformedCtrlPt1.y(), transformedCtrlPt2.x(), transformedCtrlPt2.y(),
-                                    transformedEndPt.x(), transformedEndPt.y());
-        } break;
-        default:
-            break;
-        }
+    switch (blendMode) {
+    case rive::BlendMode::srcOver:
+        return QPainter::CompositionMode_SourceOver;
+    case rive::BlendMode::screen:
+        return QPainter::CompositionMode_Screen;
+    case rive::BlendMode::overlay:
+        return QPainter::CompositionMode_Overlay;
+    case rive::BlendMode::darken:
+        return QPainter::CompositionMode_Darken;
+    case rive::BlendMode::lighten:
+        return QPainter::CompositionMode_Lighten;
+    case rive::BlendMode::colorDodge:
+        return QPainter::CompositionMode_ColorDodge;
+    case rive::BlendMode::colorBurn:
+        return QPainter::CompositionMode_ColorBurn;
+    case rive::BlendMode::hardLight:
+        return QPainter::CompositionMode_HardLight;
+    case rive::BlendMode::softLight:
+        return QPainter::CompositionMode_SoftLight;
+    case rive::BlendMode::difference:
+        return QPainter::CompositionMode_Difference;
+    case rive::BlendMode::exclusion:
+        return QPainter::CompositionMode_Exclusion;
+    case rive::BlendMode::multiply:
+        return QPainter::CompositionMode_Multiply;
+    case rive::BlendMode::hue:
+    case rive::BlendMode::saturation:
+    case rive::BlendMode::color:
+    case rive::BlendMode::luminosity:
+        // QPainter doesn't have corresponding composition modes for these blend modes
+        return QPainter::CompositionMode_SourceOver;
+    default:
+        return QPainter::CompositionMode_SourceOver;
     }
-
-    return transformedPath;
 }
 
-RiveQtPaint::RiveQtPaint() { }
+RiveQtPaint::RiveQtPaint()
+    : rive::RenderPaint()
+{
+}
 
 void RiveQtPaint::color(rive::ColorInt value)
 {
-    m_color = RiveQtUtils::riveColorToQt(value);
+    m_color = RiveQtUtils::convert(value);
     m_opacity = rive::colorOpacity(value);
 
     if (!m_color.isValid()) {
         qCDebug(rqqpRendering) << "INVALID COLOR";
     }
 
-    m_Brush.setColor(m_color);
-    m_Pen.setColor(m_color);
+    m_brush.setColor(m_color);
+    m_pen.setColor(m_color);
 }
 
 void RiveQtPaint::thickness(float value)
 {
-    m_Pen.setWidthF(value);
+    m_pen.setWidthF(value);
 }
 
 void RiveQtPaint::join(rive::StrokeJoin value)
 {
-    m_Pen.setJoinStyle(RiveQtUtils::riveStrokeJoinToQt(value));
+    m_pen.setJoinStyle(RiveQtUtils::convert(value));
 }
 
 void RiveQtPaint::cap(rive::StrokeCap value)
 {
-    m_Pen.setCapStyle(RiveQtUtils::riveStrokeCapToQt(value));
+    m_pen.setCapStyle(RiveQtUtils::convert(value));
 }
 
 void RiveQtPaint::blendMode(rive::BlendMode value)
 {
-    m_BlendMode = value;
+    m_blendMode = value;
 }
 
 void RiveQtPaint::style(rive::RenderPaintStyle value)
@@ -144,17 +137,17 @@ void RiveQtPaint::style(rive::RenderPaintStyle value)
 
     switch (value) {
     case rive::RenderPaintStyle::fill:
-        m_Pen.setStyle(Qt::NoPen);
-        m_Brush.setStyle(Qt::SolidPattern);
+        m_pen.setStyle(Qt::NoPen);
+        m_brush.setStyle(Qt::SolidPattern);
         break;
     case rive::RenderPaintStyle::stroke:
-        m_Pen.setStyle(Qt::SolidLine);
-        m_Brush.setStyle(Qt::NoBrush);
+        m_pen.setStyle(Qt::SolidLine);
+        m_brush.setStyle(Qt::NoBrush);
         break;
     default:
         qCDebug(rqqpRendering) << "DEFAULT STYLE!";
-        m_Pen.setStyle(Qt::NoPen);
-        m_Brush.setStyle(Qt::NoBrush);
+        m_pen.setStyle(Qt::NoPen);
+        m_brush.setStyle(Qt::NoBrush);
         break;
     }
 }
@@ -164,19 +157,19 @@ void RiveQtPaint::shader(rive::rcp<rive::RenderShader> shader)
     m_shader = shader;
     if (shader) {
         RiveQtShader *qtShader = static_cast<RiveQtShader *>(shader.get());
-        m_qtGradient = qtShader->gradient();
+        m_gradient = qtShader->gradient();
 
-        if (!m_qtGradient.isNull()) {
-            m_Brush = QBrush(*m_qtGradient);
+        if (!m_gradient.isNull()) {
+            m_brush = QBrush(*m_gradient);
             if (m_paintStyle == rive::RenderPaintStyle::stroke) {
-                m_Pen.setBrush(m_Brush);
+                m_pen.setBrush(m_brush);
             }
         } else {
-            m_Brush = QBrush(m_color);
+            m_brush = QBrush(m_color);
         }
     } else {
-        m_qtGradient.reset();
-        m_Brush = QBrush(m_color);
+        m_gradient.reset();
+        m_brush = QBrush(m_color);
     }
 }
 
@@ -187,7 +180,7 @@ RiveQtLinearGradient::RiveQtLinearGradient(float x1, float y1, float x2, float y
     m_opacity = 0;
 
     for (size_t i = 0; i < count; ++i) {
-        QColor color = RiveQtUtils::riveColorToQt(colors[i]);
+        QColor color = RiveQtUtils::convert(colors[i]);
         m_opacity = qMax(m_opacity, rive::colorOpacity(colors[i]));
         qreal stop = stops[i];
         m_gradient.setColorAt(stop, color);
@@ -200,7 +193,7 @@ RiveQtRadialGradient::RiveQtRadialGradient(float centerX, float centerY, float r
     m_gradient = QRadialGradient(centerX, centerY, radius);
 
     for (size_t i = 0; i < count; i++) {
-        QColor color(RiveQtUtils::riveColorToQt(colors[i]));
+        QColor color(RiveQtUtils::convert(colors[i]));
         m_opacity = rive::colorOpacity(colors[i]);
         m_gradient.setColorAt(positions[i], color);
     }
