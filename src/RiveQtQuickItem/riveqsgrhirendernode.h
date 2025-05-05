@@ -5,24 +5,15 @@
 
 #pragma once
 
-#include <QQuickItem>
-#include <QElapsedTimer>
-#include <QQuickItem>
-#include <QQuickPaintedItem>
-#include <QSGRenderNode>
-#include <QSGTextureProvider>
+#include "riveqsgrendernode.h"
+#include "datatypes.h"
 
+#include <QQuickItem>
+#include <QSGRenderNode>
 #include <private/qrhi_p.h>
-#include <private/qsgrendernode_p.h>
 
 #include <rive/artboard.hpp>
 
-#include "datatypes.h"
-#include "riveqsgrendernode.h"
-
-//-----------------
-class RiveQtQuickItem;
-class TextureTargetNode;
 class RiveQtRhiRenderer;
 class PostprocessingSMAA;
 
@@ -64,6 +55,11 @@ public:
     QRhiTexture *getDummyTexture();
 
     bool isCurrentRenderBufferA();
+
+    static RiveQSGRHIRenderNode *create(const RiveRenderSettings &renderSettings,
+                                        QQuickWindow *window,
+                                        std::weak_ptr<rive::ArtboardInstance> artboardInstance,
+                                        const QRectF &geometry);
 
 protected:
     struct RenderSurface

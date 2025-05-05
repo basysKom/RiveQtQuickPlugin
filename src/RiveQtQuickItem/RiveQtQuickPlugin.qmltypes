@@ -167,6 +167,7 @@ Module {
         exportMetaObjectRevisions: [256]
         Enum {
             name: "RivePropertyType"
+            isScoped: true
             type: "short"
             values: ["RiveNumber", "RiveBoolean", "RiveTrigger"]
         }

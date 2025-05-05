@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <QtQml>
-#include <QQuickItem>
 #include <QSGRendererInterface>
 
 struct AnimationInfo
@@ -62,9 +60,9 @@ struct RiveRenderSettings
 public:
     enum RenderQuality
     {
-        Low,
-        Medium,
-        High
+        Low = 1,
+        Medium = 5,
+        High = 10
     };
     Q_ENUM(RenderQuality)
 

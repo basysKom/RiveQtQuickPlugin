@@ -1,14 +1,12 @@
-
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-
-#include "rqqplogging.h"
 #include "renderer/riveqtpainterrenderer.h"
+#include "riveqtpath.h"
+#include "rqqplogging.h"
+#include "riveqtutils.h"
 
 RiveQtPainterRenderer::RiveQtPainterRenderer()
     : rive::Renderer()
@@ -42,10 +40,10 @@ void RiveQtPainterRenderer::drawPath(rive::RenderPath *path, rive::RenderPaint *
         return;
     }
 
-    RiveQtPainterPath *qtPath = static_cast<RiveQtPainterPath *>(path);
+    RiveQtPath *qtPath = static_cast<RiveQtPath *>(path);
     RiveQtPaint *qtPaint = static_cast<RiveQtPaint *>(paint);
 
-    QPainter::CompositionMode compositionMode = convertRiveBlendModeToQCompositionMode(qtPaint->blendMode());
+    QPainter::CompositionMode compositionMode = RiveQtUtils::convert(qtPaint->blendMode());
 
     QPainter::RenderHints oldRenderHint = m_painter->renderHints();
     m_painter->setCompositionMode(compositionMode);
@@ -78,7 +76,7 @@ void RiveQtPainterRenderer::clipPath(rive::RenderPath *path)
         return;
     }
 
-    RiveQtPainterPath *qtPath = static_cast<RiveQtPainterPath *>(path);
+    RiveQtPath *qtPath = static_cast<RiveQtPath *>(path);
     m_painter->setClipPath(qtPath->toQPainterPath(), Qt::ClipOperation::IntersectClip);
 }
 
@@ -95,7 +93,7 @@ void RiveQtPainterRenderer::drawImage(const rive::RenderImage *image, rive::Blen
         return;
     }
 
-    QPainter::CompositionMode compositionMode = convertRiveBlendModeToQCompositionMode(blendMode);
+    QPainter::CompositionMode compositionMode = RiveQtUtils::convert(blendMode);
     QPainter::RenderHints oldRenderHint = m_painter->renderHints();
     m_painter->setCompositionMode(compositionMode);
     m_painter->setRenderHint(QPainter::Antialiasing, true);
@@ -122,41 +120,15 @@ void RiveQtPainterRenderer::drawImageMesh(const rive::RenderImage *image, rive::
     qCWarning(rqqpRendering) << "Draw image mesh is not implemented for qpainter approach";
 }
 
-RiveQtPainterPath::RiveQtPainterPath(rive::RawPath &rawPath, rive::FillRule fillRule)
+QImage RiveQtPainterRenderer::convertRiveImageToQImage(const rive::RenderImage *image)
 {
-    m_path.clear();
-    m_path.setFillRule(RiveQtUtils::riveFillRuleToQt(fillRule));
-
-    for (const auto &[verb, pts] : rawPath) {
-        switch (verb) {
-        case rive::PathVerb::move:
-            m_path.moveTo(pts->x, pts->y);
-            break;
-        case rive::PathVerb::line:
-            m_path.lineTo(pts->x, pts->y);
-            break;
-        case rive::PathVerb::cubic:
-            m_path.cubicTo(pts[0].x, pts[0].y, pts[1].x, pts[1].y, pts[2].x, pts[2].y);
-            break;
-        case rive::PathVerb::close:
-            m_path.lineTo(pts->x, pts->y);
-            m_path.closeSubpath();
-            break;
-        default:
-            break;
-        }
-    }
-}
-
-void RiveQtPainterPath::addRenderPath(RenderPath *path, const rive::Mat2D &transform)
-{
-    if (!path) {
-        return;
+    if (!image) {
+        return QImage();
     }
 
-    RiveQtPainterPath *qtPath = static_cast<RiveQtPainterPath *>(path);
-    QTransform qTransform(transform[0], transform[1], transform[2], transform[3], transform[4], transform[5]);
+    // Cast the rive::RenderImage to RiveQtImage
+    const RiveQtImage *qtImage = static_cast<const RiveQtImage *>(image);
 
-    QPainterPath qPath = qtPath->toQPainterPath() * qTransform;
-    m_path.addPath(qPath);
+    // Return the QImage contained in the RiveQtImage
+    return qtImage->image();
 }
