@@ -7,12 +7,13 @@
 
 #define USE_QPAINTERPATH_STROKER
 
-#include <QPainterPath>
-#include <QMatrix4x4>
-#include <QPen>
-
 #include <rive/renderer.hpp>
 #include <rive/math/raw_path.hpp>
+
+#include <QPainterPath>
+#include <QMatrix4x4>
+#include <QVector2D>
+#include <QPen>
 
 class RiveQtPath : public rive::RenderPath
 {
@@ -22,24 +23,25 @@ public:
     RiveQtPath(const rive::RawPath &rawPath, rive::FillRule fillRule);
 
     void rewind() override;
-    void moveTo(float x, float y) override { m_qPainterPath.moveTo(x, y); }
-    void lineTo(float x, float y) override { m_qPainterPath.lineTo(x, y); }
-    void cubicTo(float ox, float oy, float ix, float iy, float x, float y) override { m_qPainterPath.cubicTo(ox, oy, ix, iy, x, y); }
-    void close() override { m_qPainterPath.closeSubpath(); }
+    void moveTo(float x, float y) override;
+    void lineTo(float x, float y) override;
+    void cubicTo(float ox, float oy, float ix, float iy, float x, float y) override;
+    void close() override;
     void fillRule(rive::FillRule value) override;
     void addRenderPath(rive::RenderPath *path, const rive::Mat2D &transform) override;
+    void addRawPath(const rive::RawPath &path) override;
 
-    void setQPainterPath(QPainterPath path);
+    void setQPainterPath(const QPainterPath &path);
     bool intersectWith(const QPainterPath &other);
-    QPainterPath toQPainterPath() { return m_qPainterPath; }
-    QPainterPath toQPainterPaths(const QMatrix4x4 &t);
+    QPainterPath toQPainterPath() const;
 
     void setLevelOfDetail(const unsigned lod);
 
     QVector<QVector<QVector2D>> toVertices();
     QVector<QVector<QVector2D>> toVerticesLine(const QPen &pen);
 
-    void applyMatrix(QMatrix4x4 m);
+    void applyMatrix(const QMatrix4x4 &matrix);
+
 private:
 #if !defined(USE_QPAINTERPATH_STROKER)
     struct PathDataPoint

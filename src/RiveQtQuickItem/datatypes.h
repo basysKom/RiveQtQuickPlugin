@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <QtQml>
-#include <QQuickItem>
 #include <QSGRendererInterface>
 
 struct AnimationInfo

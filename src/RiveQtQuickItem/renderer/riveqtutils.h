@@ -1,15 +1,9 @@
-
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #pragma once
-
-#include <QMatrix4x4>
-#include <QColor>
-#include <QPainterPath>
-#include <QPainter>
 
 #include <rive/renderer.hpp>
 #include <rive/command_path.hpp>
@@ -19,13 +13,18 @@
 #include <rive/shapes/paint/stroke_join.hpp>
 #include <rive/math/mat2d.hpp>
 
+#include <QMatrix4x4>
+#include <QColor>
+#include <QPainterPath>
+#include <QPainter>
+
 namespace RiveQtUtils {
-QColor riveColorToQt(rive::ColorInt value);
-Qt::PenJoinStyle riveStrokeJoinToQt(rive::StrokeJoin join);
-Qt::PenCapStyle riveStrokeCapToQt(rive::StrokeCap cap);
-QMatrix4x4 riveMat2DToQt(const rive::Mat2D &riveMatrix);
-Qt::FillRule riveFillRuleToQt(rive::FillRule fillRule);
-QPainterPath transformPathWithMatrix4x4(const QPainterPath &path, const QMatrix4x4 &matrix);
+    QColor riveColorToQt(rive::ColorInt value);
+    Qt::PenJoinStyle riveStrokeJoinToQt(rive::StrokeJoin join);
+    Qt::PenCapStyle riveStrokeCapToQt(rive::StrokeCap cap);
+    QMatrix4x4 riveMat2DToQt(const rive::Mat2D &riveMatrix);
+    Qt::FillRule riveFillRuleToQt(rive::FillRule fillRule);
+    QPainterPath transformPathWithMatrix4x4(const QPainterPath &path, const QMatrix4x4 &matrix);
 }
 
 class RiveQtImage : public rive::RenderImage

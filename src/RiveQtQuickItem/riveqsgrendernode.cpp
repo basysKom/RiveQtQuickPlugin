@@ -6,16 +6,6 @@
 #include "riveqsgrendernode.h"
 #include "riveqtquickitem.h"
 
-QRectF RiveQSGRenderNode::rect() const
-{
-    return m_rect;
-}
-
-RiveQSGRenderNode::RiveQSGRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, const QRectF &geometry)
-    : RiveQSGBaseNode(window, artboardInstance, geometry)
-{
-}
-
 RiveQSGBaseNode::RiveQSGBaseNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, const QRectF &geometry)
     : m_artboardInstance(artboardInstance)
     , m_window(window)
@@ -43,6 +33,11 @@ float RiveQSGBaseNode::scaleFactorY() const
     return m_scaleFactorY;
 }
 
+void RiveQSGBaseNode::updateArtboardInstance(std::weak_ptr<rive::ArtboardInstance> artboardInstance)
+{
+    m_artboardInstance = artboardInstance;
+}
+
 void RiveQSGBaseNode::setArtboardRect(const QRectF &bounds)
 {
     m_topLeftRivePosition = bounds.topLeft();
@@ -52,4 +47,24 @@ void RiveQSGBaseNode::setArtboardRect(const QRectF &bounds)
         m_scaleFactorX = bounds.width() / artboardInstance->width();
         m_scaleFactorY = bounds.height() / artboardInstance->height();
     }
+}
+
+RiveQSGRenderNode::RiveQSGRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, const QRectF &geometry)
+    : RiveQSGBaseNode(window, artboardInstance, geometry)
+{
+}
+
+QSGRenderNode::RenderingFlags RiveQSGRenderNode::flags() const
+{
+    return QSGRenderNode::BoundedRectRendering | QSGRenderNode::DepthAwareRendering;
+}
+
+QSGRenderNode::StateFlags RiveQSGRenderNode::changedStates() const
+{
+    return QSGRenderNode::BlendState;
+}
+
+QRectF RiveQSGRenderNode::rect() const
+{
+    return m_rect;
 }

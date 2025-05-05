@@ -4,40 +4,40 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include <optional>
+#include "riveqtpath.h"
+#include "rqqplogging.h"
+#include "riveqtutils.h"
 
 #include <QVector2D>
 #include <QMatrix2x2>
 #include <QtMath>
-
 #include <private/qtriangulator_p.h>
 
-#include "rqqplogging.h"
-#include "riveqtpath.h"
-#include "riveqtutils.h"
+#if !defined(USE_QPAINTERPATH_STROKER)
+#include <optional>
+#endif
 
 RiveQtPath::RiveQtPath()
+    : rive::RenderPath()
 {
     m_qPainterPath.setFillRule(Qt::FillRule::WindingFill);
-    m_pathSegmentOutlineDataDirty = true;
-    m_pathSegmentDataDirty = true;
 }
 
 RiveQtPath::RiveQtPath(const RiveQtPath &other)
-{
-    m_qPainterPath = other.m_qPainterPath;
-    m_pathVertices = other.m_pathVertices;
-
+    : rive::RenderPath()
 #if !defined(USE_QPAINTERPATH_STROKER)
-    m_pathSegmentsOutlineData = other.m_pathSegmentsOutlineData;
-    m_segmentCount = other.m_segmentCount;
+    , m_pathSegmentsOutlineData(other.m_pathSegmentsOutlineData)
+    , m_segmentCount(other.m_segmentCount)
 #endif
-
-    m_pathOutlineVertices = other.m_pathOutlineVertices;
-    m_lod = other.m_lod;
+    , m_qPainterPath(other.m_qPainterPath)
+    , m_pathVertices(other.m_pathVertices)
+    , m_pathOutlineVertices(other.m_pathOutlineVertices)
+    , m_lod(other.m_lod)
+{
 }
 
 RiveQtPath::RiveQtPath(const rive::RawPath &rawPath, rive::FillRule fillRule)
+    : rive::RenderPath()
 {
     m_qPainterPath.clear();
     m_qPainterPath.setFillRule(RiveQtUtils::riveFillRuleToQt(fillRule));
@@ -65,8 +65,6 @@ RiveQtPath::RiveQtPath(const rive::RawPath &rawPath, rive::FillRule fillRule)
             break;
         }
     }
-    m_pathSegmentOutlineDataDirty = true;
-    m_pathSegmentDataDirty = true;
 }
 
 void RiveQtPath::rewind()
@@ -82,6 +80,26 @@ void RiveQtPath::rewind()
     m_pathSegmentDataDirty = true;
 }
 
+void RiveQtPath::moveTo(float x, float y)
+{
+    m_qPainterPath.moveTo(x, y);
+}
+
+void RiveQtPath::lineTo(float x, float y)
+{
+    m_qPainterPath.lineTo(x, y);
+}
+
+void RiveQtPath::cubicTo(float ox, float oy, float ix, float iy, float x, float y)
+{
+    m_qPainterPath.cubicTo(ox, oy, ix, iy, x, y);
+}
+
+void RiveQtPath::close()
+{
+    m_qPainterPath.closeSubpath();
+}
+
 void RiveQtPath::fillRule(rive::FillRule value)
 {
     switch (value) {
@@ -89,6 +107,7 @@ void RiveQtPath::fillRule(rive::FillRule value)
         m_qPainterPath.setFillRule(Qt::FillRule::OddEvenFill);
         break;
     case rive::FillRule::nonZero:
+    default:
         m_qPainterPath.setFillRule(Qt::FillRule::WindingFill);
         break;
     }
@@ -112,14 +131,19 @@ void RiveQtPath::addRenderPath(rive::RenderPath *path, const rive::Mat2D &transf
     m_pathSegmentDataDirty = true;
 }
 
-void RiveQtPath::setQPainterPath(QPainterPath path)
+void RiveQtPath::addRawPath(const rive::RawPath &path)
+{
+
+}
+
+void RiveQtPath::setQPainterPath(const QPainterPath &path)
 {
     m_qPainterPath = path;
 }
 
-void RiveQtPath::applyMatrix(QMatrix4x4 m)
+void RiveQtPath::applyMatrix(const QMatrix4x4 &matrix)
 {
-    m_qPainterPath = m_qPainterPath * m.toTransform();
+    m_qPainterPath = m_qPainterPath * matrix.toTransform();
 }
 
 void RiveQtPath::setLevelOfDetail(const unsigned lod)
@@ -155,6 +179,11 @@ bool RiveQtPath::intersectWith(const QPainterPath &other)
     }
     m_qPainterPath = other;
     return false;
+}
+
+QPainterPath RiveQtPath::toQPainterPath() const
+{
+    return m_qPainterPath;
 }
 
 QVector<QVector<QVector2D>> RiveQtPath::toVerticesLine(const QPen &pen)

@@ -1,28 +1,18 @@
-
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #pragma once
-#include <vector>
 
-#include <QFont>
-#include <QFontDatabase>
-
-#include <rive/file.hpp>
+#include <rive/factory.hpp>
+#include <rive/artboard.hpp>
 #include <rive/renderer.hpp>
 #include <rive/span.hpp>
-#include <utils/factory_utils.hpp>
-
-#ifdef WITH_RIVE_TEXT
-#include <rive/text/font_hb.hpp>
-#endif
 
 #include "datatypes.h"
-#include "riveqsgrendernode.h"
 
-class RiveQtQuickItem;
+class RiveQSGRenderNode;
 
 class RiveQtFactory : public rive::Factory
 {
@@ -34,13 +24,9 @@ public:
         RHIRenderer
     };
 
-    explicit RiveQtFactory(const RiveRenderSettings &renderSettings = RiveRenderSettings())
-        : rive::Factory()
-        , m_renderSettings(renderSettings)
-    {
-    }
+    explicit RiveQtFactory(const RiveRenderSettings &renderSettings = RiveRenderSettings());
 
-    void setRenderSettings(const RiveRenderSettings &renderSettings) { m_renderSettings = renderSettings; }
+    void setRenderSettings(const RiveRenderSettings &renderSettings);
 
     RiveQSGRenderNode *renderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, const QRectF &geometry);
     rive::rcp<rive::RenderBuffer> makeRenderBuffer(rive::RenderBufferType, rive::RenderBufferFlags, size_t) override;
@@ -51,11 +37,9 @@ public:
     rive::rcp<rive::RenderPath> makeEmptyRenderPath() override;
     rive::rcp<rive::RenderPaint> makeRenderPaint() override;
     rive::rcp<rive::RenderImage> decodeImage(rive::Span<const uint8_t> span) override;
-    rive::rcp<rive::Font> decodeFont(rive::Span<const uint8_t> span) override;
 
 private:
     unsigned levelOfDetail();
-
     RiveQtRenderType renderType();
 
     RiveRenderSettings m_renderSettings;

@@ -1,21 +1,34 @@
-
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
-#include <QQuickWindow>
 
 #include "renderer/riveqtfactory.h"
-#include "renderer/riveqtfont.h"
 #include "renderer/riveqtpainterrenderer.h"
+#include "riveqsgrendernode.h"
 #include "riveqsgrhirendernode.h"
 #include "riveqsgsoftwarerendernode.h"
 #include "riveqtpath.h"
+#include "riveqtutils.h"
 #include "rqqplogging.h"
-
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #    include "renderer/riveqtrhirenderer.h"
 #endif
+
+#include <QQuickWindow>
+
+#include <utils/factory_utils.hpp>
+
+RiveQtFactory::RiveQtFactory(const RiveRenderSettings &renderSettings)
+    : rive::Factory()
+    , m_renderSettings(renderSettings)
+{
+}
+
+void RiveQtFactory::setRenderSettings(const RiveRenderSettings &renderSettings)
+{
+    m_renderSettings = renderSettings;
+}
 
 RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance,
                                              const QRectF &geometry)
@@ -46,7 +59,7 @@ RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr
             if (redirectRenderTarget) {
                 sampleCount = redirectRenderTarget->sampleCount();
             } else {
-                qCritical(rqqpFactory)
+                qCCritical(rqqpFactory)
                     << "Swap chain or offscreen render target not found for given window: rendering may be faulty.";
             }
         }
@@ -59,7 +72,7 @@ RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr
             node->setPostprocessingMode(m_renderSettings.postprocessingMode);
             return node;
         } else {
-            qCritical(rqqpFactory)
+            qCCritical(rqqpFactory)
                 << "MSAA requested, but requested sample size is not supported - requested sample size:" << sampleCount;
             return nullptr;
         }
@@ -73,7 +86,7 @@ RiveQSGRenderNode *RiveQtFactory::renderNode(QQuickWindow *window, std::weak_ptr
 
 rive::rcp<rive::RenderBuffer> RiveQtFactory::makeRenderBuffer(rive::RenderBufferType renderBufferType, rive::RenderBufferFlags renderBufferFlags, size_t size)
 {
-    return rive::make_rcp<rive::DataRenderBuffer>(renderBufferType, renderBufferFlags, size);;
+    return rive::make_rcp<rive::DataRenderBuffer>(renderBufferType, renderBufferFlags, size);
 }
 
 rive::rcp<rive::RenderShader> RiveQtFactory::makeLinearGradient(float x1, float y1, float x2, float y2, const rive::ColorInt *colors,
@@ -93,8 +106,6 @@ rive::rcp<rive::RenderShader> RiveQtFactory::makeRadialGradient(float centerX, f
 rive::rcp<rive::RenderPath> RiveQtFactory::makeRenderPath(rive::RawPath &rawPath, rive::FillRule fillRule)
 {
     switch (renderType()) {
-    case RiveQtRenderType::QPainterRenderer:
-        return rive::make_rcp<RiveQtPainterPath>(rawPath, fillRule);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     case RiveQtRenderType::RHIRenderer: {
         rive::rcp<RiveQtPath> riveQtPath = rive::make_rcp<RiveQtPath>(rawPath, fillRule);
@@ -102,7 +113,7 @@ rive::rcp<rive::RenderPath> RiveQtFactory::makeRenderPath(rive::RawPath &rawPath
         return riveQtPath;
     }
 #endif
-
+    case RiveQtRenderType::QPainterRenderer:
     case RiveQtRenderType::None:
     default:
         return rive::make_rcp<RiveQtPainterPath>(rawPath, fillRule); // TODO Add Empty Path
@@ -112,8 +123,6 @@ rive::rcp<rive::RenderPath> RiveQtFactory::makeRenderPath(rive::RawPath &rawPath
 rive::rcp<rive::RenderPath> RiveQtFactory::makeEmptyRenderPath()
 {
     switch (renderType()) {
-    case RiveQtRenderType::QPainterRenderer:
-        return rive::make_rcp<RiveQtPainterPath>();
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     case RiveQtRenderType::RHIRenderer: {
         rive::rcp<RiveQtPath> riveQtPath = rive::make_rcp<RiveQtPath>();
@@ -121,6 +130,7 @@ rive::rcp<rive::RenderPath> RiveQtFactory::makeEmptyRenderPath()
         return riveQtPath;
     }
 #endif
+    case RiveQtRenderType::QPainterRenderer:
     case RiveQtRenderType::None:
     default:
         return rive::make_rcp<RiveQtPainterPath>(); // TODO Add Empty Path
@@ -143,44 +153,16 @@ rive::rcp<rive::RenderImage> RiveQtFactory::decodeImage(rive::Span<const uint8_t
     return rive::rcp<RiveQtImage>(new RiveQtImage(image));
 }
 
-rive::rcp<rive::Font> RiveQtFactory::decodeFont(rive::Span<const uint8_t> span)
-{
-#ifdef WITH_RIVE_TEXT
-    return HBFont::Decode(span);
-#else
-    return nullptr;
-#endif
-    // Todo: would be nice to use qt build in support for fonts
-    // however qt is missing an api to access AXIS data from a font; lets for now use the HBFont maintained by rivecpp and consider
-    // switching later using qt directy would maybe allow us to drop the direct dependency on harfbuzz ...
-
-    /*QByteArray fontData(reinterpret_cast<const char *>(span.data()), static_cast<int>(span.size()));
-    int fontId = QFontDatabase::addApplicationFontFromData(fontData);
-
-    if (fontId == -1) {
-        return nullptr;
-    }
-
-    const QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
-    if (fontFamilies.isEmpty()) {
-        return nullptr;
-    }
-
-    QFont font(fontFamilies.first());
-    return rive::rcp<RiveQtFont>(new RiveQtFont(font));*/
-
-}
-
 unsigned int RiveQtFactory::levelOfDetail()
 {
     switch (m_renderSettings.renderQuality) {
     case RiveRenderSettings::Low:
         return 1;
-    default:
-    case RiveRenderSettings::Medium:
-        return 5;
     case RiveRenderSettings::High:
         return 10;
+    case RiveRenderSettings::Medium:
+    default:
+        return 5;
     }
 }
 

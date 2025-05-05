@@ -1,8 +1,15 @@
-
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
+
+#include "riveqtquickitem.h"
+#include "riveqsgrendernode.h"
+#include "renderer/riveqtfactory.h"
+#include "rqqplogging.h"
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#    include "riveqsgsoftwarerendernode.h"
+#endif
 
 #include <QSGRendererInterface>
 #include <QSGRenderNode>
@@ -10,25 +17,7 @@
 #include <QQuickWindow>
 #include <QFile>
 
-#include <rive/node.hpp>
-#include <rive/shapes/clipping_shape.hpp>
-#include <rive/shapes/rectangle.hpp>
-#include <rive/shapes/image.hpp>
-#include <rive/shapes/shape.hpp>
-#include <rive/assets/image_asset.hpp>
-#include <rive/animation/linear_animation_instance.hpp>
-#include <rive/generated/shapes/shape_base.hpp>
-#include <rive/animation/state_machine_listener.hpp>
 #include <rive/file.hpp>
-
-#include "rive/animation/state_machine_input_instance.hpp"
-#include "rqqplogging.h"
-#include "riveqtquickitem.h"
-#include "renderer/riveqtfactory.h"
-
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-#    include "riveqsgsoftwarerendernode.h"
-#endif
 
 RiveQtQuickItem::RiveQtQuickItem(QQuickItem *parent)
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)

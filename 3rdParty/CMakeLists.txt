@@ -69,9 +69,6 @@ endif()
 # Define _UNICODE and UNICODE
 add_definitions(-D_UNICODE -DUNICODE)
 
-# Define _USE_MATH_DEFINES
-add_definitions(-D_USE_MATH_DEFINES)
-
 #
 #
 #

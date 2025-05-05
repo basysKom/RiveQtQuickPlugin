@@ -1,14 +1,105 @@
-
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-
-#include "rqqplogging.h"
 #include "renderer/riveqtpainterrenderer.h"
+#include "rqqplogging.h"
+#include "riveqtutils.h"
+
+RiveQtPainterPath::RiveQtPainterPath(const RiveQtPainterPath &rqp)
+    : rive::RenderPath()
+    , m_path(rqp.m_path)
+{
+}
+
+RiveQtPainterPath::RiveQtPainterPath(rive::RawPath &rawPath, rive::FillRule fillRule)
+    : rive::RenderPath()
+{
+    m_path.clear();
+    m_path.setFillRule(RiveQtUtils::riveFillRuleToQt(fillRule));
+
+    for (const auto &[verb, pts] : rawPath) {
+        switch (verb) {
+        case rive::PathVerb::move:
+            m_path.moveTo(pts->x, pts->y);
+            break;
+        case rive::PathVerb::line:
+            m_path.lineTo(pts->x, pts->y);
+            break;
+        case rive::PathVerb::cubic:
+            m_path.cubicTo(pts[0].x, pts[0].y, pts[1].x, pts[1].y, pts[2].x, pts[2].y);
+            break;
+        case rive::PathVerb::close:
+            m_path.lineTo(pts->x, pts->y);
+            m_path.closeSubpath();
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+void RiveQtPainterPath::rewind()
+{
+    m_path.clear();
+}
+
+void RiveQtPainterPath::moveTo(float x, float y)
+{
+    m_path.moveTo(x, y);
+}
+
+void RiveQtPainterPath::lineTo(float x, float y)
+{
+    m_path.lineTo(x, y);
+}
+
+void RiveQtPainterPath::cubicTo(float ox, float oy, float ix, float iy, float x, float y)
+{
+    m_path.cubicTo(ox, oy, ix, iy, x, y);
+}
+
+void RiveQtPainterPath::close()
+{
+    m_path.closeSubpath();
+}
+
+void RiveQtPainterPath::fillRule(rive::FillRule value)
+{
+    switch (value) {
+    case rive::FillRule::evenOdd:
+        m_path.setFillRule(Qt::FillRule::OddEvenFill);
+        break;
+    case rive::FillRule::nonZero:
+    default:
+        m_path.setFillRule(Qt::FillRule::WindingFill);
+        break;
+    }
+}
+
+void RiveQtPainterPath::addRenderPath(RenderPath *path, const rive::Mat2D &transform)
+{
+    if (!path) {
+        return;
+    }
+
+    RiveQtPainterPath *qtPath = static_cast<RiveQtPainterPath *>(path);
+    QTransform qTransform(transform[0], transform[1], transform[2], transform[3], transform[4], transform[5]);
+
+    QPainterPath qPath = qtPath->toQPainterPath() * qTransform;
+    m_path.addPath(qPath);
+}
+
+void RiveQtPainterPath::addRawPath(const rive::RawPath &path)
+{
+
+}
+
+QPainterPath RiveQtPainterPath::toQPainterPath() const
+{
+    return m_path;
+}
 
 RiveQtPainterRenderer::RiveQtPainterRenderer()
     : rive::Renderer()
@@ -122,41 +213,53 @@ void RiveQtPainterRenderer::drawImageMesh(const rive::RenderImage *image, rive::
     qCWarning(rqqpRendering) << "Draw image mesh is not implemented for qpainter approach";
 }
 
-RiveQtPainterPath::RiveQtPainterPath(rive::RawPath &rawPath, rive::FillRule fillRule)
+QImage RiveQtPainterRenderer::convertRiveImageToQImage(const rive::RenderImage *image)
 {
-    m_path.clear();
-    m_path.setFillRule(RiveQtUtils::riveFillRuleToQt(fillRule));
-
-    for (const auto &[verb, pts] : rawPath) {
-        switch (verb) {
-        case rive::PathVerb::move:
-            m_path.moveTo(pts->x, pts->y);
-            break;
-        case rive::PathVerb::line:
-            m_path.lineTo(pts->x, pts->y);
-            break;
-        case rive::PathVerb::cubic:
-            m_path.cubicTo(pts[0].x, pts[0].y, pts[1].x, pts[1].y, pts[2].x, pts[2].y);
-            break;
-        case rive::PathVerb::close:
-            m_path.lineTo(pts->x, pts->y);
-            m_path.closeSubpath();
-            break;
-        default:
-            break;
-        }
+    if (!image) {
+        return QImage();
     }
+
+    // Cast the rive::RenderImage to RiveQtImage
+    const RiveQtImage *qtImage = static_cast<const RiveQtImage *>(image);
+
+    // Return the QImage contained in the RiveQtImage
+    return qtImage->image();
 }
 
-void RiveQtPainterPath::addRenderPath(RenderPath *path, const rive::Mat2D &transform)
+QPainter::CompositionMode RiveQtPainterRenderer::convertRiveBlendModeToQCompositionMode(rive::BlendMode blendMode)
 {
-    if (!path) {
-        return;
+    switch (blendMode) {
+    case rive::BlendMode::srcOver:
+        return QPainter::CompositionMode_SourceOver;
+    case rive::BlendMode::screen:
+        return QPainter::CompositionMode_Screen;
+    case rive::BlendMode::overlay:
+        return QPainter::CompositionMode_Overlay;
+    case rive::BlendMode::darken:
+        return QPainter::CompositionMode_Darken;
+    case rive::BlendMode::lighten:
+        return QPainter::CompositionMode_Lighten;
+    case rive::BlendMode::colorDodge:
+        return QPainter::CompositionMode_ColorDodge;
+    case rive::BlendMode::colorBurn:
+        return QPainter::CompositionMode_ColorBurn;
+    case rive::BlendMode::hardLight:
+        return QPainter::CompositionMode_HardLight;
+    case rive::BlendMode::softLight:
+        return QPainter::CompositionMode_SoftLight;
+    case rive::BlendMode::difference:
+        return QPainter::CompositionMode_Difference;
+    case rive::BlendMode::exclusion:
+        return QPainter::CompositionMode_Exclusion;
+    case rive::BlendMode::multiply:
+        return QPainter::CompositionMode_Multiply;
+    case rive::BlendMode::hue:
+    case rive::BlendMode::saturation:
+    case rive::BlendMode::color:
+    case rive::BlendMode::luminosity:
+        // QPainter doesn't have corresponding composition modes for these blend modes
+        return QPainter::CompositionMode_SourceOver;
+    default:
+        return QPainter::CompositionMode_SourceOver;
     }
-
-    RiveQtPainterPath *qtPath = static_cast<RiveQtPainterPath *>(path);
-    QTransform qTransform(transform[0], transform[1], transform[2], transform[3], transform[4], transform[5]);
-
-    QPainterPath qPath = qtPath->toQPainterPath() * qTransform;
-    m_path.addPath(qPath);
 }

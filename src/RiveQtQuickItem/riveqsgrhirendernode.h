@@ -5,22 +5,20 @@
 
 #pragma once
 
+#include "datatypes.h"
+#include "riveqsgrendernode.h"
+
 #include <QQuickItem>
 #include <QElapsedTimer>
 #include <QQuickItem>
 #include <QQuickPaintedItem>
 #include <QSGRenderNode>
 #include <QSGTextureProvider>
-
 #include <private/qrhi_p.h>
 #include <private/qsgrendernode_p.h>
 
 #include <rive/artboard.hpp>
 
-#include "datatypes.h"
-#include "riveqsgrendernode.h"
-
-//-----------------
 class RiveQtQuickItem;
 class TextureTargetNode;
 class RiveQtRhiRenderer;

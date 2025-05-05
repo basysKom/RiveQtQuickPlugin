@@ -4,13 +4,10 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "texturetargetnode.h"
-
-#include <QFile>
-#include <QQuickItem>
-#include <QQuickWindow>
-#include <QSGRendererInterface>
 #include "riveqsgrhirendernode.h"
 
+#include <QQuickWindow>
+#include <QSGRendererInterface>
 #include <private/qrhi_p.h>
 #include <private/qsgrendernode_p.h>
 

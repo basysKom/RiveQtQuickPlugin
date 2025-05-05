@@ -3,23 +3,20 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include <QQuickWindow>
-#include <QFile>
-
-#include <QOpenGLContext>
-#include <QOpenGLFunctions>
-#include <QOpenGLExtraFunctions>
-
-#include <private/qrhi_p.h>
-#include <private/qrhigles2_p.h>
-#include <private/qsgrendernode_p.h>
-
 #include "riveqsgrhirendernode.h"
 #include "riveqtquickitem.h"
 #include "renderer/riveqtrhirenderer.h"
-
 #include "rhi/postprocessingsmaa.h"
 #include "rqqplogging.h"
+
+#include <QQuickWindow>
+#include <QFile>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
+#include <QOpenGLExtraFunctions>
+#include <private/qrhi_p.h>
+#include <private/qrhigles2_p.h>
+#include <private/qsgrendernode_p.h>
 
 RiveQSGRHIRenderNode::RiveQSGRHIRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance,
                                            const QRectF &geometry)

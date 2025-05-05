@@ -1,22 +1,17 @@
-
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
-#define _USE_MATH_DEFINES
 
-#include <algorithm>
-#include <math.h>
+#include "renderer/riveqtrhirenderer.h"
+#include "rhi/texturetargetnode.h"
+#include "rqqplogging.h"
+#include "riveqtpath.h"
 
 #include <QVector4D>
 #include <QSGRenderNode>
 #include <QQuickWindow>
-
 #include <private/qtriangulator_p.h>
-
-#include "rqqplogging.h"
-#include "renderer/riveqtrhirenderer.h"
-#include "rhi/texturetargetnode.h"
 
 RiveQtRhiRenderer::RiveQtRhiRenderer(QQuickWindow *window, RiveQSGRHIRenderNode *node)
     : rive::Renderer()
@@ -31,6 +26,11 @@ RiveQtRhiRenderer::~RiveQtRhiRenderer()
     for (TextureTargetNode *textureTargetNode : m_renderNodes) {
         delete textureTargetNode;
     }
+}
+
+void RiveQtRhiRenderer::setRiveRect(const QRectF &bounds)
+{
+    m_riveRect = bounds;
 }
 
 void RiveQtRhiRenderer::save()
@@ -214,7 +214,7 @@ void RiveQtRhiRenderer::drawImageMesh(const rive::RenderImage *image, rive::rcp<
     node->updateClippingGeometry(clipResult.toVertices());
 }
 
-void RiveQtRhiRenderer::render(QRhiCommandBuffer *cb)
+void RiveQtRhiRenderer::render(QRhiCommandBuffer *cb) const
 {
     for (TextureTargetNode *textureTargetNode : m_renderNodes) {
         textureTargetNode->render(cb);
@@ -225,7 +225,7 @@ TextureTargetNode *RiveQtRhiRenderer::getRiveDrawTargetNode()
 {
     TextureTargetNode *pathNode = nullptr;
 
-    for (TextureTargetNode *textureTargetNode : m_renderNodes) {
+    for (TextureTargetNode *textureTargetNode : std::as_const(m_renderNodes)) {
         if (textureTargetNode->isRecycled()) {
             pathNode = textureTargetNode;
             pathNode->take();

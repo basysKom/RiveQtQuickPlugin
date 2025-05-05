@@ -3,20 +3,35 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include <QJSValue>
-#include <QVariant>
-#include <QQmlEngine>
+#include "rivestatemachineinput.h"
+#include "rqqplogging.h"
 
+#include <QMetaProperty>
 #include <QRegularExpression>
 
+#include <rive/animation/state_machine_instance.hpp>
 #include <rive/animation/state_machine_input_instance.hpp>
 #include <rive/animation/state_machine_input.hpp>
 #include <rive/animation/state_machine_bool.hpp>
 #include <rive/animation/state_machine_number.hpp>
 #include <rive/animation/state_machine_trigger.hpp>
 
-#include "rivestatemachineinput.h"
-#include "rqqplogging.h"
+namespace {
+    // we ignore properties with those names as they will
+    // conflict with JS/QML environment
+    const QStringList reservedWords = { "await",      "break",   "case",     "catch",
+                                        "class",      "const",   "continue", "debugger",
+                                        "default",    "delete",  "do",       "else",
+                                        "export",     "extends", "finally",  "for",
+                                        "function",   "if",      "import",   "in",
+                                        "instanceof", "new",     "return",   "super",
+                                        "switch",     "this",    "throw",    "try",
+                                        "typeof",     "var",     "void",     "while",
+                                        "with",       "yield",   "enum",     "implements",
+                                        "interface",  "let",     "package",  "private",
+                                        "protected",  "public",  "static",   "riveQtArtboardName",
+                                        "riveInputs" };
+}
 
 RiveStateMachineInput::RiveStateMachineInput(QObject *parent)
     : QObject(parent)

@@ -6,21 +6,15 @@
 #pragma once
 
 #include <QPainterPath>
-#include <QQuickItem>
-#include <QBrush>
-#include <QPen>
-#include <QLinearGradient>
-
-#include <private/qrhi_p.h>
+#include <QMatrix4x4>
 
 #include <rive/renderer.hpp>
 #include <rive/math/raw_path.hpp>
 
-#include "datatypes.h"
-#include "riveqtpath.h"
-
-class RhiSubPath;
+class QRhiCommandBuffer;
 class QSGRenderNode;
+class QQuickWindow;
+class RhiSubPath;
 class TextureTargetNode;
 class RiveQSGRHIRenderNode;
 
@@ -37,7 +31,6 @@ class RiveQtRhiRenderer : public rive::Renderer
 public:
     RiveQtRhiRenderer(QQuickWindow *window, RiveQSGRHIRenderNode *node);
     virtual ~RiveQtRhiRenderer();
-    void setRiveRect(const QRectF &bounds) { m_riveRect = bounds; }
 
     void save() override;
     void restore() override;
@@ -53,8 +46,9 @@ public:
     void updateArtboardSize(const QSize &artboardSize) { m_artboardSize = artboardSize; }
     void updateViewPort(const QRectF &viewportRect);
     void recycleRiveNodes();
+    void setRiveRect(const QRectF &bounds);
 
-    void render(QRhiCommandBuffer *cb);
+    void render(QRhiCommandBuffer *cb) const;
 
 private:
     TextureTargetNode *getRiveDrawTargetNode();

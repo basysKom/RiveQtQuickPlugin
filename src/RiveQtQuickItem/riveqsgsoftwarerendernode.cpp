@@ -1,13 +1,12 @@
-
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include <QQuickWindow>
-
-#include "riveqtquickitem.h"
 #include "riveqsgsoftwarerendernode.h"
+#include "riveqtquickitem.h"
+
+#include <QQuickWindow>
 
 RiveQSGSoftwareRenderNode::RiveQSGSoftwareRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance,
                                                      const QRectF &geometry)
@@ -18,6 +17,16 @@ RiveQSGSoftwareRenderNode::RiveQSGSoftwareRenderNode(QQuickWindow *window, std::
 QRectF RiveQSGSoftwareRenderNode::rect() const
 {
     return QRectF(0, 0, m_rect.width(), m_rect.height());
+}
+
+QSGRenderNode::RenderingFlags RiveQSGSoftwareRenderNode::flags() const
+{
+    return QSGRenderNode::BoundedRectRendering;
+}
+
+QSGRenderNode::StateFlags RiveQSGSoftwareRenderNode::changedStates() const
+{
+    return QSGRenderNode::BlendState;
 }
 
 void RiveQSGSoftwareRenderNode::render(const RenderState *state)

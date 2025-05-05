@@ -1,18 +1,17 @@
-
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include <QVector4D>
+#include "renderer/riveqtutils.h"
+#include "rqqplogging.h"
+
 #include <QMatrix4x4>
+#include <QVector4D>
 
 #include <rive/shapes/paint/color.hpp>
 #include <rive/renderer.hpp>
 #include <rive/command_path.hpp>
-
-#include "rqqplogging.h"
-#include "renderer/riveqtutils.h"
 
 QColor RiveQtUtils::riveColorToQt(rive::ColorInt value)
 {

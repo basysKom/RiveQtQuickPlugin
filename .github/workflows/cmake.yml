@@ -88,7 +88,7 @@ jobs:
           echo "CXX=cl.exe" >> $GITHUB_ENV
 
       - name: Install CMake
-        uses: lukka/get-cmake@v3.21.1
+        uses: lukka/get-cmake@latest
 
       - name: Configure
         run: |

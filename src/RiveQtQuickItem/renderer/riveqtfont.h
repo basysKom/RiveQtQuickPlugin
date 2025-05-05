@@ -1,10 +1,12 @@
-
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #pragma once
+
+#include <rive/text_engine.hpp>
+#include <rive/core.hpp>
 
 #include <QFont>
 #include <QFontDatabase>
@@ -14,9 +16,6 @@
 #include <QGlyphRun>
 #include <QTextLayout>
 #include <QTextOption>
-
-#include <rive/text_engine.hpp>
-#include <rive/core.hpp>
 
 class RiveQtFont : public rive::Font, public std::enable_shared_from_this<RiveQtFont>
 {

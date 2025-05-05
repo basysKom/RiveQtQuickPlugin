@@ -6,16 +6,16 @@
 
 #pragma once
 
+#include "riveqsgrendernode.h"
+#include "renderer/riveqtpainterrenderer.h"
+
+#include <rive/artboard.hpp>
+
 #include <QElapsedTimer>
 #include <QQuickItem>
 #include <QQuickPaintedItem>
 #include <QSGRenderNode>
 #include <QSGTextureProvider>
-
-#include <rive/artboard.hpp>
-
-#include "riveqsgrendernode.h"
-#include "renderer/riveqtpainterrenderer.h"
 
 class RiveQtQuickItem;
 class QQuickWindow;
@@ -26,10 +26,8 @@ public:
     RiveQSGSoftwareRenderNode(QQuickWindow *window, std::weak_ptr<rive::ArtboardInstance> artboardInstance, const QRectF &geometry);
 
     QRectF rect() const override;
-
-    StateFlags changedStates() const override { return QSGRenderNode::BlendState; }
-    RenderingFlags flags() const override { return QSGRenderNode::BoundedRectRendering; }
-
+    StateFlags changedStates() const override;
+    RenderingFlags flags() const override;
     void render(const RenderState *state) override;
 
     void paint(QPainter *painter);

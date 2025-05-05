@@ -5,22 +5,20 @@
 
 #pragma once
 
-#include <QElapsedTimer>
 #include <QQuickItem>
 #include <QQuickPaintedItem>
 #include <QSGRenderNode>
 #include <QSGTextureProvider>
-#include <QImage>
-#include <QPainter>
-#include <QTimer>
-#include <QtCore/QtGlobal>
-
-#include <rive/artboard.hpp>
-#include <rive/listener_type.hpp>
+#include <QElapsedTimer>
 
 #include "rivestatemachineinput.h"
 #include "datatypes.h"
 #include "renderer/riveqtfactory.h"
+
+#include <rive/listener_type.hpp>
+#include <rive/animation/state_machine_instance.hpp>
+#include <rive/animation/linear_animation_instance.hpp>
+#include <rive/animation/animation_state_instance.hpp>
 
 #if defined(RIVEQTQUICKITEM_LIBRARY)
 #    define RIVEQTQUICKITEM_EXPORT Q_DECL_EXPORT
@@ -28,12 +26,6 @@
 #    define RIVEQTQUICKITEM_EXPORT Q_DECL_IMPORT
 #endif
 
-class RiveQSGRenderNode;
-class RiveQSGRHIRenderNode;
-
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-class RiveQSGSoftwareRenderNode;
-#endif
 /**
  * \class RiveQtQuickItem
  * \brief A quick item for Rive-based animations.
@@ -43,8 +35,11 @@ class RiveQSGSoftwareRenderNode;
  * \date 2023/08/01
  */
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+class RiveQSGSoftwareRenderNode;
 class RiveQtQuickItem : public QQuickPaintedItem
 #else
+class RiveQSGRenderNode;
+class RiveQSGRHIRenderNode;
 class RiveQtQuickItem : public QQuickItem
 #endif
 {
