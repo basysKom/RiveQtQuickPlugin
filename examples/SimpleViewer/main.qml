@@ -1,11 +1,13 @@
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 Jonas Kalinka <jonas.kalinka@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
-
+//
 // SPDX-License-Identifier: LGPL-3.0-or-later
+
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
+import Qt.labs.folderlistmodel 2.15
 
 import RiveQtQuickPlugin 1.0
 
@@ -13,11 +15,10 @@ ApplicationWindow {
     visible: true
     width: 1800
     height: 1024
-    color: "#222222"
+    color: "#444c4e"
+    header: TabBar {
+        id: tabBar
 
-    TabBar {
-        id: bar
-        width: parent.width
         TabButton {
             text: qsTr("Inspector")
         }
@@ -25,130 +26,109 @@ ApplicationWindow {
             text: qsTr("Discover")
         }
     }
-
-    Rectangle {
-        id: separator
-        anchors.top: bar.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        height: 5
-
-        color: "black"
+    footer: ToolBar {
+        Label {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            elide: Label.ElideRight
+            color: "crimson"
+            text: qsTr("Could not load rive file:") + riveItem.fileSource
+            visible: riveItem.loadingStatus === RiveQtQuickItem.Error
+        }
     }
 
     StackLayout {
-        anchors.top: separator.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        anchors.fill: parent
 
-        currentIndex: bar.currentIndex
+        currentIndex: tabBar.currentIndex
 
-        RowLayout {
-            ScrollView {
-                id: scrollView
+        Page {
+            id: inspectorTab
 
-                Layout.fillHeight: true
-                Layout.minimumWidth: 200
-                Layout.minimumHeight: 200
+            padding: 5
 
-                hoverEnabled: true
+            RowLayout {
+                anchors.fill: parent
 
-                padding: 16
-
-                clip: true
-                background: Rectangle {
-                    color: "lightgray"
-                }
-
-                Column {
-                    id: buttonColumn
+                GroupBox {
+                    id: fileListView
 
                     Layout.fillHeight: true
-                    Layout.fillWidth: true
+                    implicitWidth: 200
 
-                    spacing: 16
+                    title: "Files"
 
-                    Repeater {
-                        id: buttonRepeater
-                        model: ["basyskom.riv", "cannonball-man.riv", "rivebot-transform.riv", "simple-strokes.riv", "pathfinder.riv", "glow-grid.riv", "sith-de-mayo.riv", "electrified-button.riv", "joystick.riv", "naridon-oni-fan-art.riv", "nested-artboards-demo.riv", "travel-icons-pack.riv", "Clear"]
-                        delegate: Button {
-                            text: modelData
-                            onClicked: {
-                                if (modelData === "Clear")
-                                    dropView.fileSource = ""
-                                else
-                                    dropView.fileSource = ":/rive/" + modelData
-                            }
+                    ListView {
+                        anchors.fill: parent
+
+                        clip: true
+                        model: FolderListModel {
+                            folder: "qrc:/rive/"
+                        }
+                        delegate: ItemDelegate {
+                            width: ListView.view.width
+                            text: model.fileName
+
+                            onClicked: dropView.fileSource = model.filePath
+                        }
+                        footerPositioning: ListView.OverlayFooter
+                        footer: Button {
+                            width: ListView.view.width
+                            text: "Clear"
+
+                            onClicked: dropView.fileSource = ""
                         }
                     }
                 }
-            }
 
-            RiveInspectorView {
-                id: dropView
+                RiveInspectorView {
+                    id: dropView
 
-                Layout.fillHeight: true
-                Layout.fillWidth: true
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
 
-                Item {
-                    anchors.fill: parent
-
-                    Text {
-                        visible: !dropView.fileSource
-                        text: "Drop some .riv file"
-                        color: "white"
+                    Label {
                         anchors.centerIn: parent
+                        text: "Drop some .riv file"
+                        visible: !dropView.fileSource
                     }
 
                     DropArea {
                         id: dropArea
+
                         anchors.fill: parent
-                        onEntered: {
-                            drag.accept(Qt.LinkAction)
-                        }
-                        onDropped: {
-                            console.log(drop.urls)
-                            dropView.fileSource = drop.urls[0].toString().slice(7)
-                        }
+
+                        onEntered: (drag) => drag.accept(Qt.LinkAction)
+                        onDropped: (drop) => dropView.fileSource = drop.urls[0].toString().slice(8)
                     }
                 }
             }
         }
-        Item {
+
+        Page {
             id: discoverTab
 
-            ColumnLayout {
+            padding: 5
+            footer: Slider {
+                id: slider
+
+                from: 1
+                value: 25
+                to: 100
+                stepSize: 0.1
+            }
+
+            RiveQtQuickItem {
+                id: riveItem
+
                 anchors.fill: parent
 
-                RiveQtQuickItem {
-                    id: riveItem
-
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.minimumHeight: 500
-                    fileSource: ":/rive/water-bar-demo.riv"
-
-                    interactive: false
-
-                    currentArtboardIndex: 0
-                    currentStateMachineIndex: 0
-
-                    stateMachineInterface: RiveStateMachineInput {
-                        property real level: slider.value
-                    }
-                }
-
-                Slider {
-                    id: slider
-
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    from: 1
-                    value: 25
-                    to: 100
-                    stepSize: 0.1
+                fileSource: ":/rive/water-bar-demo.riv"
+                interactive: false
+                currentArtboardIndex: 0
+                currentStateMachineIndex: 0
+                stateMachineInterface: RiveStateMachineInput {
+                    property real level: slider.value
                 }
             }
         }

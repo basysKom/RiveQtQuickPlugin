@@ -12,152 +12,100 @@ import RiveQtQuickPlugin
 ApplicationWindow {
     id: window
 
-    property int contentWidth: 600
-    property int controlPanelWidth: 250
-
-    width: contentWidth + controlPanelWidth
+    width: 800
     height: 600
     visible: true
     color: "#444c4e"
-
     title: qsTr("Rive Plugin Demo")
-
-    Item {
-        id: content
-        anchors {
-            top: parent.top
-            bottom: parent.bottom
-            left: parent.left
-            right: controlPanel.left
+    footer: ToolBar {
+        Label {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            elide: Label.ElideRight
+            color: "crimson"
+            text: qsTr("Could not load rive file:") + riveItem.fileSource
+            visible: riveItem.loadingStatus === RiveQtQuickItem.Error
         }
+    }
+
+    SplitView {
+        anchors.fill: parent
 
         RiveQtQuickItem {
             id: riveItem
-            anchors.fill: parent
-            fillMode: RiveQtQuickItem.PreserveAspectFit
 
+            SplitView.fillWidth: true
+            SplitView.minimumWidth: window.width / 2
+
+            fillMode: RiveQtQuickItem.PreserveAspectFit
             // not used by software backend
             renderQuality: RiveQtQuickItem.Medium
             postprocessingMode: RiveQtQuickItem.SMAA
 
             fileSource: ":/rive/travel-icons-pack.riv"
 
-            onArtboardsChanged: console.log("ARTBOARDS", artboards);
-        }
+            DropArea {
+                id: dropArea
 
-        Text {
-            id: errorMessage
-            anchors.centerIn: parent
-            width: window.width
-            horizontalAlignment: Text.AlignHCenter
-            font.pointSize: 24
-            color: "crimson"
-            text: qsTr("Could not load rive file:\n") + riveItem.fileSource 
-            visible: riveItem.loadingStatus === RiveQtQuickItem.Error
-        }
+                anchors.fill: parent
 
-        DropArea {
-            id: dropArea
-            anchors.fill: parent
-            onEntered: {
-                drag.accept(Qt.LinkAction)
+                onEntered: (drag) => drag.accept(Qt.LinkAction)
+                onDropped: (drop) => riveItem.fileSource = drop.urls[0].toString().slice(8)
             }
-            onDropped: {
-                riveItem.fileSource = drop.urls[0].toString().slice(7)
+        }
+
+        Pane {
+            id: controlPanel
+
+            SplitView.minimumWidth: window.width / 5
+
+            ColumnLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+
+                Label {
+                    Layout.fillWidth: true
+
+                    text: qsTr("Artboards")
+                }
+
+                ComboBox {
+                    Layout.fillWidth: true
+
+                    model: riveItem.artboards.map(artboard => artboard.name)
+
+                    onActivated: (index) => riveItem.currentArtboardIndex = index
+                }
+
+                Label {
+                    Layout.fillWidth: true
+
+                    text: qsTr("Animations")
+                }
+
+                ComboBox {
+                    Layout.fillWidth: true
+
+                    model: riveItem.animations.map(animation => `${animation.name} (${animation.duration} ms)`)
+
+                    onActivated: (index) => riveItem.currentAnimationIndex = index
+                }
+
+                Label {
+                    Layout.fillWidth: true
+
+                    text: qsTr("State Machines")
+                }
+
+                ComboBox {
+                    Layout.fillWidth: true
+
+                    model: [qsTr('Disabled')].concat(riveItem.stateMachines.map(stateMachine => stateMachine.name))
+
+                    onActivated: (index) => riveItem.currentStateMachineIndex = index - 1
+                }
             }
         }
     }
-
-    Rectangle {
-        id: controlPanel
-        
-        anchors {
-            top: parent.top
-            bottom: parent.bottom
-            right: parent.right
-        }
-
-        width: controlPanelWidth
-
-        color: "#203133"
-
-        Rectangle {
-            id: separator
-            anchors {
-                top: parent.top
-                bottom: parent.bottom
-                left: parent.left
-            }
-            width: 2
-            color: "black"
-            opacity: 0.3
-        }
-
-        Column {
-            id: column
-
-            anchors {
-                fill: parent
-                leftMargin: 16
-                rightMargin: 16
-                topMargin: 32
-            }
-
-            spacing: 8
-
-            Label {
-                width: parent.width
-                wrapMode: Label.Wrap
-                horizontalAlignment: Qt.AlignLeft
-                text: qsTr("Artboards")
-            }
-
-            ComboBox {
-                model: riveItem.artboards.map(artboard => artboard.name)
-                anchors.left: parent.left
-                anchors.right: parent.right
-
-                onActivated: (index) => riveItem.currentArtboardIndex = index
-            }
-
-            Item { width: 1; height: 32 }
-
-            Label {
-                width: parent.width
-                wrapMode: Label.Wrap
-                horizontalAlignment: Qt.AlignLeft
-                text: qsTr("Animations")
-            }
-
-            ComboBox {
-                model: riveItem.animations.map(animation => `${animation.name} (${animation.duration} ms)`)
-                anchors.left: parent.left
-                anchors.right: parent.right
-
-                onActivated: (index) => riveItem.currentAnimationIndex = index
-            }
-
-           Item { width: 1; height: 32 }
-
-           Label {
-                width: parent.width
-                wrapMode: Label.Wrap
-                horizontalAlignment: Qt.AlignLeft
-                text: qsTr("State Machines")
-            }
-
-            ComboBox {
-                model: [qsTr('Disabled')].concat(riveItem.stateMachines.map(stateMachine => stateMachine.name))
-                anchors.left: parent.left
-                anchors.right: parent.right
-
-                onActivated: (index) => riveItem.currentStateMachineIndex = index - 1
-            }
-
-
-        }
-
-    }
-
 }
-    
+
