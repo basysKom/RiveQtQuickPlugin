@@ -1,17 +1,14 @@
-
 // SPDX-FileCopyrightText: 2023 Jeremias Bosch <jeremias.bosch@basyskom.com>
 // SPDX-FileCopyrightText: 2023 basysKom GmbH
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include <QDir>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQuickWindow>
 
 int main(int argc, char *argv[])
 {
-
     QSurfaceFormat f;
     f.setSamples(4);
     QSurfaceFormat::setDefaultFormat(f);
@@ -29,11 +26,6 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
-
-    const auto &pathList = engine.importPathList();
-    for (const QString &path : pathList) {
-        qDebug() << "  " << path;
-    }
 
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(
